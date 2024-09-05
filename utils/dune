@@ -1,0 +1,14 @@
+(library
+ (name utils)
+ (public_name zutils.utils)
+ (wrapped false)
+ (modules
+   assertion
+   sugar
+   json
+   zlog
+   rename
+   pp
+ )
+ (libraries zdatatype core core_unix yojson dolog ocolor ppx_here)
+)
