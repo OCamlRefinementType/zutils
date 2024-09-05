@@ -1,6 +1,6 @@
 (library
- (name utils)
- (public_name zutils.utils)
+ (name zutils)
+ (public_name zutils)
  (wrapped false)
  (modules
    assertion
