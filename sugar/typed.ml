@@ -1,6 +1,6 @@
-type ('a, 'b) typed = { x : 'a; ty : 'b } [@@deriving sexp, show, eq, ord]
+type ('a, 'b) typed = { ty : 'a; x : 'b } [@@deriving sexp, show, eq, ord]
 
-let ( #> ) f { x; ty } = { x = f x; ty }
+let ( #--> ) f { x; ty } = { x = f x; ty }
 let ( #-> ) f { x; ty } = { x; ty = f ty }
 let ( #: ) x ty = { x; ty }
 let ( #+ ) x ty = { x = x.x; ty }

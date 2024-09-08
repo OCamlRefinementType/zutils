@@ -37,7 +37,7 @@ type nt =
   | Ty_tuple of nt list
   | Ty_uninter of string
   | Ty_constructor of (string * nt list)
-  | Ty_record of (string, nt) typed list
+  | Ty_record of (nt, string) typed list
 [@@deriving sexp, eq, show, ord]
 
 type t = nt
