@@ -9,7 +9,7 @@ let __type_unify = Unification.__type_unify
 (* module NOpttyped = Typed.NOpttyped *)
 (* module Frontend = Frontend *)
 (* module Connective = Connective *)
-open Frontend
+include Frontend
 
 let mk_arr a b = Ty_arrow (a, b)
 let layout = layout_nt
