@@ -11,6 +11,7 @@ let __type_unify = Unification.__type_unify
 (* module Connective = Connective *)
 open Frontend
 
+let layout = layout_nt
 let layout_nt = layout_nt
 let nt_of_string = nt_of_string
 let string_of_core_typel = string_of_core_typel
