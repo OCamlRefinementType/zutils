@@ -1,9 +1,6 @@
 include Ast
 include Subst
 
-let __type_unify = Unification.__type_unify
-let _type_unify = __type_unify
-
 (* module SMTtyped = Typed.SMTtyped *)
 (* module Notatedtyped = Typed.Notatedtyped *)
 (* module Ntyped = Typed.Ntyped *)
@@ -12,6 +9,8 @@ let _type_unify = __type_unify
 (* module Connective = Connective *)
 include Frontend
 
+let __type_unify = Unification.__type_unify layout_nt
+let _type_unify = __type_unify
 let mk_arr a b = Ty_arrow (a, b)
 let layout = layout_nt
 let layout_nt = layout_nt
