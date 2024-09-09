@@ -20,3 +20,6 @@ let subst_f_to_instance subst x lit e = subst x (fun _ -> lit) e
 (** override show *)
 let show_typed (f : 'a -> string) (g : 'b -> string) { x; ty } =
   Printf.sprintf "(%s: %s)" (f x) (g ty)
+
+let eq_typed f p1 p2 = equal_typed (fun _ _ -> true) f p1 p2
+let typed_eq = eq_typed
