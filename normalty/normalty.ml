@@ -16,3 +16,7 @@ let layout = layout_nt
 let layout_nt = layout_nt
 let nt_of_string = nt_of_string
 let string_of_nts = string_of_nts
+
+open Sugar
+
+let untyped x = { x; ty = Ty_unknown }
