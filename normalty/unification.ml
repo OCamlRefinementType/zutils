@@ -47,7 +47,7 @@ let type_unification_v2 m (cs : (t * t) list) =
 
 open Zdatatype
 
-let __type_unify_ (pprint : t -> string) file line m t1 t2 =
+let __type_unify_ (pprint : t -> string) loc m t1 t2 =
   (* let () = Printf.printf "unify %s --> %s\n" (layout t1) (layout t2) in *)
   let rec unify m (t1, t2) =
     let t1, t2 = map2 (msubst_nt m) (t1, t2) in
@@ -60,7 +60,7 @@ let __type_unify_ (pprint : t -> string) file line m t1 t2 =
         | Some _ -> _die [%here]
         | None -> (StrMap.add n t2 m, t2))
     | Ty_constructor (id1, ts1), Ty_constructor (id2, ts2) ->
-        let id = _check_equality file line String.equal id1 id2 in
+        let id = _check_equality loc String.equal id1 id2 in
         let m, ts =
           List.fold_left
             (fun (m, ts) (t1, t2) ->
@@ -103,10 +103,10 @@ let __type_unify_ (pprint : t -> string) file line m t1 t2 =
     | _, Ty_unknown -> (m, t1)
     | _, Ty_var _ ->
         (* (m, t1) *)
-        _failatwith file line "argment should not contain type var"
+        _die_with loc "argment should not contain type var"
     | _, _ ->
         ( m,
-          try _check_equality file line equal_nt t1 t2
+          try _check_equality loc equal_nt t1 t2
           with e ->
             Printf.printf "%s != %s\n" (show_nt t1) (show_nt t2);
             raise e )
@@ -117,19 +117,19 @@ let __type_unify_ (pprint : t -> string) file line m t1 t2 =
     Printf.printf "Precisely: %s ==> %s\n" (show_nt t1) (show_nt t2);
     raise e
 
-let __type_unify_v1 pprint file line t1 t2 =
-  snd @@ __type_unify_ pprint file line StrMap.empty t1 t2
+let __type_unify_v1 pprint loc t1 t2 =
+  snd @@ __type_unify_ pprint loc StrMap.empty t1 t2
 
-let __type_unify_v2 (pprint : t -> string) file line t1 t2 =
+let __type_unify_v2 (pprint : t -> string) loc t1 t2 =
   let m = type_unification_v2 StrMap.empty [ (t1, t2) ] in
   let error_print () =
     Printf.printf "Type unify error: %s ==> %s\n" (pprint t1) (pprint t2);
-    _failatwith file line "normal type check error"
+    _die_with loc "normal type check error"
   in
   match m with
   | Some m ->
       let t1, t2 = map2 (msubst_nt m) (t1, t2) in
-      __type_unify_v1 pprint file line t1 t2
+      __type_unify_v1 pprint loc t1 t2
   (* if not (eq t1 t2) then ( *)
   (*   Printf.printf "Precisely: %s ==> %s\n" (layout t1) (layout t2); *)
   (*   error_print ()) *)
