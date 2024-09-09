@@ -109,7 +109,7 @@ let layout_nt t = string_of_core_type (t_to_core_type t)
 let nt_of_string str =
   core_type_to_t @@ Parse.core_type @@ Lexing.from_string str
 
-let string_of_core_typel ts = Zdatatype.List.split_by_comma layout_nt ts
+let string_of_nts ts = Zdatatype.List.split_by_comma layout_nt ts
 
 (* let%test "rev" = List.equal Int.equal (List.rev [ 3; 2; 1 ]) [ 1; 2 ] *)
 (* let%test "parse1" = equal_nt int_ty (of_string "int") *)

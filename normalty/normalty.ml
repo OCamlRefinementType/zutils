@@ -15,4 +15,4 @@ let mk_arr a b = Ty_arrow (a, b)
 let layout = layout_nt
 let layout_nt = layout_nt
 let nt_of_string = nt_of_string
-let string_of_core_typel = string_of_core_typel
+let string_of_nts = string_of_nts
