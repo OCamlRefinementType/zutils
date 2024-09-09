@@ -20,3 +20,15 @@ let string_of_nts = string_of_nts
 open Sugar
 
 let untyped x = { x; ty = Ty_unknown }
+let nt_name nt = String.concat "_" @@ String.split_on_char ' ' @@ layout_nt nt
+
+let to_smtty t =
+  let aux = function
+    | Ty_bool -> Smt_Bool
+    | Ty_int -> Smt_Int
+    | Ty_nat -> Smt_Int
+    | Ty_constructor (name, []) -> Smt_Uninterp name
+    | Ty_constructor (_, _) -> Smt_Uninterp (nt_name t)
+    | _ -> _die_with [%here] (spf "%s not a basic type" (show_nt t))
+  in
+  aux t
