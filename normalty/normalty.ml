@@ -11,6 +11,7 @@ let __type_unify = Unification.__type_unify
 (* module Connective = Connective *)
 open Frontend
 
+let mk_arr a b = Ty_arrow (a, b)
 let layout = layout_nt
 let layout_nt = layout_nt
 let nt_of_string = nt_of_string
