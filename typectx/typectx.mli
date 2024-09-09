@@ -14,3 +14,6 @@ val map_ctx_typed :
   (('a, string) Sugar.typed -> ('b, string) Sugar.typed) -> 'a ctx -> 'b ctx
 
 val map_ctx : ('a -> 'b) -> 'a ctx -> 'b ctx
+val filter_ctx : ('a -> bool) -> 'a ctx -> 'a ctx
+val filter_ctx_typed : (('a, string) Sugar.typed -> bool) -> 'a ctx -> 'a ctx
+val filter_ctx_name : (string -> bool) -> 'a ctx -> 'a ctx

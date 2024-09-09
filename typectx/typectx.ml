@@ -43,3 +43,17 @@ let map_ctx (f : 't -> 's) (ctx_e : 't ctx) =
   match ctx_e with
   | Typectx _t_stringtypedlist0 ->
       Typectx (List.map (( #=> ) f) _t_stringtypedlist0)
+
+let filter_ctx_typed (f : ('t, string) typed -> bool) (ctx_e : 't ctx) =
+  match ctx_e with
+  | Typectx _t_stringtypedlist0 -> Typectx (List.filter f _t_stringtypedlist0)
+
+let filter_ctx_name (f : string -> bool) (ctx_e : 't ctx) =
+  match ctx_e with
+  | Typectx _t_stringtypedlist0 ->
+      Typectx (List.filter (fun x -> f x.x) _t_stringtypedlist0)
+
+let filter_ctx (f : 't -> bool) (ctx_e : 't ctx) =
+  match ctx_e with
+  | Typectx _t_stringtypedlist0 ->
+      Typectx (List.filter (fun x -> f x.ty) _t_stringtypedlist0)

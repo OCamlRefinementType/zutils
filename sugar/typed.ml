@@ -16,6 +16,7 @@ let typed_from_pair (x, ty) = x #: ty
 let typed_to_pair { x; ty } = (x, ty)
 let fv_typed_id_to_id f e = List.map (fun x -> x.x) @@ f e
 let subst_f_to_instance subst x lit e = subst x (fun _ -> lit) e
+let find_in_args name l = List.find_opt (fun x -> String.equal name x.x) l
 
 (** override show *)
 let show_typed (f : 'a -> string) (g : 'b -> string) { x; ty } =
