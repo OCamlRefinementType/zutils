@@ -42,4 +42,4 @@ let map_ctx_typed (f : ('t, string) typed -> ('b, string) typed)
 let map_ctx (f : 't -> 's) (ctx_e : 't ctx) =
   match ctx_e with
   | Typectx _t_stringtypedlist0 ->
-      Typectx (List.map (( #-> ) f) _t_stringtypedlist0)
+      Typectx (List.map (( #=> ) f) _t_stringtypedlist0)
