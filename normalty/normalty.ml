@@ -2,6 +2,7 @@ include Ast
 include Subst
 
 let __type_unify = Unification.__type_unify
+let _type_unify = __type_unify
 
 (* module SMTtyped = Typed.SMTtyped *)
 (* module Notatedtyped = Typed.Notatedtyped *)
