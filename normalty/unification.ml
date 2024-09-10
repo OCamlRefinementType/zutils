@@ -118,7 +118,9 @@ let __type_unify_ (pprint : t -> string) loc m t1 t2 =
     raise e
 
 let __type_unify_v1 pprint loc t1 t2 =
-  snd @@ __type_unify_ pprint loc StrMap.empty t1 t2
+  match snd @@ __type_unify_ pprint loc StrMap.empty t1 t2 with
+  | Ty_unknown -> _die_with [%here] "still unknown type"
+  | _ as ty -> ty
 
 let __type_unify_v2 (pprint : t -> string) loc t1 t2 =
   let m = type_unification_v2 StrMap.empty [ (t1, t2) ] in
