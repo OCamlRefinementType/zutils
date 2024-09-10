@@ -53,6 +53,7 @@ let __type_unify_ (pprint : t -> string) loc m t1 t2 =
     let t1, t2 = map2 (msubst_nt m) (t1, t2) in
     (* let () = Printf.printf "one %s --> %s\n" (layout t1) (layout t2) in *)
     match (t1, t2) with
+    | Ty_unknown, Ty_unknown _ -> _die_with loc "unknown type"
     | Ty_any, _ -> (m, t2)
     | Ty_unknown, _ -> (m, t2)
     | Ty_var n, t2 -> (
@@ -119,7 +120,7 @@ let __type_unify_ (pprint : t -> string) loc m t1 t2 =
 
 let __type_unify_v1 pprint loc t1 t2 =
   match snd @@ __type_unify_ pprint loc StrMap.empty t1 t2 with
-  | Ty_unknown -> _die_with [%here] "still unknown type"
+  | Ty_unknown -> _die_with loc "still unknown type"
   | _ as ty -> ty
 
 let __type_unify_v2 (pprint : t -> string) loc t1 t2 =
