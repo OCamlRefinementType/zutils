@@ -5,3 +5,4 @@ module Zdatatype = Zdatatype
 module Typectx = Typectx
 module Myconfig = Myconfig
 module Prop = Prop
+module Dtree = Dtree
