@@ -1,0 +1,6 @@
+include Normal_constant_typing
+include Normal_id_typing
+include Normal_op_typing
+include Normal_lit_typing
+include Normal_prop_typing
+include Normal_sevent_typing
