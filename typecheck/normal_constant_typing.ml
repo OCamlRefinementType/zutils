@@ -1,6 +1,8 @@
 open Prop
 open Sugar
 
+let ty_set ty = Nt.Ty_constructor ("set", [ ty ])
+
 let rec infer_constant (c : constant) =
   let open Nt in
   match c with
@@ -17,5 +19,5 @@ let rec infer_constant (c : constant) =
             if List.for_all (Nt.equal_nt ty) tys then ty
             else _die_with [%here] "set contains multiple typed values"
       in
-      Ty_constructor ("set", [ ty ])
+      ty_set ty
   | Dt _ -> _die_with [%here] "unimp datatype instance"

@@ -6,4 +6,4 @@ module Typectx = Typectx
 module Myconfig = Myconfig
 module Prop = Prop
 module Dtree = Dtree
-module PTypecheck = Typecheck
+module PropTypecheck = Typecheck

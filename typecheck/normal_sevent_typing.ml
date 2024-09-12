@@ -5,16 +5,22 @@ open Sugar
 
 (* type t = Nt.t *)
 
-let bi_sevent_check event_tyctx tyctx (sevent : Nt.t sevent) : Nt.t sevent =
+type regex_ctx = {
+  regex_tyctx : Nt.nt Typectx.ctx;
+  tyctx : Nt.nt Typectx.ctx;
+  event_tyctx : (Nt.nt, string) typed list Typectx.ctx;
+}
+
+let bi_sevent_check ctx (sevent : Nt.t sevent) : Nt.t sevent =
   match sevent with
   | GuardEvent { vs; phi } ->
       let bindings = (List.map (Nt.__force_typed [%here])) vs in
-      let ctx' = add_to_rights tyctx bindings in
+      let ctx' = add_to_rights ctx.tyctx bindings in
       let phi = bi_typed_prop_check ctx' phi in
       let res = GuardEvent { vs = bindings; phi } in
       res
   | EffEvent { op; vs; phi } -> (
-      match get_opt event_tyctx op with
+      match get_opt ctx.event_tyctx op with
       | None -> _failatwith [%here] (spf "undefined event: %s" op)
       | Some argsty ->
           let vs =
@@ -38,7 +44,7 @@ let bi_sevent_check event_tyctx tyctx (sevent : Nt.t sevent) : Nt.t sevent =
           (* we always add the server type *)
           (* let vs = (__server_feild #: (Some server_type)) :: vs in *)
           let bindings = List.map (Nt.__force_typed [%here]) vs in
-          let ctx' = add_to_rights tyctx bindings in
+          let ctx' = add_to_rights ctx.tyctx bindings in
           let phi = bi_typed_prop_check ctx' phi in
           let res = EffEvent { op; vs = bindings; phi } in
           (* let () = Printf.printf "SE: %s\n" @@ layout_se res in *)
