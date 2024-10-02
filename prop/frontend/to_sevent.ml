@@ -116,3 +116,13 @@ let sevent_of_expr expr =
   rty
 
 let of_expr = sevent_of_expr
+
+let locally_rename_se ctx = function
+  | EffEvent { op; phi; _ } ->
+      let vs =
+        match List.find_opt (fun x -> String.equal op x.x) ctx with
+        | None -> _die_with [%here] (spf "cannot find type of %s" op)
+        | Some vs -> vs.ty
+      in
+      EffEvent { op; vs; phi }
+  | GuardEvent _ as se -> se
