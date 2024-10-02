@@ -57,3 +57,7 @@ let filter_ctx (f : 't -> bool) (ctx_e : 't ctx) =
   match ctx_e with
   | Typectx _t_stringtypedlist0 ->
       Typectx (List.filter (fun x -> f x.ty) _t_stringtypedlist0)
+
+let layout_ctx f ctx =
+  match ctx with
+  | Typectx l -> List.split_by "" (fun x -> spf "%s: %s\n" x.x (f x.ty)) l
