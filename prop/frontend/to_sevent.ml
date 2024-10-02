@@ -87,7 +87,7 @@ let desugar_sevent expr =
           [ phi ] es
       in
       (args, And phis)
-  | _ -> _die [%here]
+  | _ -> ([], prop_of_expr expr)
 
 let sevent_of_expr_aux expr =
   match expr.pexp_desc with
