@@ -28,7 +28,8 @@ let tpEventRaw str = spf "<%s>" str
 let pprintRaw = function
   | GuardEvent { phi; _ } -> tpEventRaw @@ spf "%s" (layout_propRaw phi)
   | EffEvent { op; phi; _ } ->
-      tpEventRaw @@ spf "%s | %s" op (layout_propRaw phi)
+      if is_true phi then tpEventRaw op
+      else tpEventRaw @@ spf "%s | %s" op (layout_propRaw phi)
 
 let get_opopt expr =
   match To_op.string_to_op_opt (get_denote expr) with
