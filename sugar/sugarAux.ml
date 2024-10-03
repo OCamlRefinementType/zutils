@@ -74,3 +74,5 @@ let rec pow a = function
   | n ->
       let b = pow a (n / 2) in
       b * b * if n mod 2 = 0 then 1 else a
+
+let layout_option f = function None -> "none" | Some x -> f x
