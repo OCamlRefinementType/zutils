@@ -523,6 +523,23 @@ module List = struct
       if incr 0 then aux r else r
     in
     aux default
+
+  open Lexing
+
+  let left_reduce location f = function
+    | [] ->
+        failwith
+          (Printf.sprintf "[file %s line %i]: %s" location.pos_fname
+             location.pos_lnum __FUNCTION__)
+    | h :: t -> List.fold_left f h t
+
+  let right_reduce location f l =
+    match last_destruct_opt l with
+    | None ->
+        failwith
+          (Printf.sprintf "[file %s line %i]: %s" location.pos_fname
+             location.pos_lnum __FUNCTION__)
+    | Some (rest, tl) -> List.fold_right f rest tl
 end
 
 module StrList = struct
