@@ -14,7 +14,9 @@ let pprint = function
   | GuardEvent { vs; phi } ->
       tpEvent
       @@ spf "%s | %s" (List.split_by " " (fun x -> x.x) vs) (layout_prop phi)
-  | EffEvent { op; phi; _ } -> tpEvent @@ spf "%s | %s" op (layout_prop phi)
+  | EffEvent { op; phi; _ } ->
+      if is_true phi then tpEvent op
+      else tpEvent @@ spf "%s | %s" op (layout_prop phi)
 (* spf "%s %s | %s" op *)
 (* (List.split_by " " (fun x -> x.x) vs) *)
 (* (layout_prop phi) *)
