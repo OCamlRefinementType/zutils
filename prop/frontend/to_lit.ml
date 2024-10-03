@@ -44,12 +44,19 @@ let layout_typed_lit lit = layout lit.x
 
 open Nt
 
+let constructor_const_opt c =
+  match c with
+  | "true" -> Some (B true)
+  | "false" -> Some (B false)
+  | "()" -> Some U
+  | _ -> None
+
 let rec lit_of_expr expr =
   match expr.pexp_desc with
   | Pexp_tuple es -> ATu (List.map typed_lit_of_expr es)
   | Pexp_constraint _ -> _die [%here]
   | Pexp_ident id -> AVar (longid_to_id id) #: Ty_unknown
-  | Pexp_construct (c, args) ->
+  | Pexp_construct (c, args) -> (
       let args =
         match args with
         | None -> []
@@ -57,7 +64,10 @@ let rec lit_of_expr expr =
             let args = typed_lit_of_expr args in
             match args.x with ATu es -> es | _ -> [ args ])
       in
-      AAppOp ((longid_to_id c) #: Ty_unknown, args)
+      let op = longid_to_id c in
+      match (constructor_const_opt op, args) with
+      | Some c, _ -> AC c
+      | _, _ -> AAppOp (op #: Ty_unknown, args))
   | Pexp_constant _ -> AC (expr_to_constant expr)
   | Pexp_let _ -> _die [%here]
   | Pexp_apply (func, args) ->
