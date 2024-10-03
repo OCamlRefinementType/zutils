@@ -10,7 +10,10 @@ type t = Nt.t
 let bi_typed_id_infer (ctx : t ctx) (x : (t, string) typed) : (t, string) typed
     =
   let ty = match get_opt ctx x.x with None -> Nt.Ty_unknown | Some ty -> ty in
-  { ty = Nt._type_unify [%here] ty x.ty; x = x.x }
+  try { ty = Nt._type_unify [%here] ty x.ty; x = x.x }
+  with e ->
+    let _ = Printf.printf "type error at %s" x.x in
+    raise e
 
 let bi_typed_id_check (ctx : t ctx) (x : (t, string) typed) (ty : t) :
     (t, string) typed =
