@@ -302,6 +302,12 @@ let smart_implies a prop =
   | Some false -> mk_true
   | None -> Implies (a, prop)
 
+let smart_forall qvs prop =
+  List.fold_right (fun qv body -> Forall { qv; body }) qvs prop
+
+let smart_exists qvs prop =
+  List.fold_right (fun qv body -> Exists { qv; body }) qvs prop
+
 let get_lits prop =
   let rec aux e res =
     match e with
@@ -479,3 +485,23 @@ let and_prop_to_se p = function
 let delimit_cotexnt_se = function
   | Some ctx, GuardEvent { phi; _ } -> List.map (and_prop_to_se phi) ctx
   | _, r -> [ r ]
+
+let rec get_consts_from_lit = function
+  | AAppOp (_, args) -> List.concat_map get_consts_from_typed_lit args
+  | AC c -> [ c ]
+  | _ -> []
+
+and get_consts_from_typed_lit lit = get_consts_from_lit lit.x
+
+let get_consts prop =
+  let lits = get_lits prop in
+  let cs = List.concat_map get_consts_from_lit lits in
+  List.slow_rm_dup equal_constant cs
+
+let lit_to_nt = function
+  | AC c -> constant_to_nt c
+  | AAppOp (op, _) -> snd @@ Nt.destruct_arr_tp op.ty
+  | AVar x -> x.ty
+  | _ -> _die [%here]
+
+let lit_to_prop lit = Lit lit #: (lit_to_nt lit)
