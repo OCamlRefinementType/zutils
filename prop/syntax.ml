@@ -505,3 +505,34 @@ let lit_to_nt = function
   | _ -> _die [%here]
 
 let lit_to_prop lit = Lit lit #: (lit_to_nt lit)
+let msubst f = List.fold_right (fun (x, lit) -> f x lit)
+let subst_name_qv x z y = if y.x == x then z else y
+
+let to_conjs prop =
+  let rec aux = function And l -> List.concat_map aux l | _ as r -> [ r ] in
+  aux prop
+
+let to_lit_opt = function Lit lit -> Some lit.x | _ -> None
+let is_var_c = function AVar _ | AC _ -> true | _ -> false
+
+let simp_eq_lit lit =
+  match lit with
+  | AAppOp (op, [ a; b ]) when String.equal eq_op op.x ->
+      if equal_lit Nt.equal_nt a.x b.x then AC (B true) else lit
+  | _ -> lit
+
+let simpl_eq_in_prop =
+  let rec aux = function
+    | Lit lit -> Lit (simp_eq_lit lit.x) #: lit.ty
+    | Implies (e1, e2) -> Implies (aux e1, aux e2)
+    | Ite (e1, e2, e3) -> Ite (aux e1, aux e2, aux e3)
+    | Not p ->
+        let p = aux p in
+        if is_true p then mk_false else if is_false p then mk_true else Not p
+    | And es -> smart_and (List.map aux es)
+    | Or es -> smart_or (List.map aux es)
+    | Iff (e1, e2) -> Iff (aux e1, aux e2)
+    | Forall { qv; body } -> Forall { qv; body = aux body }
+    | Exists { qv; body } -> Exists { qv; body = aux body }
+  in
+  aux
