@@ -13,5 +13,5 @@
    sugar
  )
  (preprocess (pps ppx_optcomp ppx_compare ppx_sexp_conv ppx_inline_test ppx_assert ppx_deriving.show ppx_deriving.eq ppx_deriving.ord))
- (libraries zdatatype core core_unix yojson dolog ocolor ppx_here)
+ (libraries zdatatype core core_unix yojson dolog spectrum ppx_here)
 )
