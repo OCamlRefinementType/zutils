@@ -536,3 +536,8 @@ let simpl_eq_in_prop =
     | Exists { qv; body } -> Exists { qv; body = aux body }
   in
   aux
+
+let tv_mem vs qv = List.exists (fun x -> String.equal x.x qv.x) vs
+let tv_not_mem vs qv = not (tv_mem vs qv)
+let tv_to_lit x = (AVar x) #: x.ty
+let c_to_lit c = (AC c) #: (constant_to_nt c)
