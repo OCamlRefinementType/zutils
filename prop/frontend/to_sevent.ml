@@ -28,12 +28,10 @@ let tpEventRaw str = spf "<%s>" str
 let pprintRaw = function
   | GuardEvent { phi; _ } -> tpEventRaw @@ spf "%s" (layout_propRaw phi)
   | EffEvent { op; phi; vs } ->
-      if is_true phi then tpEventRaw op
-      else
-        tpEventRaw
-        @@ spf "%s %s | %s" op
-             (List.split_by " " (fun x -> x.x) vs)
-             (layout_propRaw phi)
+      tpEventRaw
+      @@ spf "%s %s | %s" op
+           (List.split_by " " (fun x -> x.x) vs)
+           (layout_propRaw phi)
 
 let layout_se_precise = pprintRaw
 
