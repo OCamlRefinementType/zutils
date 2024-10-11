@@ -2,6 +2,7 @@ open Z3
 open Z3aux
 open Syntax
 open Sugar
+open Myconfig
 
 let constant_to_z3 ctx c =
   match c with
@@ -16,7 +17,19 @@ let rec typed_lit_to_z3 ctx lit =
   | AC c -> constant_to_z3 ctx c
   | AVar x -> tpedvar_to_z3 ctx (x.ty, x.x)
   | AAppOp (op, args) -> (
+      let () =
+        _log "z3encode" @@ fun () ->
+        Pp.printf "app (%s:%s) on %s\n" op.x (Nt.layout op.ty)
+          (Zdatatype.List.split_by_comma
+             (fun l -> spf "%s:%s" (Front.layout_lit l.x) (Nt.layout l.ty))
+             args)
+      in
       let args = List.map (typed_lit_to_z3 ctx) args in
+      let () =
+        _log "z3encode" @@ fun () ->
+        Pp.printf "app (%s:%s) on %s\n" op.x (Nt.layout op.ty)
+          (Zdatatype.List.split_by_comma Expr.to_string args)
+      in
       match (op.x, args) with
       (* NOTE: we don't encode force *)
       | "forc", [ a ] -> a
