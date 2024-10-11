@@ -39,3 +39,5 @@ let _log_stat = _log "stat"
 let _log_info = _log "info"
 let _log_debug = _log "debug"
 let get_prim_path () = (get_meta ()).prim_path
+let global_counter = ref 0
+let global_counterpp () = global_counter := !global_counter + 1
