@@ -14,31 +14,32 @@ let pprint = function
   | GuardEvent { vs; phi } ->
       tpEvent
       @@ spf "%s | %s" (List.split_by " " (fun x -> x.x) vs) (layout_prop phi)
-  | EffEvent { op; phi; _ } ->
+      (* | EffEvent { op; phi; _ } -> *)
+      (*     if is_true phi then tpEvent op *)
+      (*     else tpEvent @@ spf "%s | %s" op (layout_prop phi) *)
+  | EffEvent { op; phi; vs } ->
       if is_true phi then tpEvent op
-      else tpEvent @@ spf "%s | %s" op (layout_prop phi)
-(* | EffEvent { op; phi; vs } -> *)
-(*     if is_true phi then tpEvent op *)
-(*     else *)
-(*       tpEvent *)
-(*       @@ spf "%s %s | %s" op *)
-(*            (List.split_by " " (fun x -> x.x) vs) *)
-(*            (layout_prop phi) *)
+      else
+        tpEvent
+        @@ spf "%s %s | %s" op
+             (List.split_by " " (fun x -> x.x) vs)
+             (layout_prop phi)
 
 let layout_se = pprint
 let layout = pprint
 let tpEventRaw str = spf "<%s>" str
 
 let pprintRaw = function
-  | GuardEvent { phi; _ } -> tpEventRaw @@ spf "%s" (layout_prop phi)
-  | EffEvent { op; phi; _ } ->
-      if is_true phi then tpEventRaw op
-      else tpEventRaw @@ spf "%s | %s" op (layout_prop phi)
-(* | EffEvent { op; phi; vs } -> *)
-(*     tpEventRaw *)
-(*     @@ spf "%s %s | %s" op *)
-(*          (List.split_by " " (fun x -> x.x) vs) *)
-(*          (layout_propRaw phi) *)
+  | GuardEvent { phi; _ } ->
+      tpEventRaw @@ spf "%s" (layout_prop phi)
+      (* | EffEvent { op; phi; _ } -> *)
+      (*     if is_true phi then tpEventRaw op *)
+      (*     else tpEventRaw @@ spf "%s | %s" op (layout_prop phi) *)
+  | EffEvent { op; phi; vs } ->
+      tpEventRaw
+      @@ spf "%s %s | %s" op
+           (List.split_by " " (fun x -> x.x) vs)
+           (layout_propRaw phi)
 
 let layout_se_precise = pprintRaw
 
