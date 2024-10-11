@@ -56,6 +56,10 @@ let handle_sat_result solver =
 
 let check_sat prop =
   let { goal; solver; axioms; _ } = get_prover () in
+  let _ =
+    _log_queries @@ fun _ ->
+    Pp.printf "@{<bold>QUERY: @}%s\n" (Expr.to_string prop)
+  in
   Goal.reset goal;
   Goal.add goal (prop :: axioms);
   Solver.reset solver;
