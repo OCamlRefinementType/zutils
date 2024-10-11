@@ -18,8 +18,8 @@ let pprint = function
       if is_true phi then tpEvent op
       else tpEvent @@ spf "%s | %s" op (layout_prop phi)
 (* spf "%s %s | %s" op *)
-(* (List.split_by " " (fun x -> x.x) vs) *)
-(* (layout_prop phi) *)
+(*   (List.split_by " " (fun x -> x.x) vs) *)
+(*   (layout_prop phi) *)
 
 let layout_se = pprint
 let layout = pprint
@@ -27,9 +27,15 @@ let tpEventRaw str = spf "<%s>" str
 
 let pprintRaw = function
   | GuardEvent { phi; _ } -> tpEventRaw @@ spf "%s" (layout_propRaw phi)
-  | EffEvent { op; phi; _ } ->
+  | EffEvent { op; phi; vs } ->
       if is_true phi then tpEventRaw op
-      else tpEventRaw @@ spf "%s | %s" op (layout_propRaw phi)
+      else
+        tpEventRaw
+        @@ spf "%s %s | %s" op
+             (List.split_by " " (fun x -> x.x) vs)
+             (layout_propRaw phi)
+
+let layout_se_precise = pprintRaw
 
 let get_opopt expr =
   match To_op.string_to_op_opt (get_denote expr) with
