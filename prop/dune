@@ -19,7 +19,6 @@
    to_lit
    to_notation
    to_prop
-   to_sevent
    front
    ;; Prover
    z3aux litencoding propencoding prover

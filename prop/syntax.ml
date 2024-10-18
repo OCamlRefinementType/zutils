@@ -364,32 +364,7 @@ let build_euf vars =
 
 (** sevent *)
 
-let show_sevent regex = show_sevent (fun _ _ -> ()) regex
-
-(* fv *)
-
-let fv sevent =
-  match sevent with
-  | GuardEvent { vs; phi } ->
-      Zdatatype.List.substract (typed_eq String.equal) ([] @ fv_prop phi) vs
-  | EffEvent { vs; phi; _ } ->
-      Zdatatype.List.substract (typed_eq String.equal) ([] @ fv_prop phi) vs
-
 (* subst *)
-
-let subst_sevent (y : string) f sevent =
-  match sevent with
-  | GuardEvent { vs; phi } ->
-      if List.exists (fun x -> String.equal x.x y) vs then
-        GuardEvent { vs; phi }
-      else GuardEvent { vs; phi = subst_prop y f phi }
-  | EffEvent { op; vs; phi } ->
-      if List.exists (fun x -> String.equal x.x y) vs then
-        EffEvent { op; vs; phi }
-      else EffEvent { op; vs; phi = subst_prop y f phi }
-
-let subst_sevent_instance y z sevent =
-  subst_f_to_instance subst_sevent y z sevent
 
 (* normalize name *)
 
@@ -418,14 +393,6 @@ let subst_sevent_instance y z sevent =
 (* gather lits *)
 (** For Nt.t typed*)
 
-let mk_top_sevent (op : string) vs =
-  (* let argsty = List.map snd @@ Nt.get_record_types ty in *)
-  (* let vs = vs_names (List.length argsty) in *)
-  (* let vs = List.map (fun (x, ty) -> x #: ty) @@ List.combine vs argsty in *)
-  (* let vs = (__server_feild #: server_type) :: vs in *)
-  (* normalize_name @@ *)
-  EffEvent { op; vs; phi = mk_true }
-
 open Zdatatype
 
 type gathered_lits = {
@@ -441,50 +408,6 @@ let gathered_rm_dup { global_lits; local_lits } =
     StrMap.map (fun (vs, lits) -> (vs, List.slow_rm_dup eq_lit lits)) local_lits
   in
   { global_lits; local_lits }
-
-let gather_se { global_lits; local_lits } sevent =
-  (* let () = Env.show_log "gather" @@ fun _ -> Printf.printf ">>>>> gather:\n" in *)
-  match sevent with
-  | GuardEvent _ ->
-      _die [%here]
-      (* { global_lits = Prop.get_lits phi @ global_lits; local_lits } *)
-  | EffEvent { op; phi; vs } ->
-      let lits = get_lits phi in
-      let vs' = List.map (fun x -> x.x) vs in
-      let is_contain_local_free lit =
-        match List.interset String.equal vs' @@ fv_lit_id lit with
-        | [] -> false
-        | _ -> true
-      in
-      let llits, glits = List.partition is_contain_local_free lits in
-      (* let () = Printf.printf "vs: %s\n" (layout_qvs vs) in *)
-      (* let () = *)
-      (*   Printf.printf "glits: %s\n" *)
-      (*     (List.split_by_comma Lit.layout_sexp_lit glits) *)
-      (* in *)
-      (* let () = *)
-      (*   Printf.printf "llits: %s\n" *)
-      (*     (List.split_by_comma Lit.layout_sexp_lit llits) *)
-      (* in *)
-      (* let () = _die [%here] in *)
-      let local_lits =
-        StrMap.update op
-          (fun l ->
-            match l with
-            | None -> Some (vs, llits)
-            | Some (_, l) -> Some (vs, l @ llits))
-          local_lits
-      in
-      let global_lits = global_lits @ glits in
-      { global_lits; local_lits }
-
-let and_prop_to_se p = function
-  | GuardEvent { phi; vs } -> GuardEvent { phi = smart_add_to p phi; vs }
-  | EffEvent { op; phi; vs } -> EffEvent { op; phi = smart_add_to p phi; vs }
-
-let delimit_cotexnt_se = function
-  | Some ctx, GuardEvent { phi; _ } -> List.map (and_prop_to_se phi) ctx
-  | _, r -> [ r ]
 
 let rec get_consts_from_lit = function
   | AAppOp (_, args) -> List.concat_map get_consts_from_typed_lit args

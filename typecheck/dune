@@ -9,7 +9,6 @@
   normal_op_typing
   normal_lit_typing
   normal_prop_typing
-  normal_sevent_typing
   typecheck
 )
 (preprocess (pps ppx_here))

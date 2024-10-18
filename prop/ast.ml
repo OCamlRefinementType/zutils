@@ -46,10 +46,10 @@ type 't prop =
   | Exists of { qv : (('t, string) typed[@bound]); body : 't prop }
 [@@deriving sexp, show, eq, ord]
 
-type 't sevent =
-  | GuardEvent of { vs : ('t, string) typed list; phi : 't prop }
-  | EffEvent of { op : string; vs : ('t, string) typed list; phi : 't prop }
-[@@deriving sexp, show, eq, ord]
+(* type 't sevent = *)
+(*   | GuardEvent of { vs : ('t, string) typed list; phi : 't prop } *)
+(*   | EffEvent of { op : string; vs : ('t, string) typed list; phi : 't prop } *)
+(* [@@deriving sexp, show, eq, ord] *)
 
 let eq_lit p1 p2 = equal_lit (fun _ _ -> true) p1 p2
 let eq_prop p1 p2 = equal_prop (fun _ _ -> true) p1 p2
@@ -57,11 +57,3 @@ let eq_prop p1 p2 = equal_prop (fun _ _ -> true) p1 p2
 (** Ast builder *)
 
 let uAVar x = AVar (Nt.untyped x)
-
-let _get_sevent_fields location = function
-  | EffEvent { op; vs; phi } -> (op, vs, phi)
-  | GuardEvent _ -> _die location
-
-let _get_sevent_name location p =
-  let res, _, _ = _get_sevent_fields location p in
-  res
