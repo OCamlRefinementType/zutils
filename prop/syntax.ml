@@ -10,6 +10,7 @@ let rec constant_to_nt c =
   | B _ -> Ty_bool
   | I _ -> Ty_int
   | Tu l -> Nt.Ty_tuple (List.map constant_to_nt l)
+  | Enum { enum_name; enum_elems; _ } -> Ty_enum { enum_name; enum_elems }
   | Dt _ | SetLiteral _ -> failwith "Not implemented"
 
 (** op *)

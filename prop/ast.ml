@@ -24,6 +24,7 @@ type constant =
   | Tu of constant list
   | Dt of string * constant list
   | SetLiteral of constant list
+  | Enum of { enum_name : string; enum_elems : string list; elem : string }
 [@@deriving sexp, show, eq, ord]
 
 type 't lit =

@@ -38,6 +38,7 @@ type nt =
   | Ty_uninter of string
   | Ty_constructor of (string * nt list)
   | Ty_record of (nt, string) typed list
+  | Ty_enum of { enum_name : string; enum_elems : string list }
 [@@deriving sexp, eq, show, ord]
 
 type t = nt
@@ -47,12 +48,13 @@ open Sugar
 let is_uninterp = function Smt_Uninterp _ -> true | _ -> false
 
 let is_base_tp = function
-  | Ty_unit | Ty_int | Ty_nat | Ty_bool | Ty_uninter _ | Ty_constructor _ ->
+  | Ty_unit | Ty_int | Ty_nat | Ty_bool | Ty_uninter _ | Ty_constructor _
+  | Ty_enum _ ->
       true
   | _ -> false
 
 let is_basic_tp = function
-  | Ty_unit | Ty_int | Ty_nat | Ty_bool | Ty_uninter _ -> true
+  | Ty_unit | Ty_int | Ty_nat | Ty_bool | Ty_uninter _ | Ty_enum _ -> true
   | _ -> false
 
 let is_dt = function Ty_constructor _ -> true | _ -> false
@@ -61,6 +63,14 @@ let snd_ty = function Ty_tuple [ _; a ] -> a | _ -> _die [%here]
 let para_ty = function Ty_arrow (t, _) -> t | _ -> _die [%here]
 let ret_ty = function Ty_arrow (_, t) -> t | _ -> _die [%here]
 let get_record_types = function Ty_record l -> l | _ -> _die [%here]
+
+let get_enum_name = function
+  | Ty_enum { enum_name; _ } -> enum_name
+  | _ -> _die [%here]
+
+let get_enum_elems = function
+  | Ty_enum { enum_elems; _ } -> enum_elems
+  | _ -> _die [%here]
 
 let destruct_arr_tp tp =
   let rec aux = function

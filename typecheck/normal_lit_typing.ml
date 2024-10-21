@@ -9,6 +9,8 @@ type t = Nt.t
 let rec bi_typed_lit_check (ctx : t ctx) (lit : (t, t lit) typed) (ty : t) :
     (t, t lit) typed =
   match (lit.x, ty) with
+  | AC (Enum { elem; _ }), Nt.Ty_enum { enum_name; enum_elems } ->
+      (AC (Enum { elem; enum_name; enum_elems })) #: ty
   | AC _, _ | AVar _, _ ->
       let lit = bi_typed_lit_infer ctx lit in
       let _ = Nt._type_unify [%here] lit.ty ty in

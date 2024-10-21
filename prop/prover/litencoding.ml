@@ -4,12 +4,23 @@ open Syntax
 open Sugar
 open Myconfig
 
+let get_idx_in_list x l =
+  let rec aux i = function
+    | [] -> _die [%here]
+    | h :: l -> if String.equal x h then i else aux (i + 1) l
+  in
+  aux 0 l
+
 let constant_to_z3 ctx c =
   match c with
   | U | Tu _ | Dt _ | SetLiteral _ ->
       _die_with [%here] "unimp complex constant encoding"
   | B b -> bool_to_z3 ctx b
   | I i -> int_to_z3 ctx i
+  | Enum { elem; enum_elems; _ } ->
+      let ty = constant_to_nt c in
+      let idx = get_idx_in_list elem enum_elems in
+      Enumeration.get_const (tp_to_sort ctx ty) idx
 
 let rec typed_lit_to_z3 ctx lit =
   match lit.x with

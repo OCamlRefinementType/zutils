@@ -10,6 +10,7 @@ let type_unification_v2 m (cs : (t * t) list) =
     | (t1, t2) :: cs -> (
         match (t1, t2) with
         | Ty_any, _ | _, Ty_any | Ty_unknown, _ | _, Ty_unknown -> aux m cs
+        | Ty_enum _, Ty_enum _ -> aux m cs
         | Ty_var n, _ ->
             let m = subst_on_sol (n, t2) m in
             let cs = subst_on_cs (n, t2) cs in
@@ -60,6 +61,11 @@ let __type_unify_ (pprint : t -> string) loc m t1 t2 =
         match StrMap.find_opt m n with
         | Some _ -> _die [%here]
         | None -> (StrMap.add n t2 m, t2))
+    | Ty_enum { enum_elems = []; _ }, Ty_enum { enum_elems = []; _ } ->
+        _die [%here]
+    | _, Ty_enum { enum_elems = []; _ } -> (m, t1)
+    | Ty_enum { enum_elems = []; _ }, _ -> (m, t2)
+    (* | Ty_enum _, Ty_enum _ -> *)
     | Ty_constructor (id1, ts1), Ty_constructor (id2, ts2) ->
         let id = _check_equality loc String.equal id1 id2 in
         let m, ts =

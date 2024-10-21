@@ -5,9 +5,26 @@ open Oparse
 open Sugar
 open Ast_helper
 
+let get_str t =
+  match t.ptyp_desc with
+  | Ptyp_constr (name, []) -> List.nth (Longident.flatten name.txt) 0
+  | _ -> _die [%here]
+
 let rec core_type_to_t ct =
-  let nt = core_type_desc_to_t ct.ptyp_desc in
-  nt
+  (* enum type *)
+  match ct.ptyp_attributes with
+  | [ attr ] ->
+      let enum_name = attr.attr_name.txt in
+      let enum_elems =
+        match ct.ptyp_desc with
+        | Ptyp_tuple cts -> List.map get_str cts
+        | _ -> _die [%here]
+      in
+      let enum_elems = List.map String.capitalize_ascii enum_elems in
+      Ty_enum { enum_name; enum_elems }
+  | _ ->
+      let nt = core_type_desc_to_t ct.ptyp_desc in
+      nt
 
 and object_to_labeled_type feild =
   match feild.pof_desc with
@@ -73,6 +90,7 @@ and t_to_core_type_desc t =
     | Ty_bool -> mk0 "bool"
     | Ty_int -> mk0 "int"
     | Ty_nat -> mk0 "nat"
+    | Ty_enum { enum_name; _ } -> mk0 enum_name
     | Ty_uninter name -> mk0 name
     (* | Ty_list t -> mk1 "list" (t_to_core_type t) *)
     | Ty_tuple t -> Ptyp_tuple (List.map t_to_core_type t)

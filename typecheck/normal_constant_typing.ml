@@ -10,6 +10,7 @@ let rec infer_constant (c : constant) =
   | I _ -> Ty_int
   | B _ -> Ty_bool
   | Tu l -> Ty_tuple (List.map infer_constant l)
+  | Enum { enum_elems; enum_name; _ } -> Ty_enum { enum_elems; enum_name }
   | SetLiteral l ->
       let tys = List.map infer_constant l in
       let ty =

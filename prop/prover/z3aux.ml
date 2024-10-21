@@ -57,7 +57,8 @@ let tp_to_sort ctx t =
   (*   Printf.printf "z3aux t: %s\n" @@ Sexplib.Sexp.to_string @@ sexp_of_t t *)
   (* in *)
   match t with
-  | Ty_uninter "enum" -> Integer.mk_sort ctx
+  | Ty_enum { enum_name; enum_elems } ->
+      Enumeration.mk_sort_s ctx enum_name enum_elems
   | Ty_uninter name -> Sort.mk_uninterpreted_s ctx name
   | _ -> (
       match to_smtty t with
@@ -89,7 +90,8 @@ let z3func ctx funcname inptps outtp =
 
 let tpedvar_to_z3 ctx (tp, name) =
   match tp with
-  | Ty_uninter "enum" -> Integer.mk_const_s ctx name
+  | Ty_enum { enum_name; enum_elems } ->
+      Expr.mk_const_s ctx name @@ Enumeration.mk_sort_s ctx enum_name enum_elems
   | Ty_uninter _ -> Expr.mk_const_s ctx name (tp_to_sort ctx tp)
   | _ -> (
       match to_smtty tp with
