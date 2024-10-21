@@ -57,6 +57,7 @@ let tp_to_sort ctx t =
   (*   Printf.printf "z3aux t: %s\n" @@ Sexplib.Sexp.to_string @@ sexp_of_t t *)
   (* in *)
   match t with
+  | Ty_uninter "enum" -> Integer.mk_sort ctx
   | Ty_uninter name -> Sort.mk_uninterpreted_s ctx name
   | _ -> (
       match to_smtty t with
