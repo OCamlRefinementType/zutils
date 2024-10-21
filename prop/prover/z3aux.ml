@@ -88,6 +88,7 @@ let z3func ctx funcname inptps outtp =
 
 let tpedvar_to_z3 ctx (tp, name) =
   match tp with
+  | Ty_uninter "enum" -> Integer.mk_const_s ctx name
   | Ty_uninter _ -> Expr.mk_const_s ctx name (tp_to_sort ctx tp)
   | _ -> (
       match to_smtty tp with
