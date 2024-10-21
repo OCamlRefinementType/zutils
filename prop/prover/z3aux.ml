@@ -51,6 +51,15 @@ let get_string_by_name m x =
 
 let int_to_z3 ctx i = mk_numeral_int ctx i (Integer.mk_sort ctx)
 let bool_to_z3 ctx b = if b then mk_true ctx else mk_false ctx
+let _z3_enum_type = Hashtbl.create 5
+
+let get_z3_enum_type ctx (enum_name, enum_elems) =
+  match Hashtbl.find_opt _z3_enum_type enum_name with
+  | Some sort -> sort
+  | None ->
+      let sort = Enumeration.mk_sort_s ctx enum_name enum_elems in
+      Hashtbl.add _z3_enum_type enum_name sort;
+      sort
 
 let tp_to_sort ctx t =
   (* let () = *)
@@ -58,7 +67,7 @@ let tp_to_sort ctx t =
   (* in *)
   match t with
   | Ty_enum { enum_name; enum_elems } ->
-      Enumeration.mk_sort_s ctx enum_name enum_elems
+      get_z3_enum_type ctx (enum_name, enum_elems)
   | Ty_uninter name -> Sort.mk_uninterpreted_s ctx name
   | _ -> (
       match to_smtty t with
@@ -91,7 +100,7 @@ let z3func ctx funcname inptps outtp =
 let tpedvar_to_z3 ctx (tp, name) =
   match tp with
   | Ty_enum { enum_name; enum_elems } ->
-      Expr.mk_const_s ctx name @@ Enumeration.mk_sort_s ctx enum_name enum_elems
+      Expr.mk_const_s ctx name @@ get_z3_enum_type ctx (enum_name, enum_elems)
   | Ty_uninter _ -> Expr.mk_const_s ctx name (tp_to_sort ctx tp)
   | _ -> (
       match to_smtty tp with
