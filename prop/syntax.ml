@@ -250,6 +250,11 @@ let rec get_cbool prop =
       Some p
   | _ -> None
 
+let smart_not prop =
+  match get_cbool prop with
+  | Some p -> Lit (AC (B (not p))) #: Nt.Ty_bool
+  | None -> ( match prop with Not p -> p | _ -> Not prop)
+
 let mk_true = Lit (AC (B true)) #: Nt.Ty_bool
 let mk_false = Lit (AC (B false)) #: Nt.Ty_bool
 let is_true p = match get_cbool p with Some true -> true | _ -> false
