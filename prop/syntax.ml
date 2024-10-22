@@ -242,8 +242,13 @@ let typed_subst_prop_instance x instance e =
 let prop_force_typed_lit_opt prop =
   match prop with Lit lit -> Some lit | _ -> None
 
-let get_cbool prop =
-  match prop with Lit { x = AC (B b); _ } -> Some b | _ -> None
+let rec get_cbool prop =
+  match prop with
+  | Lit { x = AC (B b); _ } -> Some b
+  | Not p ->
+      let* p = get_cbool p in
+      Some p
+  | _ -> None
 
 let mk_true = Lit (AC (B true)) #: Nt.Ty_bool
 let mk_false = Lit (AC (B false)) #: Nt.Ty_bool
