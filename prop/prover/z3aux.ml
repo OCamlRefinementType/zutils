@@ -68,10 +68,12 @@ let tp_to_sort ctx t =
   match t with
   | Ty_enum { enum_name; enum_elems } ->
       get_z3_enum_type ctx (enum_name, enum_elems)
-  | Ty_uninter name -> Sort.mk_uninterpreted_s ctx name
+  (* | Ty_uninter name -> Sort.mk_uninterpreted_s ctx name *)
+  | Ty_uninter _ -> Integer.mk_sort ctx
   | _ -> (
       match to_smtty t with
-      | Smt_Uninterp name -> Sort.mk_uninterpreted_s ctx name
+      (* | Smt_Uninterp name -> Sort.mk_uninterpreted_s ctx name *)
+      | Smt_Uninterp _ -> Integer.mk_sort ctx
       | Smt_Int -> Integer.mk_sort ctx
       | Smt_Bool -> Boolean.mk_sort ctx)
 
@@ -101,11 +103,13 @@ let tpedvar_to_z3 ctx (tp, name) =
   match tp with
   | Ty_enum { enum_name; enum_elems } ->
       Expr.mk_const_s ctx name @@ get_z3_enum_type ctx (enum_name, enum_elems)
-  | Ty_uninter _ -> Expr.mk_const_s ctx name (tp_to_sort ctx tp)
+  | Ty_uninter _ -> Integer.mk_const_s ctx name
+  (* | Ty_uninter _ -> Expr.mk_const_s ctx name (tp_to_sort ctx tp) *)
   | _ -> (
       match to_smtty tp with
-      | Smt_Uninterp sort ->
-          Expr.mk_const_s ctx name @@ Sort.mk_uninterpreted_s ctx sort
+      (* | Smt_Uninterp sort -> *)
+      (*     Expr.mk_const_s ctx name @@ Sort.mk_uninterpreted_s ctx sort *)
+      | Smt_Uninterp _ -> Integer.mk_const_s ctx name
       | Smt_Int -> Integer.mk_const_s ctx name
       | Smt_Bool -> Boolean.mk_const_s ctx name)
 
