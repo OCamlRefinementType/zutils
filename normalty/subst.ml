@@ -11,7 +11,7 @@ let subst_nt (id, t') t =
     | Ty_arrow (t1, t2) -> Ty_arrow (aux t1, aux t2)
     | Ty_tuple xs -> Ty_tuple (List.map aux xs)
     | Ty_constructor (id, args) -> Ty_constructor (id, List.map aux args)
-    | Ty_record l -> Ty_record (List.map (( #=> ) aux) l)
+    | Ty_record l -> Ty_record (List.map (fun x -> x #=> aux) l)
   in
 
   aux t

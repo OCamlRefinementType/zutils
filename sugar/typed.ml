@@ -4,11 +4,11 @@ let _get_ty x = x.ty
 let _get_x x = x.x
 let ( #: ) x ty = { x; ty }
 
-let ( #-> ) : 't 'a 'b. ('a -> 'b) -> ('t, 'a) typed -> ('t, 'b) typed =
- fun f { x; ty } -> (f x) #: ty
+let ( #-> ) : 't 'a 'b. ('t, 'a) typed -> ('a -> 'b) -> ('t, 'b) typed =
+ fun { x; ty } f -> (f x) #: ty
 
-let ( #=> ) : 't 's 'a. ('t -> 's) -> ('t, 'a) typed -> ('s, 'a) typed =
- fun f { x; ty } -> x #: (f ty)
+let ( #=> ) : 't 's 'a. ('t, 'a) typed -> ('t -> 's) -> ('s, 'a) typed =
+ fun { x; ty } f -> x #: (f ty)
 
 let ( #: ) x ty = { x; ty }
 let ( #+ ) x ty = { x = x.x; ty }

@@ -65,23 +65,23 @@ let rec subst_lit (string_x : string) f (lit_e : 't lit) =
           List.map (typed_subst_lit string_x f) _t__tlittypedlist1 )
 
 and typed_subst_lit (string_x : string) f (lit_e : ('t, 't lit) typed) =
-  (subst_lit string_x f) #-> lit_e
+  lit_e #-> (subst_lit string_x f)
 
 let rec map_lit : 't 's. ('t -> 's) -> 't lit -> 's lit =
  fun f lit_e ->
   match lit_e with
   | AC constant0 -> AC constant0
-  | AVar _t_stringtyped0 -> AVar f #=> _t_stringtyped0
+  | AVar _t_stringtyped0 -> AVar _t_stringtyped0 #=> f
   | ATu _t__tlittypedlist0 ->
       ATu (List.map (fun e -> typed_map_lit f e) _t__tlittypedlist0)
   | AProj (_t__tlittyped0, int1) -> AProj (typed_map_lit f _t__tlittyped0, int1)
   | AAppOp (_t_stringtyped0, _t__tlittypedlist1) ->
       AAppOp
-        (f #=> _t_stringtyped0, List.map (typed_map_lit f) _t__tlittypedlist1)
+        (_t_stringtyped0 #=> f, List.map (typed_map_lit f) _t__tlittypedlist1)
 
 and typed_map_lit :
       't 's. ('t -> 's) -> ('t, 't lit) typed -> ('s, 's lit) typed =
- fun f lit_e -> f #=> ((map_lit f) #-> lit_e)
+ fun f lit_e -> lit_e #-> (map_lit f) #=> f
 
 let fv_lit_id e = fv_typed_id_to_id fv_lit e
 let typed_fv_lit_id e = fv_typed_id_to_id typed_fv_lit e
@@ -209,7 +209,7 @@ let rec subst_prop (string_x : string) f (prop_e : 't prop) =
       else Exists { qv; body = subst_prop string_x f body }
 
 and typed_subst_prop (string_x : string) f (prop_e : ('t, 't prop) typed) =
-  (subst_prop string_x f) #-> prop_e
+  prop_e #-> (subst_prop string_x f)
 
 let rec map_prop (f : 't -> 's) (prop_e : 't prop) =
   match prop_e with
@@ -222,11 +222,11 @@ let rec map_prop (f : 't -> 's) (prop_e : 't prop) =
   | And _tproplist0 -> And (List.map (map_prop f) _tproplist0)
   | Or _tproplist0 -> Or (List.map (map_prop f) _tproplist0)
   | Iff (_tprop0, _tprop1) -> Iff (map_prop f _tprop0, map_prop f _tprop1)
-  | Forall { qv; body } -> Forall { qv = f #=> qv; body = map_prop f body }
-  | Exists { qv; body } -> Exists { qv = f #=> qv; body = map_prop f body }
+  | Forall { qv; body } -> Forall { qv = qv #=> f; body = map_prop f body }
+  | Exists { qv; body } -> Exists { qv = qv #=> f; body = map_prop f body }
 
 and typed_map_prop (f : 't -> 's) (prop_e : ('t, 't prop) typed) =
-  (map_prop f) #-> (f #=> prop_e)
+  prop_e #=> f #-> (map_prop f)
 
 let fv_prop_id e = fv_typed_id_to_id fv_prop e
 let typed_fv_prop_id e = fv_typed_id_to_id typed_fv_prop e

@@ -14,7 +14,7 @@ let __force_known loc = function
   | Ty_unknown -> _die_with loc "unkonwn type"
   | _ as ty -> ty
 
-let __force_typed loc x = (__force_known loc) #=> x
+let __force_typed loc x = x #=> (__force_known loc)
 let __type_unify = Unification.__type_unify layout_nt
 let _type_unify = __type_unify
 let mk_arr a b = Ty_arrow (a, b)
