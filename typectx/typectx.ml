@@ -61,3 +61,10 @@ let filter_ctx (f : 't -> bool) (ctx_e : 't ctx) =
 let layout_ctx f ctx =
   match ctx with
   | Typectx l -> List.split_by "" (fun x -> spf "%s: %s\n" x.x (f x.ty)) l
+
+let pprint_ctx f ctx =
+  match ctx with
+  | Typectx ctx ->
+      if List.length ctx == 0 then Pp.printf "@{<green>∅@}"
+      else
+        List.iter (fun { x; ty } -> Pp.printf "%s:@{<green>%s@}," x (f ty)) ctx
