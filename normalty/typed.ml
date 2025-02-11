@@ -14,11 +14,11 @@ module type T = sig
 
   val mk_noty : 'a -> 'a typed
   val ( #: ) : 'a -> t -> 'a typed
-  val ( #-> ) : ('a -> 'b) -> 'a typed -> 'b typed
+  val ( #-> ) : 'a typed -> ('a -> 'b) -> 'b typed
   val layout_typed : ('a -> string) -> 'a typed -> string
   val layout_typed_l : ('a -> string) -> 'a typed list -> string
   val to_smttyped : 'a typed -> 'a SMTtyped.typed
-  val typed_eq: string typed -> string typed -> bool
+  val typed_eq : string typed -> string typed -> bool
 end
 
 module F (Ty : T.T) : T with type t = Ty.t = struct
@@ -27,7 +27,7 @@ module F (Ty : T.T) : T with type t = Ty.t = struct
   type 'a typed = { x : 'a; ty : Ty.t } [@@deriving sexp]
 
   let ( #: ) x ty = { x; ty }
-  let ( #-> ) f { x; ty } = { x = f x; ty }
+  let ( #-> ) { x; ty } f = { x = f x; ty }
   let mk_noty x = x #: Ty.default_ty
 
   (* let xmap f { x; ty } = { x = f x; ty } *)
