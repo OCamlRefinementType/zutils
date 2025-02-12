@@ -18,20 +18,20 @@ let _safe_combine loc a b =
   let () = _check_arity loc a b in
   List.combine a b
 
+let pos_to_string loc =
+  Printf.sprintf "[file %s line %i]" loc.pos_fname loc.pos_lnum
+
 let _failatwith loc str =
-  failwith
-    (Printf.sprintf "[file %s line %i]: %s" loc.pos_fname loc.pos_lnum str)
+  failwith (Printf.sprintf "%s: %s" (pos_to_string loc) str)
 
 let _assert loc str b =
   if b then ()
   else
     failwith
-      (Printf.sprintf "[file %s line %i]: Assertion fail with %s" loc.pos_fname
-         loc.pos_lnum str)
+      (Printf.sprintf "%s: Assertion fail with %s" (pos_to_string loc) str)
 
 let here_msg (location : Lexing.position) msg =
-  Printf.sprintf "[file %s line %i]: %s" location.pos_fname location.pos_lnum
-    msg
+  Printf.sprintf "%s: %s" (pos_to_string location) msg
 
 let _here (location : Lexing.position) = here_msg location "die"
 
