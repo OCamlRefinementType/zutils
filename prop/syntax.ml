@@ -313,10 +313,16 @@ let smart_implies a prop =
   | Some false -> mk_true
   | None -> Implies (a, prop)
 
+let str_in_list x l = List.exists (String.equal x) l
+
 let smart_forall qvs prop =
+  let fvs = fv_prop_id prop in
+  let qvs = List.filter (fun x -> str_in_list x.x fvs) qvs in
   List.fold_right (fun qv body -> Forall { qv; body }) qvs prop
 
 let smart_exists qvs prop =
+  let fvs = fv_prop_id prop in
+  let qvs = List.filter (fun x -> str_in_list x.x fvs) qvs in
   List.fold_right (fun qv body -> Exists { qv; body }) qvs prop
 
 let get_lits prop =
