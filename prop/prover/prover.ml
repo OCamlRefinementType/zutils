@@ -4,6 +4,7 @@ open Goal
 open Sugar
 open Syntax
 open Myconfig
+module Propencoding = Propencoding
 
 type smt_result = SmtSat of Model.model | SmtUnsat | Timeout
 
