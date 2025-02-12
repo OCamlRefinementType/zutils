@@ -41,6 +41,15 @@ let get_prover () =
 
 let get_ctx () = (get_prover ()).ctx
 
+let update_axioms axioms =
+  match !_prover with
+  | Some p -> { p with axioms }
+  | None ->
+      let p = mk_prover () in
+      let p = { p with axioms } in
+      let () = _prover := Some p in
+      p
+
 let handle_sat_result solver =
   (* let _ = printf "solver_result\n" in *)
   match check solver [] with
