@@ -43,6 +43,8 @@ let get_prover () =
 let get_ctx () = (get_prover ()).ctx
 
 let update_axioms axioms =
+  let ctx = get_ctx () in
+  let axioms = List.map (Propencoding.to_z3 ctx) axioms in
   match !_prover with
   | Some p -> _prover := Some { p with axioms }
   | None ->
