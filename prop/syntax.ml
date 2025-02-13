@@ -441,12 +441,6 @@ let get_consts prop =
   let cs = List.concat_map get_consts_from_lit lits in
   List.slow_rm_dup equal_constant cs
 
-let lit_to_nt = function
-  | AC c -> constant_to_nt c
-  | AAppOp (op, _) -> snd @@ Nt.destruct_arr_tp op.ty
-  | AVar x -> x.ty
-  | _ -> _die [%here]
-
 let lit_to_prop lit = Lit lit #: (lit_to_nt lit)
 let msubst f = List.fold_right (fun (x, lit) -> f x lit)
 let subst_name_qv x z y = if y.x == x then z else y
