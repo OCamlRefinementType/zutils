@@ -106,13 +106,22 @@ let mk_lit_false = AC (B true)
 
 (** For Nt.t typed *)
 
-let mk_lit_eq_lit ty lx ly =
+let lit_to_nt = function
+  | AC c -> constant_to_nt c
+  | AVar x -> x.ty
+  | ATu l -> Nt.Ty_tuple (List.map _get_ty l)
+  | AProj (lit, i) -> (
+      match lit.ty with Nt.Ty_tuple l -> List.nth l i | _ -> _die [%here])
+  | AAppOp (f, _) -> snd @@ Nt.destruct_arr_tp f.ty
+
+let lit_to_tlit lit = lit #: (lit_to_nt lit)
+
+let mk_lit_eq_lit loc lx ly =
+  let ty = Nt._type_unify loc (lit_to_nt lx) (lit_to_nt ly) in
   AAppOp (typed_eq_op_string ty, [ lx #: ty; ly #: ty ])
 
-let mk_var_eq_var ty x y =
-  let lx = AVar x in
-  let ly = AVar y in
-  AAppOp (typed_eq_op_string ty, [ lx #: ty; ly #: ty ])
+let mk_var_eq_var loc x y = mk_lit_eq_lit loc (AVar x) (AVar y)
+let mk_var_eq_c loc x c = mk_lit_eq_lit loc (AVar x) (AC c)
 
 let mk_int_l1_eq_l2 l1 l2 =
   AAppOp (typed_eq_op_string Nt.Ty_int, [ l1 #: Nt.Ty_int; l2 #: Nt.Ty_int ])
@@ -358,25 +367,19 @@ let build_euf vars =
         | Some l -> Hashtbl.replace space ty (x :: l))
       vars
   in
-  let aux ty vars =
+  let aux vars =
     let pairs = List.combination_l vars 2 in
     let eqlits =
       List.map
         (fun l ->
-          match l with [ x; y ] -> mk_lit_eq_lit ty x y | _ -> _die [%here])
+          match l with
+          | [ x; y ] -> mk_lit_eq_lit [%here] x y
+          | _ -> _die [%here])
         pairs
     in
     eqlits
   in
-  let res =
-    Hashtbl.fold
-      (fun ty vars res ->
-        if
-          List.length vars > 1 && not (Nt.equal_nt ty (Nt.Ty_uninter "Bytes.t"))
-        then aux ty vars @ res
-        else res)
-      space []
-  in
+  let res = Hashtbl.fold (fun _ vars res -> aux vars @ res) space [] in
   res
 
 (** sevent *)
