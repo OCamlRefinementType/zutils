@@ -11,6 +11,9 @@ val ctx_from_list : ('a, string) Sugar.typed list -> 'a ctx
 val ctx_from_map : 'a Zdatatype.StrMap.t -> 'a ctx
 val concat : 'a ctx -> 'a ctx -> 'a ctx
 
+val subtract_opt :
+  ('a -> 'a -> bool) -> 'a ctx -> 'a ctx -> ('a, string) Sugar.typed list option
+
 val map_ctx_typed :
   (('a, string) Sugar.typed -> ('b, string) Sugar.typed) -> 'a ctx -> 'b ctx
 

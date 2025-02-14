@@ -69,3 +69,15 @@ let pprint_ctx f ctx =
       if List.length ctx == 0 then Pp.printf "@{<green>∅@}"
       else
         List.iter (fun { x; ty } -> Pp.printf "%s:@{<green>%s@}," x (f ty)) ctx
+
+let subtract_opt eq ctx1 ctx2 =
+  match (ctx1, ctx2) with
+  | Typectx l1, Typectx l2 ->
+      let rec aux = function
+        | l1, [] -> Some l1
+        | [], _ -> None
+        | h1 :: t1, h2 :: t2 ->
+            if String.equal h1.x h2.x && eq h1.ty h2.ty then aux (t1, t2)
+            else None
+      in
+      aux (l1, l2)
