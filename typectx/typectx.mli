@@ -9,6 +9,7 @@ val ctx_to_list : 'a ctx -> ('a, string) Sugar.typed list
 val ctx_to_map : 'a ctx -> 'a Zdatatype.StrMap.t
 val ctx_from_list : ('a, string) Sugar.typed list -> 'a ctx
 val ctx_from_map : 'a Zdatatype.StrMap.t -> 'a ctx
+val concat : 'a ctx -> 'a ctx -> 'a ctx
 
 val map_ctx_typed :
   (('a, string) Sugar.typed -> ('b, string) Sugar.typed) -> 'a ctx -> 'b ctx

@@ -25,6 +25,7 @@ let add_to_right (type a) (ctx : a ctx) ({ x; ty } : (a, string) typed) =
 open Zdatatype
 
 let add_to_rights ctx l = List.fold_left add_to_right ctx l
+let concat ctx1 ctx2 = match ctx2 with Typectx l2 -> add_to_rights ctx1 l2
 let ctx_to_list ctx = match ctx with Typectx l -> l
 let ctx_from_list l = add_to_rights emp l
 
