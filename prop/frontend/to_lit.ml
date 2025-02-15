@@ -4,7 +4,8 @@ open Sugar
 open Zdatatype
 open Parsetree
 open To_id
-open To_op
+
+(* open To_op *)
 open To_constant
 open Mutils
 open Ast_helper
@@ -75,10 +76,11 @@ let rec lit_of_expr expr =
       let func = typed_lit_of_expr func in
       let res =
         match func.x with
-        | AVar f -> (
-            match string_to_op_opt f.x with
-            | Some _ -> AAppOp (f, args)
-            | None -> _die [%here])
+        | AVar f ->
+            AAppOp (f, args)
+            (* match string_to_op_opt f.x with *)
+            (* | Some _ -> AAppOp (f, args) *)
+            (* | None -> _die [%here] *)
         | _ -> _die [%here]
       in
       res
