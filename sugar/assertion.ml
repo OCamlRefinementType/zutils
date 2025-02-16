@@ -39,3 +39,6 @@ let _die_with (location : Lexing.position) msg =
   failwith (here_msg location msg)
 
 let _die (location : Lexing.position) = failwith (_here location)
+
+let _force_some (location : Lexing.position) msg opt =
+  match opt with Some res -> res | None -> _failatwith location msg
