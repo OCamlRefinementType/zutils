@@ -35,7 +35,8 @@ let id_is_dt name = String.(equal name @@ capitalize_ascii name)
 let mk_eq_op = PrimOp eq_op
 let typed_eq_op_string ty = eq_op #: Nt.(mk_arr ty (mk_arr ty bool_ty))
 let mk_tuple_lit lits = (ATu lits) #: (Nt.Ty_tuple (List.map _get_ty lits))
-let mk_nth_lit loc lit n = (AProj (lit, n)) #: (Nt.get_nth_ty loc lit.ty)
+let tvar_to_lit var = (AVar var) #: var.ty
+let mk_nth_lit loc lit n = (AProj (lit, n)) #: (Nt.get_nth_ty loc lit.ty n)
 
 (** lit *)
 
