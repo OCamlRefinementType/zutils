@@ -67,7 +67,10 @@ and bi_typed_lit_infer (ctx : t ctx) (lit : (t, t lit) typed) : (t, t lit) typed
       let y = bi_typed_lit_infer ctx y in
       match lit.ty with
       | Nt.Ty_tuple l -> (AProj (y, n)) #: (List.nth l n)
-      | _ -> _die [%here])
+      | _ ->
+          _die_with [%here]
+          @@ spf "%s has type %s which is not a tuple type" (layout_lit y.x)
+               (Nt.show_nt y.ty))
   | AAppOp (mp, args) ->
       let mp = bi_typed_id_infer ctx mp in
       let args' = List.map (bi_typed_lit_infer ctx) args in
