@@ -23,11 +23,14 @@ let rec bi_typed_lit_check (ctx : t ctx) (lit : (t, t lit) typed) (ty : t) :
       (ATu l) #: ty
   | AProj (y, n), _ -> (
       let y = bi_typed_lit_infer ctx y in
-      match lit.ty with
+      match y.ty with
       | Nt.Ty_tuple l ->
           let _ = Nt._type_unify [%here] (List.nth l n) ty in
           (AProj (y, n)) #: ty
-      | _ -> _die [%here])
+      | _ ->
+          _die_with [%here]
+          @@ spf "%s has type %s which is not a tuple type" (layout_lit y.x)
+               (Nt.show_nt y.ty))
   | AAppOp (mp, args), _ ->
       let mp = bi_typed_id_infer ctx mp in
       let args' = List.map (bi_typed_lit_infer ctx) args in
