@@ -65,7 +65,7 @@ and bi_typed_lit_infer (ctx : t ctx) (lit : (t, t lit) typed) : (t, t lit) typed
       (ATu l) #: ty
   | AProj (y, n) -> (
       let y = bi_typed_lit_infer ctx y in
-      match lit.ty with
+      match y.ty with
       | Nt.Ty_tuple l -> (AProj (y, n)) #: (List.nth l n)
       | _ ->
           _die_with [%here]
