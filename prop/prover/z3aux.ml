@@ -61,21 +61,29 @@ let get_z3_enum_type ctx (enum_name, enum_elems) =
       Hashtbl.add _z3_enum_type enum_name sort;
       sort
 
+let tuple_sym ctx n = Symbol.mk_string ctx (spf "_tuple%i" n)
+let tuple_field ctx n i = Symbol.mk_string ctx (spf "_tuplef%i_%i" n i)
+
+let rec smt_tp_to_sort ctx t =
+  match t with
+  | Smt_enum { enum_name; enum_elems } ->
+      get_z3_enum_type ctx (enum_name, enum_elems)
+  (* | Smt_Uninterp name -> Sort.mk_uninterpreted_s ctx name *)
+  | Smt_Uninterp _ -> Integer.mk_sort ctx
+  | Smt_Int -> Integer.mk_sort ctx
+  | Smt_Bool -> Boolean.mk_sort ctx
+  | Smt_tuple l ->
+      let n = List.length l in
+      let sym = tuple_sym ctx n in
+      let syms = List.init n (fun i -> tuple_field ctx n i) in
+      let l = List.map (smt_tp_to_sort ctx) l in
+      Tuple.mk_sort ctx sym syms l
+
 let tp_to_sort ctx t =
   (* let () = *)
   (*   Printf.printf "z3aux t: %s\n" @@ Sexplib.Sexp.to_string @@ sexp_of_t t *)
   (* in *)
-  match t with
-  | Ty_enum { enum_name; enum_elems } ->
-      get_z3_enum_type ctx (enum_name, enum_elems)
-  (* | Ty_uninter name -> Sort.mk_uninterpreted_s ctx name *)
-  | Ty_uninter _ -> Integer.mk_sort ctx
-  | _ -> (
-      match to_smtty t with
-      (* | Smt_Uninterp name -> Sort.mk_uninterpreted_s ctx name *)
-      | Smt_Uninterp _ -> Integer.mk_sort ctx
-      | Smt_Int -> Integer.mk_sort ctx
-      | Smt_Bool -> Boolean.mk_sort ctx)
+  smt_tp_to_sort ctx (to_smtty t)
 
 let z3func ctx funcname inptps outtp =
   (* let () = Printf.printf "[%s]funcname: %s\n" __FILE__ funcname in *)
@@ -99,19 +107,19 @@ let z3func ctx funcname inptps outtp =
 (*   let idx = Integer.mk_const_s ctx idxname in *)
 (*   array_head_ ctx (arrname, idx) *)
 
-let tpedvar_to_z3 ctx (tp, name) =
-  match tp with
-  | Ty_enum { enum_name; enum_elems } ->
-      Expr.mk_const_s ctx name @@ get_z3_enum_type ctx (enum_name, enum_elems)
-  | Ty_uninter _ -> Integer.mk_const_s ctx name
-  (* | Ty_uninter _ -> Expr.mk_const_s ctx name (tp_to_sort ctx tp) *)
-  | _ -> (
-      match to_smtty tp with
-      (* | Smt_Uninterp sort -> *)
-      (*     Expr.mk_const_s ctx name @@ Sort.mk_uninterpreted_s ctx sort *)
-      | Smt_Uninterp _ -> Integer.mk_const_s ctx name
-      | Smt_Int -> Integer.mk_const_s ctx name
-      | Smt_Bool -> Boolean.mk_const_s ctx name)
+let tpedvar_to_z3 ctx (tp, name) = Expr.mk_const_s ctx name @@ tp_to_sort ctx tp
+(* match tp with *)
+(* | Ty_enum { enum_name; enum_elems } -> *)
+(*     Expr.mk_const_s ctx name @@ get_z3_enum_type ctx (enum_name, enum_elems) *)
+(* | Ty_uninter _ -> Integer.mk_const_s ctx name *)
+(* (\* | Ty_uninter _ -> Expr.mk_const_s ctx name (tp_to_sort ctx tp) *\) *)
+(* | _ -> ( *)
+(*     match to_smtty tp with *)
+(*     (\* | Smt_Uninterp sort -> *\) *)
+(*     (\*     Expr.mk_const_s ctx name @@ Sort.mk_uninterpreted_s ctx sort *\) *)
+(*     | Smt_Uninterp _ -> Integer.mk_const_s ctx name *)
+(*     | Smt_Int -> Integer.mk_const_s ctx name *)
+(*     | Smt_Bool -> Boolean.mk_const_s ctx name) *)
 
 let make_forall ctx qv body =
   if List.length qv == 0 then body

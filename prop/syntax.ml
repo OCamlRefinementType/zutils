@@ -6,9 +6,9 @@ open Sugar
 let rec constant_to_nt c =
   let open Nt in
   match c with
-  | U -> Ty_unit
-  | B _ -> Ty_bool
-  | I _ -> Ty_int
+  | U -> unit_ty
+  | B _ -> bool_ty
+  | I _ -> int_ty
   | Tu l -> Nt.Ty_tuple (List.map constant_to_nt l)
   | Enum { enum_name; enum_elems; _ } -> Ty_enum { enum_name; enum_elems }
   | Dt _ | SetLiteral _ -> failwith "Not implemented"
@@ -33,7 +33,7 @@ let is_dt_op str =
 let id_eq_op = function PrimOp "==" -> true | _ -> false
 let id_is_dt name = String.(equal name @@ capitalize_ascii name)
 let mk_eq_op = PrimOp eq_op
-let typed_eq_op_string ty = eq_op #: Nt.(mk_arr ty (mk_arr ty Ty_bool))
+let typed_eq_op_string ty = eq_op #: Nt.(mk_arr ty (mk_arr ty bool_ty))
 
 (** lit *)
 
@@ -124,7 +124,7 @@ let mk_var_eq_var loc x y = mk_lit_eq_lit loc (AVar x) (AVar y)
 let mk_var_eq_c loc x c = mk_lit_eq_lit loc (AVar x) (AC c)
 
 let mk_int_l1_eq_l2 l1 l2 =
-  AAppOp (typed_eq_op_string Nt.Ty_int, [ l1 #: Nt.Ty_int; l2 #: Nt.Ty_int ])
+  AAppOp (typed_eq_op_string Nt.int_ty, [ l1 #: Nt.int_ty; l2 #: Nt.int_ty ])
 
 let get_var_opt = function AVar x -> Some x | _ -> None
 
@@ -152,7 +152,7 @@ let rec get_non_unit_lit lit =
   (*   Printf.printf ">>>>> get_non_unit_lit: %s\n" *)
   (*     (Sexplib.Sexp.to_string (sexp_of_lit lit.x)) *)
   (* in *)
-  if Nt.equal_nt Nt.Ty_unit lit.ty then None
+  if Nt.equal_nt Nt.unit_ty lit.ty then None
   else
     match lit.x with
     | AAppOp (_, args) -> (
@@ -261,11 +261,11 @@ let rec get_cbool prop =
 
 let smart_not prop =
   match get_cbool prop with
-  | Some p -> Lit (AC (B (not p))) #: Nt.Ty_bool
+  | Some p -> Lit (AC (B (not p))) #: Nt.bool_ty
   | None -> ( match prop with Not p -> p | _ -> Not prop)
 
-let mk_true = Lit (AC (B true)) #: Nt.Ty_bool
-let mk_false = Lit (AC (B false)) #: Nt.Ty_bool
+let mk_true = Lit (AC (B true)) #: Nt.bool_ty
+let mk_false = Lit (AC (B false)) #: Nt.bool_ty
 let is_true p = match get_cbool p with Some true -> true | _ -> false
 let is_false p = match get_cbool p with Some false -> true | _ -> false
 

@@ -4,9 +4,7 @@ open Ast
 let subst_nt (id, t') t =
   let rec aux t =
     match t with
-    | Ty_unknown | Ty_any | Ty_unit | Ty_int | Ty_nat | Ty_bool | Ty_uninter _
-    | Ty_enum _ ->
-        t
+    | Ty_unknown | Ty_any | Ty_uninter _ | Ty_enum _ -> t
     | Ty_var x -> if streq x id then t' else t
     | Ty_arrow (t1, t2) -> Ty_arrow (aux t1, aux t2)
     | Ty_tuple xs -> Ty_tuple (List.map aux xs)

@@ -5,16 +5,9 @@
  (modules_without_implementation)
  (libraries sugar core ocamlParser ppxlib)
  (modules
-   ; connective
    ast
    subst
    unification
-   ; smtty
-   ; t
-   ; nt
-   ; notatet
-   ; ntopt
-   ; typed
    frontend
    normalty
  )

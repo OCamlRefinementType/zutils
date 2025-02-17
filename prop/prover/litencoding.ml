@@ -24,7 +24,14 @@ let constant_to_z3 ctx c =
 
 let rec typed_lit_to_z3 ctx lit =
   match lit.x with
-  | ATu _ | AProj _ -> _die [%here]
+  | ATu lits ->
+      Z3.FuncDecl.apply
+        (Tuple.get_mk_decl (tp_to_sort ctx lit.ty))
+        (List.map (typed_lit_to_z3 ctx) lits)
+  | AProj (lit, n) ->
+      Z3.FuncDecl.apply
+        (List.nth (Tuple.get_field_decls (tp_to_sort ctx lit.ty)) n)
+        [ typed_lit_to_z3 ctx lit ]
   | AC c -> constant_to_z3 ctx c
   | AVar x -> tpedvar_to_z3 ctx (x.ty, x.x)
   | AAppOp (op, args) -> (

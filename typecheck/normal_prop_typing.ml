@@ -5,7 +5,7 @@ open Normal_lit_typing
 let bi_typed_prop_check (ctx : t ctx) (prop : t prop) : t prop =
   let rec aux ctx prop =
     match prop with
-    | Lit lit -> Lit (bi_typed_lit_check ctx lit Nt.Ty_bool)
+    | Lit lit -> Lit (bi_typed_lit_check ctx lit Nt.bool_ty)
     | Implies (e1, e2) -> Implies (aux ctx e1, aux ctx e2)
     | Ite (e1, e2, e3) -> Ite (aux ctx e1, aux ctx e2, aux ctx e3)
     | Not e -> Not (aux ctx e)

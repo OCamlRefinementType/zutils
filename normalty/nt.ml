@@ -5,10 +5,6 @@ type t =
   | Ty_unknown (* parsing only, equal to none *)
   | Ty_any
   | Ty_var of string
-  | Ty_unit
-  | Ty_int
-  | Ty_nat
-  | Ty_bool
   | Ty_arrow of t * t
   | Ty_tuple of t list
   | Ty_uninter of string
@@ -23,15 +19,13 @@ let new_type_var () =
   _unique_type_var_name := !_unique_type_var_name + 1;
   res
 
-let is_base_tp = function
-  | Ty_unit | Ty_int | Ty_nat | Ty_bool | Ty_uninter _ | Ty_constructor _ ->
-      true
-  | _ -> false
-
-let is_basic_tp = function
-  | Ty_unit | Ty_int | Ty_nat | Ty_bool | Ty_uninter _ -> true
-  | _ -> false
-
+let _constructor_ty_0 name = Ty_constructor (name, [])
+let unit_ty = _constructor_ty_0 "unit"
+let bool_ty = _constructor_ty_0 "bool"
+let int_ty = _constructor_ty_0 "int"
+let nat_ty = _constructor_ty_0 "nat"
+let is_base_tp = function Ty_uninter _ | Ty_constructor _ -> true | _ -> false
+let is_basic_tp = function Ty_uninter _ -> true | _ -> false
 let is_dt = function Ty_constructor _ -> true | _ -> false
 let fst_ty = function Ty_tuple [ a; _ ] -> a | _ -> _die_with [%here] "fst_ty"
 let snd_ty = function Ty_tuple [ _; a ] -> a | _ -> _die_with [%here] "snd_ty"
@@ -42,10 +36,6 @@ let eq x y =
     | Ty_any, Ty_any -> true
     | Ty_unknown, Ty_unknown -> true
     | Ty_var x, Ty_var y -> String.equal x y
-    | Ty_unit, Ty_unit -> true
-    | Ty_int, Ty_int -> true
-    | Ty_nat, Ty_nat -> true
-    | Ty_bool, Ty_bool -> true
     | Ty_uninter name1, Ty_uninter name2 -> String.equal name1 name2
     | Ty_arrow (x, x'), Ty_arrow (y, y') -> aux (x, y) && aux (x', y')
     | Ty_tuple xs, Ty_tuple ys ->
@@ -85,9 +75,8 @@ let rec construct_arr_tp = function
 
 let to_smtty t =
   let aux = function
-    | Ty_bool -> Smtty.Bool
-    | Ty_int -> Smtty.Int
-    | Ty_nat -> Smtty.Int
+    | Ty_constructor ("bool", []) -> Smtty.Bool
+    | Ty_constructor ("int", []) -> Smtty.Int
     | Ty_constructor _ -> Smtty.Dt
     | _ ->
         let () =

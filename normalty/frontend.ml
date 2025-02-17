@@ -58,11 +58,6 @@ and core_type_desc_to_t t =
       (*     (Zzdatatype.Datatype.StrList.to_string (Longident.flatten lc.txt)) *)
       (* in *)
       match (Longident.flatten lc.txt, ts) with
-      | [ "unit" ], [] -> Ty_unit
-      | [ "bool" ], [] -> Ty_bool
-      | [ "int" ], [] -> Ty_int
-      | [ "nat" ], [] -> Ty_nat
-      (* | [ "list" ], [ t ] -> Ty_constructor ("list", [ core_type_to_t t ]) *)
       | [ c ], args -> Ty_constructor (c, List.map core_type_to_t args)
       | cs, [] -> Ty_uninter (Zdatatype.List.split_by "." (fun x -> x) cs)
       | _, _ ->
@@ -86,10 +81,6 @@ and t_to_core_type_desc t =
         (*   Printf.printf "output res: %s\n" @@ string_of_core_type @@ desc_to_ct res *)
         (* in *)
         res
-    | Ty_unit -> mk0 "unit"
-    | Ty_bool -> mk0 "bool"
-    | Ty_int -> mk0 "int"
-    | Ty_nat -> mk0 "nat"
     | Ty_enum { enum_name; _ } -> mk0 enum_name
     | Ty_uninter name -> mk0 name
     (* | Ty_list t -> mk1 "list" (t_to_core_type t) *)

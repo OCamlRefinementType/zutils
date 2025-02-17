@@ -35,6 +35,10 @@ type 't lit =
   | AAppOp of ('t, string) typed * ('t, 't lit) typed list
 [@@deriving sexp, show, eq, ord]
 
+let proj_func = "_proj"
+let fst_func = "fst"
+let snd_func = "snd"
+
 type 't prop =
   | Lit of ('t, 't lit) typed
   | Implies of 't prop * 't prop

@@ -26,12 +26,14 @@ let untyped x = { x; ty = Ty_unknown }
 let nt_name nt = String.concat "_" @@ String.split_on_char ' ' @@ layout_nt nt
 
 let to_smtty t =
-  let aux = function
-    | Ty_bool -> Smt_Bool
-    | Ty_int -> Smt_Int
-    | Ty_nat -> Smt_Int
+  let rec aux = function
+    | Ty_constructor ("bool", _) -> Smt_Bool
+    | Ty_constructor ("int", _) -> Smt_Int
+    | Ty_constructor ("nat", _) -> Smt_Int
     | Ty_constructor (name, []) -> Smt_Uninterp name
     | Ty_constructor (_, _) -> Smt_Uninterp (nt_name t)
+    | Ty_tuple l -> Smt_tuple (List.map aux l)
+    | Ty_enum { enum_name; enum_elems } -> Smt_enum { enum_name; enum_elems }
     | _ -> _die_with [%here] (spf "%s not a basic type" (show_nt t))
   in
   aux t

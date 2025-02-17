@@ -20,7 +20,12 @@ let qt_pretty_layout = function Fa -> "∀ " | Ex -> "∃ "
 
 (** Type used for smt query. *)
 
-type smtty = Smt_Bool | Smt_Int | Smt_Uninterp of string
+type smtty =
+  | Smt_Bool
+  | Smt_Int
+  | Smt_tuple of smtty list
+  | Smt_enum of { enum_name : string; enum_elems : string list }
+  | Smt_Uninterp of string
 [@@deriving sexp, show, eq, ord]
 
 (** Normal Type. *)
@@ -29,10 +34,6 @@ type nt =
   | Ty_unknown (* parsing only, equal to none *)
   | Ty_any
   | Ty_var of string
-  | Ty_unit
-  | Ty_int
-  | Ty_nat
-  | Ty_bool
   | Ty_arrow of nt * nt
   | Ty_tuple of nt list
   | Ty_uninter of string
@@ -48,15 +49,15 @@ open Sugar
 let is_uninterp = function Smt_Uninterp _ -> true | _ -> false
 
 let is_base_tp = function
-  | Ty_unit | Ty_int | Ty_nat | Ty_bool | Ty_uninter _ | Ty_constructor _
-  | Ty_enum _ ->
-      true
+  | Ty_uninter _ | Ty_constructor _ | Ty_enum _ -> true
   | _ -> false
 
-let is_basic_tp = function
-  | Ty_unit | Ty_int | Ty_nat | Ty_bool | Ty_uninter _ | Ty_enum _ -> true
-  | _ -> false
-
+let is_basic_tp = function Ty_enum _ -> true | _ -> false
+let _constructor_ty_0 name = Ty_constructor (name, [])
+let unit_ty = _constructor_ty_0 "unit"
+let bool_ty = _constructor_ty_0 "bool"
+let int_ty = _constructor_ty_0 "int"
+let nat_ty = _constructor_ty_0 "nat"
 let is_dt = function Ty_constructor _ -> true | _ -> false
 let fst_ty = function Ty_tuple [ a; _ ] -> a | _ -> _die [%here]
 let snd_ty = function Ty_tuple [ _; a ] -> a | _ -> _die [%here]

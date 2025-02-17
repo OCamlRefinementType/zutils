@@ -6,9 +6,9 @@ let ty_set ty = Nt.Ty_constructor ("set", [ ty ])
 let rec infer_constant (c : constant) =
   let open Nt in
   match c with
-  | U -> Ty_unit
-  | I _ -> Ty_int
-  | B _ -> Ty_bool
+  | U -> unit_ty
+  | I _ -> int_ty
+  | B _ -> bool_ty
   | Tu l -> Ty_tuple (List.map infer_constant l)
   | Enum { enum_elems; enum_name; _ } -> Ty_enum { enum_elems; enum_name }
   | SetLiteral l ->

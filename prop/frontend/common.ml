@@ -25,8 +25,8 @@ let quantifier_to_pattern (q, u) =
     (notated (Nt.qt_to_string q, u.ty))
 
 let smt_layout_ty = function
-  | Some Nt.Ty_bool -> "Bool"
-  | Some Nt.Ty_int -> "Int"
+  | Some (Nt.Ty_constructor ("bool", [])) -> "Bool"
+  | Some (Nt.Ty_constructor ("int", [])) -> "Int"
   | Some (Nt.Ty_constructor _) -> "Int"
   | _ -> _die_with [%here] "unimp"
 
