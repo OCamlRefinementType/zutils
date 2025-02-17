@@ -65,6 +65,16 @@ let para_ty = function Ty_arrow (t, _) -> t | _ -> _die [%here]
 let ret_ty = function Ty_arrow (_, t) -> t | _ -> _die [%here]
 let get_record_types = function Ty_record l -> l | _ -> _die [%here]
 
+let get_nth_ty loc ty n =
+  match ty with
+  | Ty_tuple l -> (
+      match List.nth_opt l n with
+      | None ->
+          _die_with loc
+          @@ spf "cannot find %i th element of tuple type %s" n (show_nt ty)
+      | Some ty -> ty)
+  | _ -> _die_with loc "not a tuple type"
+
 let get_enum_name = function
   | Ty_enum { enum_name; _ } -> enum_name
   | _ -> _die [%here]
