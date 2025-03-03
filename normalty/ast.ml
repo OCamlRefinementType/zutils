@@ -83,6 +83,9 @@ let get_enum_elems = function
   | Ty_enum { enum_elems; _ } -> enum_elems
   | _ -> _die [%here]
 
+let get_arr_lhs = function Ty_arrow (t1, _) -> t1 | _ -> _die [%here]
+let get_arr_rhs = function Ty_arrow (_, t2) -> t2 | _ -> _die [%here]
+
 let destruct_arr_tp tp =
   let rec aux = function
     | Ty_arrow (t1, t2) ->
