@@ -1,6 +1,10 @@
 let streq = String.equal
 let spf = Printf.sprintf
-let make_dir name = Core_unix.mkdir_p name
+let make_dir name = 
+  let full_permission = 0o777 in
+  try
+    Sys.mkdir name full_permission
+  with Sys_error _ -> ()
 
 let rec fastexpt : int -> int -> int =
  fun b n ->
@@ -56,9 +60,9 @@ let ( #. ) f g x = f (g x)
 let ( #> ) f g x = g (f x)
 
 let clock f =
-  let start_t = Core_unix.gettimeofday () in
+  let start_t = Unix.gettimeofday () in
   let res = f () in
-  let end_t = Core_unix.gettimeofday () in
+  let end_t = Unix.gettimeofday () in
   (end_t -. start_t, res)
 
 let short_str size e =
