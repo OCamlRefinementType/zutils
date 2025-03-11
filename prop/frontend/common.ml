@@ -20,10 +20,14 @@ let notated (name, t) =
   Typ.extension (Location.mknoloc name, PTyp (Nt.t_to_core_type t))
 
 let quantifier_to_pattern (q, u) =
-  let q = Attr.mk (Location.mknoloc (Nt.qt_to_string q)) (PStr []) in
-  Pat.constraint_
-    (Pat.attr (Pat.var (Location.mknoloc u.x)) q)
-    (Nt.t_to_core_type u.ty)
+  let x = Pat.var (Location.mknoloc u.x) in
+  let x =
+    match q with
+    | Nt.Fa -> x
+    | _ ->
+        Pat.attr x @@ Attr.mk (Location.mknoloc (Nt.qt_to_string q)) (PStr [])
+  in
+  Pat.constraint_ x (Nt.t_to_core_type u.ty)
 
 let smt_layout_ty = function
   | Some (Nt.Ty_constructor ("bool", [])) -> "Bool"

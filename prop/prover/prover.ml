@@ -8,6 +8,11 @@ module Propencoding = Propencoding
 
 type smt_result = SmtSat of Model.model | SmtUnsat | Timeout
 
+let layout_smt_result = function
+  | SmtSat _ -> "sat"
+  | SmtUnsat -> "unsat"
+  | Timeout -> "timeout"
+
 type prover = {
   axioms : Expr.expr list;
   ctx : context;
@@ -83,8 +88,14 @@ let check_sat prop =
 let check_sat_bool prop =
   let ctx = get_ctx () in
   let assertion = Propencoding.to_z3 ctx prop in
+  let res = check_sat assertion in
+  let () =
+    _log_queries @@ fun _ ->
+    Pp.printf "@{<bold>SAT(%s): @} %s\n" (layout_smt_result res)
+      (Front.layout_prop prop)
+  in
   let res =
-    match check_sat assertion with
+    match res with
     | SmtUnsat -> false
     | SmtSat model ->
         ( _log "model" @@ fun _ ->
@@ -94,10 +105,6 @@ let check_sat_bool prop =
     | Timeout ->
         (_log_queries @@ fun _ -> Pp.printf "@{<bold>SMTTIMEOUT@}\n");
         false
-  in
-  let () =
-    _log_queries @@ fun _ ->
-    Pp.printf "@{<bold>SAT(%b): @} %s\n" res (Front.layout_prop prop)
   in
   res
 
