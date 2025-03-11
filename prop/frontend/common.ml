@@ -14,7 +14,7 @@ let typed_to_expr f expr =
   | Some ty -> Exp.constraint_ (f expr.x) (Nt.t_to_core_type ty)
 
 let update_ty { x; ty } ty' =
-  match ty with None -> x #: (Some ty') | Some _ -> x #: (Some ty')
+  match ty with None -> x#:(Some ty') | Some _ -> x#:(Some ty')
 
 let notated (name, t) =
   Typ.extension (Location.mknoloc name, PTyp (Nt.t_to_core_type t))
@@ -22,7 +22,8 @@ let notated (name, t) =
 let quantifier_to_pattern (q, u) =
   Pat.constraint_
     (Pat.var (Location.mknoloc u.x))
-    (notated (Nt.qt_to_string q, u.ty))
+    (Typ.attr (Nt.t_to_core_type u.ty)
+       (Attr.mk (Location.mknoloc (Nt.qt_to_string q)) (PStr [])))
 
 let smt_layout_ty = function
   | Some (Nt.Ty_constructor ("bool", [])) -> "Bool"
