@@ -104,7 +104,7 @@ let check_sat_bool prop =
         true
     | Timeout ->
         (_log_queries @@ fun _ -> Pp.printf "@{<bold>SMTTIMEOUT@}\n");
-        false
+        true
   in
   res
 
