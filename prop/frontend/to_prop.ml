@@ -85,14 +85,8 @@ let rec prop_to_expr expr =
     | Or (h :: t) -> mk_op_apply ("||", List.map prop_to_expr [ h; And t ])
     | Iff (e1, e2) -> mk_op_apply ("iff", List.map prop_to_expr [ e1; e2 ])
     | Forall { qv; body } ->
-        let qv =
-          match qv.ty with Some ty -> qv.x #: ty | None -> _die [%here]
-        in
         mklam (quantifier_to_pattern (Nt.Fa, qv)) (prop_to_expr body)
     | Exists { qv; body } ->
-        let qv =
-          match qv.ty with Some ty -> qv.x #: ty | None -> _die [%here]
-        in
         mklam (quantifier_to_pattern (Nt.Ex, qv)) (prop_to_expr body)
   in
   aux expr
