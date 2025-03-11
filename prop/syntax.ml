@@ -481,6 +481,26 @@ let smart_exists_phi (x, phi) query =
   | None -> smart_exists [ x ] (smart_add_to phi query)
   | Some lit -> subst_prop_instance x.x lit query
 
+(* let rec has_top_ex phi = *)
+(*   match phi with *)
+(*   | Exists _ -> true *)
+(*   | And ps -> List.exists has_top_ex ps *)
+(*   | Lit _ | Implies _ | Ite _ | Not _ | Or _ | Iff _ | Forall _ -> false *)
+
+let lift_ex_quantifiers phi =
+  let rec aux qvs prop =
+    match prop with
+    | Exists { qv; body } -> aux (qvs @ [ qv ]) body
+    (* | And [] -> _die [%here] *)
+    (* | And [p1] -> aux qvs p1 *)
+    | And ps ->
+        let qvss, ps = List.split @@ List.map (aux []) ps in
+        let qvs = qvs @ List.concat qvss in
+        (qvs, And ps)
+    | Lit _ | Implies _ | Ite _ | Not _ | Or _ | Iff _ | Forall _ -> (qvs, prop)
+  in
+  aux phi
+
 let simpl_eq_in_prop =
   let rec aux = function
     | Lit lit -> Lit (simp_eq_lit lit.x)#:lit.ty
