@@ -33,10 +33,10 @@ let is_dt_op str =
 let id_eq_op = function PrimOp "==" -> true | _ -> false
 let id_is_dt name = String.(equal name @@ capitalize_ascii name)
 let mk_eq_op = PrimOp eq_op
-let typed_eq_op_string ty = eq_op #: Nt.(mk_arr ty (mk_arr ty bool_ty))
-let mk_tuple_lit lits = (ATu lits) #: (Nt.Ty_tuple (List.map _get_ty lits))
-let tvar_to_lit var = (AVar var) #: var.ty
-let mk_nth_lit loc lit n = (AProj (lit, n)) #: (Nt.get_nth_ty loc lit.ty n)
+let typed_eq_op_string ty = eq_op#:Nt.(mk_arr ty (mk_arr ty bool_ty))
+let mk_tuple_lit lits = (ATu lits)#:(Nt.Ty_tuple (List.map _get_ty lits))
+let tvar_to_lit var = (AVar var)#:var.ty
+let mk_nth_lit loc lit n = (AProj (lit, n))#:(Nt.get_nth_ty loc lit.ty n)
 
 (** lit *)
 
@@ -68,23 +68,22 @@ let rec subst_lit (string_x : string) f (lit_e : 't lit) =
           List.map (typed_subst_lit string_x f) _t__tlittypedlist1 )
 
 and typed_subst_lit (string_x : string) f (lit_e : ('t, 't lit) typed) =
-  lit_e #-> (subst_lit string_x f)
+  lit_e#->(subst_lit string_x f)
 
 let rec map_lit : 't 's. ('t -> 's) -> 't lit -> 's lit =
  fun f lit_e ->
   match lit_e with
   | AC constant0 -> AC constant0
-  | AVar _t_stringtyped0 -> AVar _t_stringtyped0 #=> f
+  | AVar _t_stringtyped0 -> AVar _t_stringtyped0#=>f
   | ATu _t__tlittypedlist0 ->
       ATu (List.map (fun e -> typed_map_lit f e) _t__tlittypedlist0)
   | AProj (_t__tlittyped0, int1) -> AProj (typed_map_lit f _t__tlittyped0, int1)
   | AAppOp (_t_stringtyped0, _t__tlittypedlist1) ->
-      AAppOp
-        (_t_stringtyped0 #=> f, List.map (typed_map_lit f) _t__tlittypedlist1)
+      AAppOp (_t_stringtyped0#=>f, List.map (typed_map_lit f) _t__tlittypedlist1)
 
 and typed_map_lit :
-      't 's. ('t -> 's) -> ('t, 't lit) typed -> ('s, 's lit) typed =
- fun f lit_e -> lit_e #-> (map_lit f) #=> f
+    't 's. ('t -> 's) -> ('t, 't lit) typed -> ('s, 's lit) typed =
+ fun f lit_e -> lit_e#->(map_lit f)#=>f
 
 let fv_lit_id e = fv_typed_id_to_id fv_lit e
 let typed_fv_lit_id e = fv_typed_id_to_id typed_fv_lit e
@@ -117,17 +116,17 @@ let lit_to_nt = function
       match lit.ty with Nt.Ty_tuple l -> List.nth l i | _ -> _die [%here])
   | AAppOp (f, _) -> snd @@ Nt.destruct_arr_tp f.ty
 
-let lit_to_tlit lit = lit #: (lit_to_nt lit)
+let lit_to_tlit lit = lit#:(lit_to_nt lit)
 
 let mk_lit_eq_lit loc lx ly =
   let ty = Nt._type_unify loc (lit_to_nt lx) (lit_to_nt ly) in
-  AAppOp (typed_eq_op_string ty, [ lx #: ty; ly #: ty ])
+  AAppOp (typed_eq_op_string ty, [ lx#:ty; ly#:ty ])
 
 let mk_var_eq_var loc x y = mk_lit_eq_lit loc (AVar x) (AVar y)
 let mk_var_eq_c loc x c = mk_lit_eq_lit loc (AVar x) (AC c)
 
 let mk_int_l1_eq_l2 l1 l2 =
-  AAppOp (typed_eq_op_string Nt.int_ty, [ l1 #: Nt.int_ty; l2 #: Nt.int_ty ])
+  AAppOp (typed_eq_op_string Nt.int_ty, [ l1#:Nt.int_ty; l2#:Nt.int_ty ])
 
 let get_var_opt = function AVar x -> Some x | _ -> None
 
@@ -221,7 +220,7 @@ let rec subst_prop (string_x : string) f (prop_e : 't prop) =
       else Exists { qv; body = subst_prop string_x f body }
 
 and typed_subst_prop (string_x : string) f (prop_e : ('t, 't prop) typed) =
-  prop_e #-> (subst_prop string_x f)
+  prop_e#->(subst_prop string_x f)
 
 let rec map_prop (f : 't -> 's) (prop_e : 't prop) =
   match prop_e with
@@ -234,11 +233,11 @@ let rec map_prop (f : 't -> 's) (prop_e : 't prop) =
   | And _tproplist0 -> And (List.map (map_prop f) _tproplist0)
   | Or _tproplist0 -> Or (List.map (map_prop f) _tproplist0)
   | Iff (_tprop0, _tprop1) -> Iff (map_prop f _tprop0, map_prop f _tprop1)
-  | Forall { qv; body } -> Forall { qv = qv #=> f; body = map_prop f body }
-  | Exists { qv; body } -> Exists { qv = qv #=> f; body = map_prop f body }
+  | Forall { qv; body } -> Forall { qv = qv#=>f; body = map_prop f body }
+  | Exists { qv; body } -> Exists { qv = qv#=>f; body = map_prop f body }
 
 and typed_map_prop (f : 't -> 's) (prop_e : ('t, 't prop) typed) =
-  prop_e #=> f #-> (map_prop f)
+  prop_e#=>f#->(map_prop f)
 
 let fv_prop_id e = fv_typed_id_to_id fv_prop e
 let typed_fv_prop_id e = fv_typed_id_to_id typed_fv_prop e
@@ -264,11 +263,11 @@ let rec get_cbool prop =
 
 let smart_not prop =
   match get_cbool prop with
-  | Some p -> Lit (AC (B (not p))) #: Nt.bool_ty
+  | Some p -> Lit (AC (B (not p)))#:Nt.bool_ty
   | None -> ( match prop with Not p -> p | _ -> Not prop)
 
-let mk_true = Lit (AC (B true)) #: Nt.bool_ty
-let mk_false = Lit (AC (B false)) #: Nt.bool_ty
+let mk_true = Lit (AC (B true))#:Nt.bool_ty
+let mk_false = Lit (AC (B false))#:Nt.bool_ty
 let is_true p = match get_cbool p with Some true -> true | _ -> false
 let is_false p = match get_cbool p with Some false -> true | _ -> false
 
@@ -444,7 +443,7 @@ let get_consts prop =
   let cs = List.concat_map get_consts_from_lit lits in
   List.slow_rm_dup equal_constant cs
 
-let lit_to_prop lit = Lit lit #: (lit_to_nt lit)
+let lit_to_prop lit = Lit lit#:(lit_to_nt lit)
 let msubst f = List.fold_right (fun (x, lit) -> f x lit)
 let subst_name_qv x z y = if y.x == x then z else y
 
@@ -461,9 +460,30 @@ let simp_eq_lit lit =
       if equal_lit Nt.equal_nt a.x b.x then AC (B true) else lit
   | _ -> lit
 
+let is_eq_phi x phi =
+  match phi with
+  | Lit lit -> (
+      match lit.x with
+      | AAppOp (op, [ a; b ]) when String.equal eq_op op.x ->
+          if equal_lit Nt.equal_nt a.x (AVar x) then Some b.x
+          else if equal_lit Nt.equal_nt b.x (AVar x) then Some a.x
+          else None
+      | _ -> None)
+  | _ -> None
+
+let smart_forall_phi (x, phi) query =
+  match is_eq_phi x phi with
+  | None -> smart_forall [ x ] (smart_implies phi query)
+  | Some lit -> subst_prop_instance x.x lit query
+
+let smart_exists_phi (x, phi) query =
+  match is_eq_phi x phi with
+  | None -> smart_exists [ x ] (smart_add_to phi query)
+  | Some lit -> subst_prop_instance x.x lit query
+
 let simpl_eq_in_prop =
   let rec aux = function
-    | Lit lit -> Lit (simp_eq_lit lit.x) #: lit.ty
+    | Lit lit -> Lit (simp_eq_lit lit.x)#:lit.ty
     | Implies (e1, e2) -> Implies (aux e1, aux e2)
     | Ite (e1, e2, e3) -> Ite (aux e1, aux e2, aux e3)
     | Not p ->
@@ -479,5 +499,5 @@ let simpl_eq_in_prop =
 
 let tv_mem vs qv = List.exists (fun x -> String.equal x.x qv.x) vs
 let tv_not_mem vs qv = not (tv_mem vs qv)
-let tv_to_lit x = (AVar x) #: x.ty
-let c_to_lit c = (AC c) #: (constant_to_nt c)
+let tv_to_lit x = (AVar x)#:x.ty
+let c_to_lit c = (AC c)#:(constant_to_nt c)
