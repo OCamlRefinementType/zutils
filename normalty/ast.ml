@@ -40,6 +40,8 @@ type nt =
   | Ty_constructor of (string * nt list)
   | Ty_record of (nt, string) typed list
   | Ty_enum of { enum_name : string; enum_elems : string list }
+  | Ty_poly of string * nt
+    (* We only allow poly type appear at 1. top level 2. return type of arrow *)
 [@@deriving sexp, eq, show, ord]
 
 type t = nt
@@ -85,6 +87,34 @@ let get_enum_elems = function
 
 let get_arr_lhs = function Ty_arrow (t1, _) -> t1 | _ -> _die [%here]
 let get_arr_rhs = function Ty_arrow (_, t2) -> t2 | _ -> _die [%here]
+
+let has_poly_tp tp =
+  let rec aux tp =
+    match tp with
+    | Ty_any | Ty_var _ | Ty_unknown | Ty_uninter _ | Ty_enum _ -> false
+    | Ty_constructor (_, tps) -> List.exists aux tps
+    | Ty_record xs -> List.exists (fun x -> aux x.ty) xs
+    | Ty_arrow (nt1, nt2) -> List.exists aux [ nt1; nt2 ]
+    | Ty_tuple nts -> List.exists aux nts
+    | Ty_poly _ -> true
+  in
+  aux tp
+
+let lift_poly_tp tp =
+  let rec aux tp =
+    match tp with
+    | Ty_unknown | Ty_any | Ty_var _ | Ty_uninter _ | Ty_enum _ -> ([], tp)
+    | Ty_constructor _ | Ty_record _ | Ty_tuple _ -> ([], tp)
+    | Ty_arrow (nt1, nt2) ->
+        let ps, nt2 = aux nt2 in
+        (ps, Ty_arrow (nt1, nt2))
+    | Ty_poly (p, nt) ->
+        let ps, nt = aux nt in
+        (p :: ps, nt)
+  in
+  let ps, tp = aux tp in
+  _assert [%here] "not a well-formed poly type" (not (has_poly_tp tp));
+  (ps, tp)
 
 let destruct_arr_tp tp =
   let rec aux = function

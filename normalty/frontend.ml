@@ -28,7 +28,7 @@ let rec core_type_to_t ct =
 
 and object_to_labeled_type feild =
   match feild.pof_desc with
-  | Otag (label, ct) -> label.txt #: (core_type_to_t ct)
+  | Otag (label, ct) -> label.txt#:(core_type_to_t ct)
   | _ -> _die_with [%here] "wrong record type"
 
 and core_type_desc_to_t t =
@@ -42,13 +42,9 @@ and core_type_desc_to_t t =
   | Ptyp_variant (_, _, _)
   | Ptyp_package _ | Ptyp_extension _ ->
       _die [%here]
-  | Ptyp_poly ([ lc ], ct) ->
-      _die_with [%here]
-        (spf "unimp: poly: lc: %s; ct: %s" lc.txt (string_of_core_type ct))
+  | Ptyp_poly (lc :: ps, ct) ->
+      Ty_poly (lc.txt, core_type_desc_to_t (Ptyp_poly (ps, ct)))
   | Ptyp_poly ([], ct) -> core_type_to_t ct
-  | Ptyp_poly (_, _) ->
-      _die_with [%here]
-        (spf "unimp: poly: %s" @@ string_of_core_type @@ desc_to_ct t)
   | Ptyp_var name -> Ty_var name
   | Ptyp_arrow (_, t1, t2) -> Ty_arrow (core_type_to_t t1, core_type_to_t t2)
   | Ptyp_tuple ts -> Ty_tuple (List.map core_type_to_t ts)
@@ -72,32 +68,30 @@ and t_to_core_type_desc t =
   let open Location in
   let mk0 name = Ptyp_constr (mknoloc @@ Lident name, []) in
   (* let mk1 name t = Ptyp_constr (mknoloc @@ Lident name, [ t ]) in *)
-  let aux = function
-    | Ty_any -> Ptyp_any
-    | Ty_unknown -> mk0 "unknown"
-    | Ty_var name ->
-        let res = Ptyp_var name in
-        (* let () = *)
-        (*   Printf.printf "output res: %s\n" @@ string_of_core_type @@ desc_to_ct res *)
-        (* in *)
-        res
-    | Ty_enum { enum_name; _ } -> mk0 enum_name
-    | Ty_uninter name -> mk0 name
-    (* | Ty_list t -> mk1 "list" (t_to_core_type t) *)
-    | Ty_tuple t -> Ptyp_tuple (List.map t_to_core_type t)
-    | Ty_arrow (t1, t2) ->
-        Ptyp_arrow (Asttypes.Nolabel, t_to_core_type t1, t_to_core_type t2)
-    | Ty_constructor (id, args) ->
-        Ptyp_constr
-          ( (Location.mknoloc
-            @@
-            match Longident.unflatten [ id ] with
-            | None -> _die [%here]
-            | Some x -> x),
-            List.map t_to_core_type args )
-    | Ty_record l -> Ptyp_object (List.map labeled_t_to_feild l, Asttypes.Closed)
-  in
-  aux t
+  match t with
+  | Ty_any -> Ptyp_any
+  | Ty_unknown -> mk0 "unknown"
+  | Ty_var name ->
+      let res = Ptyp_var name in
+      (* let () = *)
+      (*   Printf.printf "output res: %s\n" @@ string_of_core_type @@ desc_to_ct res *)
+      (* in *)
+      res
+  | Ty_enum { enum_name; _ } -> mk0 enum_name
+  | Ty_poly (p, nt) -> Ptyp_poly ([ mknoloc p ], t_to_core_type nt)
+  | Ty_uninter name -> mk0 name
+  | Ty_tuple t -> Ptyp_tuple (List.map t_to_core_type t)
+  | Ty_arrow (t1, t2) ->
+      Ptyp_arrow (Asttypes.Nolabel, t_to_core_type t1, t_to_core_type t2)
+  | Ty_constructor (id, args) ->
+      Ptyp_constr
+        ( (Location.mknoloc
+          @@
+          match Longident.unflatten [ id ] with
+          | None -> _die [%here]
+          | Some x -> x),
+          List.map t_to_core_type args )
+  | Ty_record l -> Ptyp_object (List.map labeled_t_to_feild l, Asttypes.Closed)
 
 and labeled_t_to_feild { x; ty = t } =
   Of.tag (Location.mknoloc x) (t_to_core_type t)

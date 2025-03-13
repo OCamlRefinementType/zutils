@@ -6,12 +6,13 @@ let subst_nt (id, t') t =
     match t with
     | Ty_unknown | Ty_any | Ty_uninter _ | Ty_enum _ -> t
     | Ty_var x -> if streq x id then t' else t
+    | Ty_poly (y, nt) ->
+        if String.equal id y then Ty_poly (y, nt) else Ty_poly (y, aux nt)
     | Ty_arrow (t1, t2) -> Ty_arrow (aux t1, aux t2)
     | Ty_tuple xs -> Ty_tuple (List.map aux xs)
     | Ty_constructor (id, args) -> Ty_constructor (id, List.map aux args)
-    | Ty_record l -> Ty_record (List.map (fun x -> x #=> aux) l)
+    | Ty_record l -> Ty_record (List.map (fun x -> x#=>aux) l)
   in
-
   aux t
 
 open Zdatatype
