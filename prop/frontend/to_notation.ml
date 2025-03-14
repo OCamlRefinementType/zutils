@@ -35,6 +35,8 @@ let notation_of_expr arg =
         (* here we assume it has forall by default. *)
         | Some "forall" -> FA
         | Some "exists" -> EX
+        | Some "fa" -> FA
+        | Some "ex" -> EX
         | Some "pi" -> PI
         | Some _ ->
             _failatwith [%here] "quantifier needs be [@forall] or [@exists]"
@@ -46,5 +48,5 @@ let notation_of_expr arg =
         | _ -> failwith "parsing: prop function"
       in
       let ty = Normalty.core_type_to_t ct in
-      (q, arg #: ty)
+      (q, arg#:ty)
   | _ -> _die_with [%here] "quantifier needs type notation"
