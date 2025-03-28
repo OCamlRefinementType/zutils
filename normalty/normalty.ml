@@ -8,15 +8,19 @@ include Subst
 (* module Frontend = Frontend *)
 (* module Connective = Connective *)
 include Frontend
+include Unification
 open Sugar
 
-let __force_known loc = function
-  | Ty_unknown -> _die_with loc "unkonwn type"
-  | _ as ty -> ty
+let is_unkown = function Ty_unknown -> true | _ -> false
+let known_opt = function Ty_unknown -> None | ty -> Some ty
 
-let __force_typed loc x = x #=> (__force_known loc)
-let __type_unify = Unification.__type_unify layout_nt
-let _type_unify = __type_unify
+let __force_known loc ty =
+  if is_unkown ty then _die_with loc "unkonwn type" else ty
+
+let __force_typed loc x = x#=>(__force_known loc)
+
+(* let __type_unify = Unification.__type_unify layout_nt *)
+(* let _type_unify = __type_unify *)
 let mk_arr a b = Ty_arrow (a, b)
 let layout = layout_nt
 let layout_nt = layout_nt

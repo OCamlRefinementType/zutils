@@ -119,7 +119,9 @@ let lit_to_nt = function
 let lit_to_tlit lit = lit#:(lit_to_nt lit)
 
 let mk_lit_eq_lit loc lx ly =
-  let ty = Nt._type_unify loc (lit_to_nt lx) (lit_to_nt ly) in
+  _assert loc "arguments of == should be the same"
+    (Nt.equal_nt (lit_to_nt lx) (lit_to_nt ly));
+  let ty = lit_to_nt lx in
   AAppOp (typed_eq_op_string ty, [ lx#:ty; ly#:ty ])
 
 let mk_var_eq_var loc x y = mk_lit_eq_lit loc (AVar x) (AVar y)

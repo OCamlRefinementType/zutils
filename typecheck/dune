@@ -5,10 +5,7 @@
  (libraries prop typectx)
  (modules
   normal_constant_typing
-  normal_id_typing
-  normal_op_typing
-  normal_lit_typing
-  normal_prop_typing
+  constraint_typing
   typecheck
 )
 (preprocess (pps ppx_here))
