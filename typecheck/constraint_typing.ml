@@ -67,10 +67,9 @@ let rec constraint_lit_type_infer (ctx : t ctx) (bc : BC.bc) (lit : t lit) =
       let bc, mp = constraint_id_type_check ctx bc mp in
       let bc, args = constraint_lits_type_check ctx bc args in
       let bc, retty = BC.fresh bc in
-      let bc, _ =
-        BC.add bc (mp.ty, Nt.construct_arr_tp (List.map _get_ty args, retty))
-      in
-      (bc, (AAppOp (mp, args))#:retty)
+      let mp_ty = Nt.construct_arr_tp (List.map _get_ty args, retty) in
+      let bc, _ = BC.add bc (mp_ty, mp.ty) in
+      (bc, (AAppOp (mp.x#:mp_ty, args))#:retty)
 
 and constraint_lits_type_check (ctx : t ctx) (bc : BC.bc)
     (lits : (t, t lit) typed list) =
@@ -95,7 +94,7 @@ let lit_type_check (ctx : t ctx) (poly_vars : string list)
   let solution = Normalty.type_unification StrMap.empty bc.cs in
   match solution with
   | None -> _die_with [%here] "lit normal type errpr"
-  | Some sol -> typed_map_lit (Normalty.msubst_nt sol) lit
+  | Some sol -> typed_map_lit (Normalty.msubst_nt sol) lit.x#:Nt.bool_ty
 
 let prop_type_check (ctx : t ctx) (poly_vars : string list) (prop : t prop) =
   let rec aux ctx prop =
