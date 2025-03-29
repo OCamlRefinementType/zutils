@@ -3,6 +3,44 @@ open Ast
 open Zdatatype
 open Subst
 
+(* let _fresh_type_var () = Ty_var (Rename.unique "__tvar") *)
+
+module BoundConstraints = struct
+  type bc = { type_vars : unit StrMap.t; cs : (t * t) list }
+
+  let exists vars p = StrMap.exists (fun y () -> String.equal p y) vars
+
+  let uniquelize (vars, t) =
+    let ps, t = lift_poly_tp t in
+    let rec aux vars (ps, t) =
+      match ps with
+      | [] -> (vars, t)
+      | p :: ps ->
+          if exists vars p then (
+            let p' = Rename.unique p in
+            _assert [%here] "reame success" (not (exists vars p));
+            aux (StrMap.add p' () vars) (ps, subst_nt (p, Ty_var p') t))
+          else aux (StrMap.add p () vars) (ps, t)
+    in
+    aux vars (ps, t)
+
+  let add { type_vars; cs } (t1, t2) =
+    let type_vars, t1 = uniquelize (type_vars, t1) in
+    let type_vars, t2 = uniquelize (type_vars, t2) in
+    ({ type_vars; cs = (t1, t2) :: cs }, (t1, t2))
+
+  let fresh { type_vars; cs } =
+    let x = Rename.unique "__tvar" in
+    _assert [%here] "fresh var create success" (not (exists type_vars x));
+    ({ type_vars = StrMap.add x () type_vars; cs }, Ty_var x)
+
+  let empty vars =
+    {
+      type_vars = StrMap.from_kv_list (List.map (fun x -> (x, ())) vars);
+      cs = [];
+    }
+end
+
 let type_unification m (cs : (t * t) list) =
   let rec aux m cs =
     match cs with

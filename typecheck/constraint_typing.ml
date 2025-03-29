@@ -5,19 +5,23 @@ open Zdatatype
 
 type t = Nt.t
 
-let fresh_type_var () = Nt.Ty_var (Rename.unique "__tvar")
+module BC = Normalty.BoundConstraints
 
-let mk_constraint ty (cs, x') =
-  if Nt.is_unkown ty then (cs, x') else ((ty, x'.ty) :: cs, x'.x#:ty)
+let mk_constraint ty (bc, x') =
+  if Nt.is_unkown ty then (bc, x')
+  else
+    let bc, (ty, _) = BC.add bc (ty, x'.ty) in
+    (bc, x'.x#:ty)
 
 let constraint_id_type_infer (ctx : t ctx) (x : string) =
   match get_opt ctx x with
   | None -> _die_with [%here] (spf "variable %s is free" x)
   | Some ty -> x#:ty
 
-let constraint_id_type_check (ctx : t ctx) (x : (t, string) typed) =
+let constraint_id_type_check (ctx : t ctx) (bc : BC.bc) (x : (t, string) typed)
+    =
   let x' = constraint_id_type_infer ctx x.x in
-  mk_constraint x.ty ([], x')
+  mk_constraint x.ty (bc, x')
 
 let constraint_op_type_infer (ctx : t ctx) (op : op) =
   match op with
@@ -38,22 +42,21 @@ let constraint_op_type_infer (ctx : t ctx) (op : op) =
       in
       (DtConstructor id)#:name.ty
 
-let constraint_op_type_check (ctx : t ctx) (op : (t, op) typed) =
+let constraint_op_type_check (ctx : t ctx) (bc : BC.bc) (op : (t, op) typed) =
   let op' = constraint_op_type_infer ctx op.x in
-  mk_constraint op.ty ([], op')
+  mk_constraint op.ty (bc, op')
 
-let rec constraint_lit_type_infer (ctx : t ctx) (lit : t lit) =
+let rec constraint_lit_type_infer (ctx : t ctx) (bc : BC.bc) (lit : t lit) =
   match lit with
   | AVar id ->
-      let cs, id' = constraint_id_type_check ctx id in
-      (cs, (AVar id')#:id'.ty)
-  | AC c -> ([], (AC c)#:(Normal_constant_typing.infer_constant c))
+      let bc, id' = constraint_id_type_check ctx bc id in
+      (bc, (AVar id')#:id'.ty)
+  | AC c -> (bc, (AC c)#:(Normal_constant_typing.infer_constant c))
   | ATu l ->
-      let css, l = List.split @@ List.map (constraint_lit_type_check ctx) l in
-      let lit' = (ATu l)#:(Nt.Ty_tuple (List.map _get_ty l)) in
-      (List.concat css, lit')
+      let bc, l = constraint_lits_type_check ctx bc l in
+      (bc, (ATu l)#:(Nt.Ty_tuple (List.map _get_ty l)))
   | AProj (y, n) -> (
-      let cs, y = constraint_lit_type_check ctx y in
+      let cs, y = constraint_lit_type_check ctx bc y in
       match y.ty with
       | Nt.Ty_tuple l -> (cs, (AProj (y, n))#:(List.nth l n))
       | _ ->
@@ -61,35 +64,43 @@ let rec constraint_lit_type_infer (ctx : t ctx) (lit : t lit) =
           @@ spf "%s has type %s which is not a tuple type" (layout_lit y.x)
                (Nt.show_nt y.ty))
   | AAppOp (mp, args) ->
-      let cs, mp = constraint_id_type_check ctx mp in
-      let css, args =
-        List.split @@ List.map (constraint_lit_type_check ctx) args
+      let bc, mp = constraint_id_type_check ctx bc mp in
+      let bc, args = constraint_lits_type_check ctx bc args in
+      let bc, retty = BC.fresh bc in
+      let bc, _ =
+        BC.add bc (mp.ty, Nt.construct_arr_tp (List.map _get_ty args, retty))
       in
-      let retty = fresh_type_var () in
-      let cs =
-        (mp.ty, Nt.construct_arr_tp (List.map _get_ty args, retty))
-        :: List.concat (cs :: css)
-      in
-      (cs, (AAppOp (mp, args))#:retty)
+      (bc, (AAppOp (mp, args))#:retty)
 
-and constraint_lit_type_check (ctx : t ctx) (lit : (t, t lit) typed) =
+and constraint_lits_type_check (ctx : t ctx) (bc : BC.bc)
+    (lits : (t, t lit) typed list) =
+  match lits with
+  | [] -> (bc, [])
+  | lit :: lits ->
+      let bc, lits = constraint_lits_type_check ctx bc lits in
+      let bc, lit = constraint_lit_type_check ctx bc lit in
+      (bc, lit :: lits)
+
+and constraint_lit_type_check (ctx : t ctx) (bc : BC.bc)
+    (lit : (t, t lit) typed) =
   (* HACK: we don't do type check when a literal is typed *)
   if Nt.is_unkown lit.ty then
-    mk_constraint lit.ty (constraint_lit_type_infer ctx lit.x)
-  else ([], lit)
+    mk_constraint lit.ty (constraint_lit_type_infer ctx bc lit.x)
+  else (bc, lit)
 
-let lit_type_check (ctx : t ctx) (lit : (t, t lit) typed) =
-  let cs, lit = constraint_lit_type_check ctx lit in
-  let cs = (Nt.bool_ty, lit.ty) :: cs in
-  let solution = Normalty.type_unification StrMap.empty cs in
+let lit_type_check (ctx : t ctx) (poly_vars : string list)
+    (lit : (t, t lit) typed) =
+  let bc, lit = constraint_lit_type_check ctx (BC.empty poly_vars) lit in
+  let bc, _ = BC.add bc (Nt.bool_ty, lit.ty) in
+  let solution = Normalty.type_unification StrMap.empty bc.cs in
   match solution with
   | None -> _die_with [%here] "lit normal type errpr"
   | Some sol -> typed_map_lit (Normalty.msubst_nt sol) lit
 
-let prop_type_check (ctx : t ctx) (prop : t prop) =
+let prop_type_check (ctx : t ctx) (poly_vars : string list) (prop : t prop) =
   let rec aux ctx prop =
     match prop with
-    | Lit lit -> Lit (lit_type_check ctx lit)
+    | Lit lit -> Lit (lit_type_check ctx poly_vars lit)
     | Implies (e1, e2) -> Implies (aux ctx e1, aux ctx e2)
     | Ite (e1, e2, e3) -> Ite (aux ctx e1, aux ctx e2, aux ctx e3)
     | Not e -> Not (aux ctx e)
