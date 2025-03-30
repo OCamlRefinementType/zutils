@@ -50,11 +50,14 @@ open Sugar
 
 let is_uninterp = function Smt_Uninterp _ -> true | _ -> false
 
-let is_base_tp = function
-  | Ty_uninter _ | Ty_constructor _ | Ty_enum _ -> true
+let rec is_base_tp = function
+  | Ty_poly (_, _) | Ty_arrow _ -> false
+  | Ty_uninter _ | Ty_any | Ty_constructor _ | Ty_enum _ | Ty_var _ -> true
+  | Ty_record l -> List.for_all (fun x -> is_base_tp x.ty) l
+  | Ty_tuple l -> List.for_all is_base_tp l
   | _ -> false
 
-let is_basic_tp = function Ty_enum _ -> true | _ -> false
+(* let is_basic_tp = function Ty_enum _ -> true | _ -> false *)
 let _constructor_ty_0 name = Ty_constructor (name, [])
 let unit_ty = _constructor_ty_0 "unit"
 let bool_ty = _constructor_ty_0 "bool"
