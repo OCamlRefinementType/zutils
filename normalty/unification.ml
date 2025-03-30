@@ -92,10 +92,15 @@ let type_unification m (cs : (t * t) list) =
   in
   aux m cs
 
-let unify_two_types (poly_vars : string list) (t1, t2) =
+let unify_two_types_opt (poly_vars : string list) (t1, t2) =
   let bc, (t1, _) = BoundConstraints.(add (empty poly_vars) (t1, t2)) in
   let solution = type_unification StrMap.empty bc.cs in
   match solution with None -> None | Some sol -> Some (msubst_nt sol t1)
+
+let unify_two_types loc (poly_vars : string list) (t1, t2) =
+  match unify_two_types_opt poly_vars (t1, t2) with
+  | None -> _die_with loc __FUNCTION__
+  | Some t -> t
 
 (* open Zdatatype *)
 
