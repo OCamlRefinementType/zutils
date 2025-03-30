@@ -17,11 +17,11 @@ module BoundConstraints = struct
       | [] -> (vars, t)
       | p :: ps ->
           if exists vars p then (
-            let p' = Rename.unique (spf "_%s" p) in
+            let p' = Rename.unique p in
             _assert [%here]
-              (spf "rename success: %s in [%s]" p
+              (spf "rename success: %s in [%s]" p'
                  (StrList.to_string (StrMap.to_key_list vars)))
-              (not (exists vars p));
+              (not (exists vars p'));
             aux (StrMap.add p' () vars) (ps, subst_nt (p, Ty_var p') t))
           else aux (StrMap.add p () vars) (ps, t)
     in
