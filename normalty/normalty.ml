@@ -86,7 +86,7 @@ let has_poly_tp tp =
 
 let lift_poly_tp tp =
   _assert [%here]
-    (spf "not a well-formed poly type: %s" (show_nt tp))
+    (spf "not a well-formed poly type: %s" (Frontend.layout_nt tp))
     (wf_nt tp);
   let rec aux tp =
     match tp with
@@ -107,7 +107,9 @@ let rec construct_poly_nt = function
 
 let close_poly_nt loc t =
   let t = construct_poly_nt (gather_type_vars t, t) in
-  _assert loc (spf "not a well-formed poly type: %s" (show_nt t)) (wf_nt t);
+  _assert loc
+    (spf "not a well-formed poly type: %s" (Frontend.layout_nt t))
+    (wf_nt t);
   t
 
 let destruct_arr_tp tp =
