@@ -11,7 +11,7 @@ module BoundConstraints = struct
   let exists vars p = StrMap.exists (fun y () -> String.equal p y) vars
 
   let uniquelize (vars, t) =
-    let ps, t = lift_poly_tp t in
+    let ps, t = _lift_poly_tp t in
     let rec aux vars (ps, t) =
       match ps with
       | [] -> (vars, t)
