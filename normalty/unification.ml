@@ -61,7 +61,7 @@ let type_unification m (cs : (t * t) list) =
             if String.equal id1 id2 && List.length ts1 == List.length ts2 then
               aux m (List.combine ts1 ts2 @ cs)
             else (
-              Printf.printf "cannot solve %s = %s" (Frontend.layout_nt t1)
+              Printf.printf "cannot solve %s = %s\n" (Frontend.layout_nt t1)
                 (Frontend.layout_nt t2);
               None)
         | Ty_arrow (t11, t12), Ty_arrow (t21, t22) ->

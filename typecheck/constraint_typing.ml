@@ -82,24 +82,23 @@ and constraint_lits_type_check (ctx : t ctx) (bc : BC.bc)
 
 and constraint_lit_type_check (ctx : t ctx) (bc : BC.bc)
     (lit : (t, t lit) typed) =
-  (* HACK: we don't do type check when a literal is typed *)
-  if Nt.is_unkown lit.ty then
-    mk_constraint lit.ty (constraint_lit_type_infer ctx bc lit.x)
-  else (bc, lit)
+  (* (\* HACK: we don't do type check when a literal is typed *\) *)
+  (* if Nt.is_unkown lit.ty then *)
+  mk_constraint lit.ty (constraint_lit_type_infer ctx bc lit.x)
+(* else (bc, lit) *)
 
 let lit_type_check (ctx : t ctx) (poly_vars : string list)
     (lit : (t, t lit) typed) =
   let bc, lit = constraint_lit_type_check ctx (BC.empty poly_vars) lit in
-  let bc, _ = BC.add bc (Nt.bool_ty, lit.ty) in
   let solution = Normalty.type_unification StrMap.empty bc.cs in
   match solution with
   | None -> _die_with [%here] "lit normal type errpr"
-  | Some sol -> typed_map_lit (Normalty.msubst_nt sol) lit.x#:Nt.bool_ty
+  | Some sol -> typed_map_lit (Normalty.msubst_nt sol) lit
 
 let prop_type_check (ctx : t ctx) (poly_vars : string list) (prop : t prop) =
   let rec aux ctx prop =
     match prop with
-    | Lit lit -> Lit (lit_type_check ctx poly_vars lit)
+    | Lit lit -> Lit (lit_type_check ctx poly_vars lit.x#:Nt.bool_ty)
     | Implies (e1, e2) -> Implies (aux ctx e1, aux ctx e2)
     | Ite (e1, e2, e3) -> Ite (aux ctx e1, aux ctx e2, aux ctx e3)
     | Not e -> Not (aux ctx e)
