@@ -39,6 +39,14 @@ module BoundConstraints = struct
       type_vars = StrMap.from_kv_list (List.map (fun x -> (x, ())) vars);
       cs = [];
     }
+
+  let layout bc =
+    spf "type vars: %s;\n constraints: %s;\n"
+      (StrList.to_string (StrMap.to_key_list bc.type_vars))
+      (List.split_by ", "
+         (fun (a, b) ->
+           spf "%s = %s" (Frontend.layout_nt a) (Frontend.layout_nt b))
+         bc.cs)
 end
 
 let type_unification m (cs : (t * t) list) =

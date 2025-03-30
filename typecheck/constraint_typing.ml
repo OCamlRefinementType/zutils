@@ -92,7 +92,9 @@ let lit_type_check (ctx : t ctx) (poly_vars : string list)
   let bc, lit = constraint_lit_type_check ctx (BC.empty poly_vars) lit in
   let solution = Normalty.type_unification StrMap.empty bc.cs in
   match solution with
-  | None -> _die_with [%here] "lit normal type errpr"
+  | None ->
+      Printf.printf "bc\n%s\nlit:%s" (BC.layout bc) (layout_lit lit.x);
+      _die_with [%here] "lit normal type errpr"
   | Some sol -> typed_map_lit (Normalty.msubst_nt sol) lit
 
 let prop_type_check (ctx : t ctx) (poly_vars : string list) (prop : t prop) =
