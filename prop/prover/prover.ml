@@ -111,6 +111,10 @@ let check_sat_bool prop =
 (** Unsat means true; otherwise means false *)
 let check_valid prop =
   let ctx = get_ctx () in
+  let () =
+    Printf.printf "input:\n%s\n"
+      (Sexplib.Sexp.to_string @@ sexp_of_prop Nt.sexp_of_nt (Not prop))
+  in
   let assertion = Propencoding.to_z3 ctx (Not prop) in
   match check_sat assertion with
   | SmtUnsat -> true
