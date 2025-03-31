@@ -38,6 +38,7 @@ let to_smtty t =
     | Ty_constructor (_, _) -> Smt_Uninterp (nt_name t)
     | Ty_tuple l -> Smt_tuple (List.map aux l)
     | Ty_enum { enum_name; enum_elems } -> Smt_enum { enum_name; enum_elems }
+    | Ty_var name -> Smt_Uninterp name
     | _ -> _die_with [%here] (spf "%s not a basic type" (show_nt t))
   in
   aux t
