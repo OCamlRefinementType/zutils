@@ -32,6 +32,16 @@ let id_of_pattern pattern =
   | Ppat_construct (name, None) -> longid_to_id name
   | _ -> _die [%here]
 
+let rec typed_id_of_pattern pattern =
+  match pattern.ppat_desc with
+  | Ppat_var ident -> Nt.untyped ident.txt
+  | Ppat_any -> Nt.untyped "_"
+  | Ppat_constraint (pat, ct) ->
+      let x = typed_id_of_pattern pat in
+      x.x#:(Nt.core_type_to_t ct)
+  | Ppat_construct (name, None) -> Nt.untyped @@ longid_to_id name
+  | _ -> _die [%here]
+
 let id_of_expr expr =
   match expr.pexp_desc with
   | Pexp_ident id -> longid_to_id id
@@ -47,7 +57,7 @@ let id_of_expr_opt expr =
 let rec typed_id_of_expr expr =
   match expr.pexp_desc with
   | Pexp_constraint (expr, ty) ->
-      (typed_id_of_expr expr).x #: (Nt.core_type_to_t ty)
+      (typed_id_of_expr expr).x#:(Nt.core_type_to_t ty)
   | Pexp_ident id -> Nt.untyped (longid_to_id id)
   | _ ->
       Pprintast.expression Format.std_formatter expr;
