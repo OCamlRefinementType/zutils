@@ -13,7 +13,8 @@ let get_idx_in_list x l =
 
 let constant_to_z3 ctx c =
   match c with
-  | U | Tu _ | Dt _ | SetLiteral _ ->
+  | U -> Enumeration.get_const (tp_to_sort ctx Nt.unit_ty) 0
+  | Tu _ | Dt _ | SetLiteral _ ->
       _die_with [%here] "unimp complex constant encoding"
   | B b -> bool_to_z3 ctx b
   | I i -> int_to_z3 ctx i

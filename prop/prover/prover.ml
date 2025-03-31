@@ -20,13 +20,13 @@ type prover = {
   goal : goal;
 }
 
-let mk_prover () =
+let _mk_prover timeout_bound =
   let ctx =
     mk_context
       [
         ("model", "true");
         ("proof", "false");
-        ("timeout", string_of_int (get_prover_timeout_bound ()));
+        ("timeout", string_of_int timeout_bound);
       ]
   in
   let solver = mk_solver ctx None in
@@ -35,6 +35,7 @@ let mk_prover () =
   let axioms = [] in
   { ctx; axioms; solver; goal }
 
+let mk_prover () = _mk_prover (get_prover_timeout_bound ())
 let _prover : prover option ref = ref None
 
 let get_prover () =
@@ -126,6 +127,38 @@ let check_valid prop =
   | Timeout ->
       (_log_queries @@ fun _ -> Pp.printf "@{<bold>SMTTIMEOUT@}\n");
       false
+
+let _prop_under_test_1 =
+  prop_of_sexp Nt.nt_of_sexp
+  @@ Sexplib.Sexp.of_string
+       "(Not(Forall(qv((ty(Ty_var a1))(x \
+        v)))(body(Exists(qv((ty(Ty_constructor(unit())))(x \
+        dummy_0)))(body(Exists(qv((ty(Ty_var a1))(x \
+        x_0)))(body(Implies(Lit((ty(Ty_constructor(bool())))(x(AAppOp((ty(Ty_arrow(Ty_var \
+        a1)(Ty_constructor(bool()))))(x p1))(((ty(Ty_var \
+        a1))(x(AVar((ty(Ty_var a1))(x \
+        v))))))))))(And((Lit((ty(Ty_constructor(bool())))(x(AAppOp((ty(Ty_arrow(Ty_constructor(unit()))(Ty_arrow(Ty_constructor(unit()))(Ty_constructor(bool())))))(x \
+        ==))(((ty(Ty_constructor(unit())))(x(AVar((ty(Ty_constructor(unit())))(x \
+        dummy_0)))))((ty(Ty_constructor(unit())))(x(AC \
+        U))))))))(And((Lit((ty(Ty_constructor(bool())))(x(AAppOp((ty(Ty_arrow(Ty_var \
+        a1)(Ty_constructor(bool()))))(x p1))(((ty(Ty_var \
+        a1))(x(AVar((ty(Ty_var a1))(x \
+        x_0))))))))))(Lit((ty(Ty_constructor(bool())))(x(AAppOp((ty(Ty_arrow(Ty_var \
+        a1)(Ty_arrow(Ty_var a1)(Ty_constructor(bool())))))(x ==))(((ty(Ty_var \
+        a1))(x(AVar((ty(Ty_var a1))(x v)))))((ty(Ty_var a1))(x(AVar((ty(Ty_var \
+        a1))(x x_0))))))))))))))))))))))"
+
+let%test _ =
+  let () =
+    meta_config_path := "/Users/zhezzhou/workspace/zutils/meta-config.json"
+  in
+  let ctx = get_ctx () in
+  let expr = Propencoding.to_z3 ctx _prop_under_test_1 in
+  let () = Printf.printf "Prop: %s:\n" @@ Front.layout _prop_under_test_1 in
+  let () = Printf.printf "Z3: %s:\n" @@ Expr.to_string expr in
+  let res = check_sat expr in
+  let () = Pp.printf "@{<bold>SAT(%s): @}\n" (layout_smt_result res) in
+  false
 
 (* let get_int m i = *)
 (*   match Model.eval m i true with *)

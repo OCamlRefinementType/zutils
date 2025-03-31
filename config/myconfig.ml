@@ -8,7 +8,12 @@ let get_meta () =
   match !meta_config with
   | Some config -> config
   | None ->
-      let config_json = Yojson.Safe.from_file !meta_config_path in
+      let config_json =
+        try Yojson.Safe.from_file !meta_config_path
+        with e ->
+          let () = Printf.printf "Current dir: %s\n" (Sys.getcwd ()) in
+          raise e
+      in
       let config =
         match meta_config_of_yojson config_json with
         | Error str ->

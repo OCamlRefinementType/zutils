@@ -34,6 +34,8 @@ let to_smtty t =
     | Ty_constructor ("bool", _) -> Smt_Bool
     | Ty_constructor ("int", _) -> Smt_Int
     | Ty_constructor ("nat", _) -> Smt_Int
+    | Ty_constructor ("unit", _) ->
+        Smt_enum { enum_name = "unit"; enum_elems = [ "tt" ] }
     | Ty_constructor (name, []) -> Smt_Uninterp name
     | Ty_constructor (_, _) -> Smt_Uninterp (nt_name t)
     | Ty_tuple l -> Smt_tuple (List.map aux l)
