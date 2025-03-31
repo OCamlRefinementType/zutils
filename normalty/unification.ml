@@ -34,6 +34,7 @@ module BoundConstraints = struct
 
   let fresh { type_vars; cs } =
     let x = Rename.unique "__tvar" in
+    let () = Printf.printf "fresh: %s\n" x in
     _assert [%here] "fresh var create success" (not (exists type_vars x));
     ({ type_vars = StrMap.add x () type_vars; cs }, Ty_var x)
 
@@ -61,7 +62,7 @@ let type_unification m (cs : (t * t) list) =
         | Ty_any, _ | _, Ty_any | Ty_unknown, _ | _, Ty_unknown -> aux m cs
         | Ty_var n, Ty_var k ->
             if String.compare n k == 0 then aux m cs
-            else if String.compare n k > 0 then
+            else if String.compare n k < 0 then
               let m = subst_on_sol (n, t2) m in
               let cs = subst_on_cs (n, t2) cs in
               aux (StrMap.add n t2 m) cs
