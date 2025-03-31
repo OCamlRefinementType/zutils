@@ -33,8 +33,8 @@ module BoundConstraints = struct
     ({ type_vars; cs = (t1, t2) :: cs }, (t1, t2))
 
   let fresh { type_vars; cs } =
-    let x = Rename.unique "__tvar" in
-    let () = Printf.printf "fresh: %s\n" x in
+    let x = Rename.unique "t" in
+    (* let () = Printf.printf "fresh: %s\n" x in *)
     _assert [%here] "fresh var create success" (not (exists type_vars x));
     ({ type_vars = StrMap.add x () type_vars; cs }, Ty_var x)
 
