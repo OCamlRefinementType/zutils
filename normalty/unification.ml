@@ -27,13 +27,16 @@ module BoundConstraints = struct
     in
     aux vars (ps, t)
 
-  let add { type_vars; cs } (t1, t2) =
+  let add_type { type_vars; cs } t =
+    let type_vars, t = uniquelize (type_vars, t) in
+    ({ type_vars; cs }, t)
+
+  let add bc (t1, t2) =
+    let type_vars, t1 = uniquelize (bc.type_vars, t1) in
     let type_vars, t2 = uniquelize (type_vars, t2) in
-    match t1 with
-    | Some t1 ->
-        let type_vars, t1 = uniquelize (type_vars, t1) in
-        ({ type_vars; cs = (t1, t2) :: cs }, (t1, t2))
-    | None -> ({ type_vars; cs }, (t2, t2))
+    _assert [%here] "new poly type var"
+      (StrMap.cardinal bc.type_vars == StrMap.cardinal type_vars);
+    ({ bc with cs = (t1, t2) :: bc.cs }, (t1, t2))
 
   let fresh { type_vars; cs } =
     let x = Rename.unique "t" in

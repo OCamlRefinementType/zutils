@@ -8,41 +8,48 @@ type t = Nt.t
 module BC = Normalty.BoundConstraints
 
 let mk_constraint ty (bc, x') =
-  let ty = if Nt.is_unkown ty then Some ty else None in
-  let bc, (ty, _) = BC.add bc (ty, x'.ty) in
-  (bc, x'.x#:ty)
+  if Nt.is_unkown ty then (bc, x')
+  else
+    let bc, (ty, _) = BC.add bc (ty, x'.ty) in
+    (bc, x'.x#:ty)
 
-let constraint_id_type_infer (ctx : t ctx) (x : string) =
+let constraint_id_type_infer (ctx : t ctx) (bc : BC.bc) (x : string) =
   match get_opt ctx x with
   | None -> _die_with [%here] (spf "variable %s is free" x)
-  | Some ty -> x#:ty
+  | Some ty ->
+      let bc, ty = BC.add_type bc ty in
+      (bc, x#:ty)
 
 let constraint_id_type_check (ctx : t ctx) (bc : BC.bc) (x : (t, string) typed)
     =
-  let x' = constraint_id_type_infer ctx x.x in
+  let bc, x' = constraint_id_type_infer ctx bc x.x in
   mk_constraint x.ty (bc, x')
 
-let constraint_op_type_infer (ctx : t ctx) (op : op) =
-  match op with
-  | PrimOp id ->
-      let id =
-        match get_opt ctx id with
-        | None -> _die_with [%here] (spf "variable %s is free" id)
-        | Some ty -> id#:ty
-      in
-      (PrimOp id.x)#:id.ty
-  | DtConstructor id ->
-      (* let _ = Printf.printf "op: %s\n" id in *)
-      let name = dt_name_for_typectx id in
-      let name =
-        match get_opt ctx name with
-        | None -> _die_with [%here] (spf "variable %s is free" name)
-        | Some ty -> name#:ty
-      in
-      (DtConstructor id)#:name.ty
+let constraint_op_type_infer (ctx : t ctx) (bc : BC.bc) (op : op) =
+  let res =
+    match op with
+    | PrimOp id ->
+        let id =
+          match get_opt ctx id with
+          | None -> _die_with [%here] (spf "variable %s is free" id)
+          | Some ty -> id#:ty
+        in
+        (PrimOp id.x)#:id.ty
+    | DtConstructor id ->
+        (* let _ = Printf.printf "op: %s\n" id in *)
+        let name = dt_name_for_typectx id in
+        let name =
+          match get_opt ctx name with
+          | None -> _die_with [%here] (spf "variable %s is free" name)
+          | Some ty -> name#:ty
+        in
+        (DtConstructor id)#:name.ty
+  in
+  let bc, ty = BC.add_type bc res.ty in
+  (bc, res.x#:ty)
 
 let constraint_op_type_check (ctx : t ctx) (bc : BC.bc) (op : (t, op) typed) =
-  let op' = constraint_op_type_infer ctx op.x in
+  let bc, op' = constraint_op_type_infer ctx bc op.x in
   mk_constraint op.ty (bc, op')
 
 let rec constraint_lit_type_infer (ctx : t ctx) (bc : BC.bc) (lit : t lit) =
@@ -67,7 +74,7 @@ let rec constraint_lit_type_infer (ctx : t ctx) (bc : BC.bc) (lit : t lit) =
       let bc, args = constraint_lits_type_check ctx bc args in
       let bc, retty = BC.fresh bc in
       let mp_ty = Nt.construct_arr_tp (List.map _get_ty args, retty) in
-      let bc, _ = BC.add bc (Some mp_ty, mp.ty) in
+      let bc, _ = BC.add bc (mp_ty, mp.ty) in
       (bc, (AAppOp (mp.x#:mp_ty, args))#:retty)
 
 and constraint_lits_type_check (ctx : t ctx) (bc : BC.bc)
