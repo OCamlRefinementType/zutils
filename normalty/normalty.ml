@@ -49,8 +49,7 @@ open Zdatatype
 
 let wf_nt t =
   let rec aux tvars = function
-    | Ty_var x -> List.exists (String.equal x) tvars
-    | Ty_any | Ty_unknown | Ty_uninter _ | Ty_enum _ -> true
+    | Ty_var _ | Ty_any | Ty_unknown | Ty_uninter _ | Ty_enum _ -> true
     | Ty_constructor (_, tps) -> List.for_all (aux tvars) tps
     | Ty_record xs -> List.for_all (fun x -> aux tvars x.ty) xs
     | Ty_arrow (nt1, nt2) -> List.for_all (aux tvars) [ nt1; nt2 ]
