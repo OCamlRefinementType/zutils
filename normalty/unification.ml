@@ -28,9 +28,12 @@ module BoundConstraints = struct
     aux vars (ps, t)
 
   let add { type_vars; cs } (t1, t2) =
-    let type_vars, t1 = uniquelize (type_vars, t1) in
     let type_vars, t2 = uniquelize (type_vars, t2) in
-    ({ type_vars; cs = (t1, t2) :: cs }, (t1, t2))
+    match t1 with
+    | Some t1 ->
+        let type_vars, t1 = uniquelize (type_vars, t1) in
+        ({ type_vars; cs = (t1, t2) :: cs }, (t1, t2))
+    | None -> ({ type_vars; cs }, (t2, t2))
 
   let fresh { type_vars; cs } =
     let x = Rename.unique "t" in

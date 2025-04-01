@@ -8,10 +8,9 @@ type t = Nt.t
 module BC = Normalty.BoundConstraints
 
 let mk_constraint ty (bc, x') =
-  if Nt.is_unkown ty then (bc, x')
-  else
-    let bc, (ty, _) = BC.add bc (ty, x'.ty) in
-    (bc, x'.x#:ty)
+  let ty = if Nt.is_unkown ty then Some ty else None in
+  let bc, (ty, _) = BC.add bc (ty, x'.ty) in
+  (bc, x'.x#:ty)
 
 let constraint_id_type_infer (ctx : t ctx) (x : string) =
   match get_opt ctx x with
@@ -68,7 +67,7 @@ let rec constraint_lit_type_infer (ctx : t ctx) (bc : BC.bc) (lit : t lit) =
       let bc, args = constraint_lits_type_check ctx bc args in
       let bc, retty = BC.fresh bc in
       let mp_ty = Nt.construct_arr_tp (List.map _get_ty args, retty) in
-      let bc, _ = BC.add bc (mp_ty, mp.ty) in
+      let bc, _ = BC.add bc (Some mp_ty, mp.ty) in
       (bc, (AAppOp (mp.x#:mp_ty, args))#:retty)
 
 and constraint_lits_type_check (ctx : t ctx) (bc : BC.bc)
