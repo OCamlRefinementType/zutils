@@ -523,3 +523,18 @@ let tv_mem vs qv = List.exists (fun x -> String.equal x.x qv.x) vs
 let tv_not_mem vs qv = not (tv_mem vs qv)
 let tv_to_lit x = (AVar x)#:x.ty
 let c_to_lit c = (AC c)#:(constant_to_nt c)
+
+let gather_poly_preds_from_prop prop =
+  let rec aux = function
+    | Lit lit -> ( match lit.x with AAppOp (op, _) -> [ op ] | _ -> [])
+    | Implies (e1, e2) -> aux e1 @ aux e2
+    | Ite (e1, e2, e3) -> aux e1 @ aux e2 @ aux e3
+    | Not e -> aux e
+    | And es -> List.concat @@ List.map aux es
+    | Or es -> List.concat @@ List.map aux es
+    | Iff (e1, e2) -> aux e1 @ aux e2
+    | Forall { body; _ } -> aux body
+    | Exists { body; _ } -> aux body
+  in
+  let xs = aux prop in
+  List.slow_rm_dup (fun x y -> String.equal x.x y.x) xs
