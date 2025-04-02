@@ -33,6 +33,8 @@ let unique name =
   | None -> name
   | Some p -> p ^ String.make 1 split_char ^ name
 
+let dummy () = unique "dummyVar"
+
 let unique_with_prefix p name =
   let _, name =
     match String.split_on_char split_char name with
