@@ -101,3 +101,17 @@ let _lift_poly_tp tp =
   in
   let ps, tp = aux tp in
   (ps, tp)
+
+open Zdatatype
+
+let gather_type_vars t =
+  let rec aux m = function
+    | Ty_var x -> StrMap.add x () m
+    | Ty_any | Ty_unknown | Ty_uninter _ | Ty_enum _ -> m
+    | Ty_constructor (_, tps) -> List.fold_left aux m tps
+    | Ty_record xs -> List.fold_left (fun m x -> aux m x.ty) m xs
+    | Ty_arrow (nt1, nt2) -> List.fold_left aux m [ nt1; nt2 ]
+    | Ty_tuple nts -> List.fold_left aux m nts
+    | Ty_poly (x, t) -> StrMap.remove x (aux m t)
+  in
+  StrMap.to_key_list @@ aux StrMap.empty t

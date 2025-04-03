@@ -64,6 +64,11 @@ let type_unification m (cs : (t * t) list) =
     match cs with
     | [] -> Some m
     | (t1, t2) :: cs -> (
+        let err () =
+          Printf.printf "cannot solve %s = %s\n" (Frontend.layout_nt t1)
+            (Frontend.layout_nt t2);
+          None
+        in
         match (t1, t2) with
         | Ty_any, _ | _, Ty_any | Ty_unknown, _ | _, Ty_unknown -> aux m cs
         | Ty_var n, Ty_var k ->
@@ -75,20 +80,21 @@ let type_unification m (cs : (t * t) list) =
             else aux m ((Ty_var k, Ty_var n) :: cs)
         | Ty_enum _, Ty_enum _ -> aux m cs
         | Ty_var n, _ ->
-            let m = subst_on_sol (n, t2) m in
-            let cs = subst_on_cs (n, t2) cs in
-            aux (StrMap.add n t2 m) cs
+            if List.exists (String.equal n) @@ gather_type_vars t2 then err ()
+            else
+              let m = subst_on_sol (n, t2) m in
+              let cs = subst_on_cs (n, t2) cs in
+              aux (StrMap.add n t2 m) cs
         | _, Ty_var n ->
-            let m = subst_on_sol (n, t1) m in
-            let cs = subst_on_cs (n, t1) cs in
-            aux (StrMap.add n t1 m) cs
+            if List.exists (String.equal n) @@ gather_type_vars t1 then err ()
+            else
+              let m = subst_on_sol (n, t1) m in
+              let cs = subst_on_cs (n, t1) cs in
+              aux (StrMap.add n t1 m) cs
         | Ty_constructor (id1, ts1), Ty_constructor (id2, ts2) ->
             if String.equal id1 id2 && List.length ts1 == List.length ts2 then
               aux m (List.combine ts1 ts2 @ cs)
-            else (
-              Printf.printf "cannot solve %s = %s\n" (Frontend.layout_nt t1)
-                (Frontend.layout_nt t2);
-              None)
+            else err ()
         | Ty_arrow (t11, t12), Ty_arrow (t21, t22) ->
             aux m ((t11, t21) :: (t12, t22) :: cs)
         (* unfold singleton tuple *)
@@ -108,12 +114,7 @@ let type_unification m (cs : (t * t) list) =
                 cs l2
             in
             aux m cs
-        | _, _ ->
-            if equal_nt t1 t2 then aux m cs
-            else (
-              Printf.printf "cannot solve %s = %s" (Frontend.layout_nt t1)
-                (Frontend.layout_nt t2);
-              None))
+        | _, _ -> if equal_nt t1 t2 then aux m cs else err ())
   in
   aux m cs
 
