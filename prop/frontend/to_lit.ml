@@ -24,7 +24,7 @@ let rec lit_to_expr expr =
     | AProj (lit, 1) -> normal_apply (mkvar snd_func) [ aux lit.x ]
     | AProj (lit, n) ->
         normal_apply (mkvar proj_func) [ aux lit.x; constant_to_expr (I n) ]
-    | AVar x -> mkvar x.x
+    | AVar x -> Exp.constraint_ (mkvar x.x) (Nt.t_to_core_type x.ty)
   in
   aux expr
 
@@ -64,7 +64,7 @@ let rec lit_of_expr expr =
   match expr.pexp_desc with
   | Pexp_tuple es -> ATu (List.map typed_lit_of_expr es)
   | Pexp_constraint _ -> _die [%here]
-  | Pexp_ident id -> AVar (longid_to_id id) #: Ty_unknown
+  | Pexp_ident id -> AVar (longid_to_id id)#:Ty_unknown
   | Pexp_construct (c, args) -> (
       let args =
         match args with
@@ -76,7 +76,7 @@ let rec lit_of_expr expr =
       let op = longid_to_id c in
       match (constructor_const_opt op, args) with
       | Some c, _ -> AC c
-      | _, _ -> AAppOp (op #: Ty_unknown, args))
+      | _, _ -> AAppOp (op#:Ty_unknown, args))
   | Pexp_constant _ -> AC (expr_to_constant expr)
   | Pexp_let _ -> _die [%here]
   | Pexp_apply (func, args) ->
@@ -112,8 +112,8 @@ let rec lit_of_expr expr =
 
 and typed_lit_of_expr expr =
   match expr.pexp_desc with
-  | Pexp_constraint (expr, ty) -> (lit_of_expr expr) #: (Nt.core_type_to_t ty)
-  | _ -> (lit_of_expr expr) #: Ty_unknown
+  | Pexp_constraint (expr, ty) -> (lit_of_expr expr)#:(Nt.core_type_to_t ty)
+  | _ -> (lit_of_expr expr)#:Ty_unknown
 
 let of_expr = lit_of_expr
 let layout lit = Pprintast.string_of_expression @@ lit_to_expr lit
