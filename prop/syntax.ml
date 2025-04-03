@@ -538,3 +538,23 @@ let gather_poly_preds_from_prop prop =
   in
   let xs = aux prop in
   List.slow_rm_dup (fun x y -> String.equal x.x y.x) xs
+
+(** Poly *)
+
+let rename_pred_prop oldname newname =
+  let rec aux = function
+    | Lit lit -> (
+        match lit.x with
+        | AAppOp (op, args) when String.equal op.x oldname ->
+            Lit (AAppOp (newname#:op.ty, args))#:lit.ty
+        | _ -> Lit lit)
+    | Implies (e1, e2) -> Implies (aux e1, aux e2)
+    | Ite (e1, e2, e3) -> Ite (aux e1, aux e2, aux e3)
+    | Not p -> Not (aux p)
+    | And es -> smart_and (List.map aux es)
+    | Or es -> smart_or (List.map aux es)
+    | Iff (e1, e2) -> Iff (aux e1, aux e2)
+    | Forall { qv; body } -> Forall { qv; body = aux body }
+    | Exists { qv; body } -> Exists { qv; body = aux body }
+  in
+  aux
