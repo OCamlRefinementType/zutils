@@ -154,12 +154,37 @@ let _prop_under_test_1 =
         a1))(x(AVar((ty(Ty_var a1))(x v)))))((ty(Ty_var a1))(x(AVar((ty(Ty_var \
         a1))(x x_0))))))))))))))))))))))"
 
+let _prop_under_test_2 =
+  prop_of_sexp Nt.nt_of_sexp
+  @@ Sexplib.Sexp.of_string
+       "(Not(Forall(qv((ty(Ty_var a))(x \
+        v)))(body(Implies(Or((Lit((ty(Ty_constructor(bool())))(x(AAppOp((ty(Ty_arrow(Ty_var \
+        a)(Ty_constructor(bool()))))(x p1))(((ty(Ty_var a))(x(AVar((ty(Ty_var \
+        a))(x \
+        v))))))))))(Lit((ty(Ty_constructor(bool())))(x(AAppOp((ty(Ty_arrow(Ty_var \
+        a)(Ty_constructor(bool()))))(x p2))(((ty(Ty_var a))(x(AVar((ty(Ty_var \
+        a))(x v))))))))))))(Exists(qv((ty(Ty_constructor(bool())))(x \
+        x)))(body(And((Lit((ty(Ty_constructor(bool())))(x(AC(B \
+        true)))))(Or((And((Lit((ty(Ty_constructor(bool())))(x(AVar((ty(Ty_constructor(bool())))(x \
+        x))))))(Lit((ty(Ty_constructor(bool())))(x(AAppOp((ty(Ty_arrow(Ty_var \
+        a)(Ty_constructor(bool()))))(x p1))(((ty(Ty_var a))(x(AVar((ty(Ty_var \
+        a))(x \
+        v))))))))))))(And((Not(Lit((ty(Ty_constructor(bool())))(x(AVar((ty(Ty_constructor(bool())))(x \
+        x)))))))(Lit((ty(Ty_constructor(bool())))(x(AAppOp((ty(Ty_arrow(Ty_var \
+        a)(Ty_constructor(bool()))))(x p2))(((ty(Ty_var a))(x(AVar((ty(Ty_var \
+        a))(x v))))))))))))))))))))))"
+
 let%test _ =
   let () =
     meta_config_path := "/Users/zhezzhou/workspace/zutils/meta-config.json"
   in
   let ctx = get_ctx () in
   let expr = Propencoding.to_z3 ctx _prop_under_test_1 in
+  let () = Printf.printf "Prop: %s:\n" @@ Front.layout _prop_under_test_1 in
+  let () = Printf.printf "Z3: %s:\n" @@ Expr.to_string expr in
+  let res = check_sat expr in
+  let () = Pp.printf "@{<bold>SAT(%s): @}\n" (layout_smt_result res) in
+  let expr = Propencoding.to_z3 ctx _prop_under_test_2 in
   let () = Printf.printf "Prop: %s:\n" @@ Front.layout _prop_under_test_1 in
   let () = Printf.printf "Z3: %s:\n" @@ Expr.to_string expr in
   let res = check_sat expr in
