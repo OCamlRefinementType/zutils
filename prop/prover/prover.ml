@@ -71,37 +71,18 @@ let handle_sat_result solver =
       | Some m -> SmtSat m)
 
 let check_sat prop =
-  let { goal; solver; axioms; ctx } = get_prover () in
+  let { goal; solver; axioms; _ } = get_prover () in
   let _ =
     _log_queries @@ fun _ ->
     Pp.printf "@{<bold>QUERY:@}\n%s\n" (Expr.to_string prop)
   in
   Goal.reset goal;
   Goal.add goal [ prop ];
-  let tac_result = Tactic.apply (Tactic.mk_tactic ctx "nnf") goal None in
+  let goal = Goal.simplify goal None in
   let _ =
     _log_queries @@ fun _ ->
-    Pp.printf "@{<bold>nnf result:@} %s\n"
-      (Tactic.ApplyResult.to_string tac_result)
+    Pp.printf "@{<bold>Simplifid Goal:@}\n%s\n" (Goal.to_string goal)
   in
-  let tac_result = Tactic.apply (Tactic.mk_tactic ctx "snf") goal None in
-  let _ =
-    _log_queries @@ fun _ ->
-    Pp.printf "@{<bold>snf result:@} %s\n"
-      (Tactic.ApplyResult.to_string tac_result)
-  in
-  let goal = Tactic.ApplyResult.get_subgoal tac_result 0 in
-  let tac_result = Tactic.apply (Tactic.mk_tactic ctx "simplify") goal None in
-  let _ =
-    _log_queries @@ fun _ ->
-    Pp.printf "@{<bold>snf + simplify result:@} %s\n"
-      (Tactic.ApplyResult.to_string tac_result)
-  in
-  let _ =
-    _log_queries @@ fun _ ->
-    Pp.printf "@{<bold>Goal:@}\n%s\n" (Goal.to_string goal)
-  in
-  let goal = Tactic.ApplyResult.get_subgoal tac_result 0 in
   Goal.add goal axioms;
   Solver.reset solver;
   Solver.add solver (get_formulas goal);

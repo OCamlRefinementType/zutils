@@ -558,3 +558,33 @@ let rename_pred_prop oldname newname =
     | Exists { qv; body } -> Exists { qv; body = aux body }
   in
   aux
+
+(* For model *)
+
+let to_nnf =
+  let rec aux is_negate prop =
+    match prop with
+    | Lit _ -> if is_negate then Not prop else prop
+    | Implies (e1, e2) ->
+        if is_negate then smart_and [ e1; aux true e2 ]
+        else Implies (aux false e1, aux false e2)
+    | Ite _ | Iff _ -> if is_negate then Not prop else prop
+    | Not p -> aux (not is_negate) p
+    | And es ->
+        if is_negate then smart_or (List.map (aux true) es)
+        else smart_and (List.map (aux false) es)
+    | Or es ->
+        if is_negate then smart_and (List.map (aux true) es)
+        else smart_or (List.map (aux false) es)
+    | Forall { qv; body } ->
+        if is_negate then Exists { qv; body = aux true body }
+        else Forall { qv; body = aux true body }
+    | Exists { qv; body } ->
+        if is_negate then Forall { qv; body = aux true body }
+        else Exists { qv; body = aux true body }
+  in
+  aux false
+
+let to_snf prop =
+  let rec aux = function Exists { body; _ } -> aux body | _ as prop -> prop in
+  aux (to_nnf prop)

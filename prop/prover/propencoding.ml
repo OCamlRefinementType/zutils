@@ -30,4 +30,4 @@ let to_z3 ctx prop =
         make_exists ctx [ tpedvar_to_z3 ctx (qv.ty, qv.x) ] (aux body)
     | Lit lit -> Litencoding.typed_lit_to_z3 ctx lit
   in
-  aux prop
+  aux (to_snf prop)
