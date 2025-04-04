@@ -71,13 +71,16 @@ let handle_sat_result solver =
       | Some m -> SmtSat m)
 
 let check_sat prop =
-  let { goal; solver; axioms; _ } = get_prover () in
+  let { goal; solver; axioms; ctx } = get_prover () in
   let _ =
     _log_queries @@ fun _ ->
     Pp.printf "@{<bold>QUERY: @}%s\n" (Expr.to_string prop)
   in
   Goal.reset goal;
-  Goal.add goal (prop :: axioms);
+  Goal.add goal [ prop ];
+  let _ = Tactic.apply (Tactic.mk_tactic ctx "nnf") goal None in
+  let _ = Tactic.apply (Tactic.mk_tactic ctx "simplify") goal None in
+  Goal.add goal axioms;
   Solver.reset solver;
   Solver.add solver (get_formulas goal);
   let time_t, res = Sugar.clock (fun () -> handle_sat_result solver) in
