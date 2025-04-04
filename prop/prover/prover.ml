@@ -84,16 +84,24 @@ let check_sat prop =
     Pp.printf "@{<bold>nnf result:@} %s\n"
       (Tactic.ApplyResult.to_string tac_result)
   in
+  let tac_result = Tactic.apply (Tactic.mk_tactic ctx "snf") goal None in
+  let _ =
+    _log_queries @@ fun _ ->
+    Pp.printf "@{<bold>snf result:@} %s\n"
+      (Tactic.ApplyResult.to_string tac_result)
+  in
+  let goal = Tactic.ApplyResult.get_subgoal tac_result 0 in
   let tac_result = Tactic.apply (Tactic.mk_tactic ctx "simplify") goal None in
   let _ =
     _log_queries @@ fun _ ->
-    Pp.printf "@{<bold>simplify result:@} %s\n"
+    Pp.printf "@{<bold>snf + simplify result:@} %s\n"
       (Tactic.ApplyResult.to_string tac_result)
   in
   let _ =
     _log_queries @@ fun _ ->
     Pp.printf "@{<bold>Goal:@}\n%s\n" (Goal.to_string goal)
   in
+  let goal = Tactic.ApplyResult.get_subgoal tac_result 0 in
   Goal.add goal axioms;
   Solver.reset solver;
   Solver.add solver (get_formulas goal);
