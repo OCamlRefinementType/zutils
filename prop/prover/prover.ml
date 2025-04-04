@@ -74,12 +74,26 @@ let check_sat prop =
   let { goal; solver; axioms; ctx } = get_prover () in
   let _ =
     _log_queries @@ fun _ ->
-    Pp.printf "@{<bold>QUERY: @}%s\n" (Expr.to_string prop)
+    Pp.printf "@{<bold>QUERY:@}\n%s\n" (Expr.to_string prop)
   in
   Goal.reset goal;
   Goal.add goal [ prop ];
-  let _ = Tactic.apply (Tactic.mk_tactic ctx "nnf") goal None in
-  let _ = Tactic.apply (Tactic.mk_tactic ctx "simplify") goal None in
+  let tac_result = Tactic.apply (Tactic.mk_tactic ctx "nnf") goal None in
+  let _ =
+    _log_queries @@ fun _ ->
+    Pp.printf "@{<bold>nnf result:@} %s\n"
+      (Tactic.ApplyResult.to_string tac_result)
+  in
+  let tac_result = Tactic.apply (Tactic.mk_tactic ctx "simplify") goal None in
+  let _ =
+    _log_queries @@ fun _ ->
+    Pp.printf "@{<bold>simplify result:@} %s\n"
+      (Tactic.ApplyResult.to_string tac_result)
+  in
+  let _ =
+    _log_queries @@ fun _ ->
+    Pp.printf "@{<bold>Goal:@}\n%s\n" (Goal.to_string goal)
+  in
   Goal.add goal axioms;
   Solver.reset solver;
   Solver.add solver (get_formulas goal);
