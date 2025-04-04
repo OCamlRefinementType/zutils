@@ -578,10 +578,10 @@ let to_nnf =
         else smart_or (List.map (aux false) es)
     | Forall { qv; body } ->
         if is_negate then Exists { qv; body = aux true body }
-        else Forall { qv; body = aux true body }
+        else Forall { qv; body = aux false body }
     | Exists { qv; body } ->
         if is_negate then Forall { qv; body = aux true body }
-        else Exists { qv; body = aux true body }
+        else Exists { qv; body = aux false body }
   in
   aux false
 
