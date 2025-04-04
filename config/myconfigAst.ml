@@ -15,6 +15,7 @@ type meta_config = {
   max_printing_size : int;
   prim_path : preload_path;
   prover_timeout_bound : int;
+  show_var_type_in_prop : bool;
 }
 [@@deriving yojson]
 

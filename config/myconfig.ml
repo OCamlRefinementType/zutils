@@ -28,6 +28,7 @@ let get_mode () = (get_meta ()).mode
 let get_max_printing_size () = (get_meta ()).max_printing_size
 let get_log_tags () = (get_meta ()).log_tags
 let get_prover_timeout_bound () = (get_meta ()).prover_timeout_bound
+let get_show_var_type_in_prop () = (get_meta ()).show_var_type_in_prop
 
 let _log kw (f : unit -> unit) =
   match get_log_tags () with

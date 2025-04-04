@@ -24,7 +24,10 @@ let rec lit_to_expr expr =
     | AProj (lit, 1) -> normal_apply (mkvar snd_func) [ aux lit.x ]
     | AProj (lit, n) ->
         normal_apply (mkvar proj_func) [ aux lit.x; constant_to_expr (I n) ]
-    | AVar x -> Exp.constraint_ (mkvar x.x) (Nt.t_to_core_type x.ty)
+    | AVar x ->
+        if Myconfig.get_show_var_type_in_prop () then
+          Exp.constraint_ (mkvar x.x) (Nt.t_to_core_type x.ty)
+        else mkvar x.x
   in
   aux expr
 
