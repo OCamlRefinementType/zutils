@@ -14,23 +14,35 @@ let name_of_string name =
 let name_to_string (sname, id) =
   match id with None -> sname | Some i -> spf "%s%c%i" sname split_char i
 
-let _unique tab sname =
+let _unique tab (sname, id) =
   match Hashtbl.find_opt tab sname with
   | Some n ->
+      let () =
+        match id with
+        | None -> ()
+        | Some id ->
+            _assert [%here]
+              (spf "seen id (%i) should less than next available one (%i) in %s"
+                 id n sname)
+              (id < n)
+      in
       Hashtbl.replace tab sname (n + 1);
       (sname, Some n)
   | None ->
+      let () =
+        match id with
+        | None -> ()
+        | Some id ->
+            _assert [%here]
+              (spf
+                 "seen id (%i) should less than next available one (None) in %s"
+                 id sname)
+              false
+      in
       Hashtbl.add tab sname 0;
       (sname, None)
 
-let mk_unique tab name =
-  let sname, id = name_of_string name in
-  match id with
-  | Some _ ->
-      _die_with [%here]
-        (Printf.sprintf "the bound name (%s) cannot contain char %c" name
-           split_char)
-  | None -> name_to_string @@ _unique tab sname
+let mk_unique tab name = name_to_string @@ _unique tab @@ name_of_string name
 
 (* NOTE: store the next available name lazily *)
 let universal_type_var : (string, int) Hashtbl.t = Hashtbl.create 100
