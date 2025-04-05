@@ -1,15 +1,22 @@
 open Assertion
 open SugarAux
 
+(* name := string _ int *)
 type name = string * int option
 
 let split_char = '_'
 
 let name_of_string name =
-  match String.split_on_char split_char name with
-  | [ x ] -> (x, None)
-  | [ x; i ] -> (x, Some (int_of_string i))
-  | _ -> _die_with [%here] (Printf.sprintf "not a well-formed name: %s" name)
+  let l = List.rev @@ String.split_on_char split_char name in
+  match l with
+  | [] -> _die_with [%here] (Printf.sprintf "not a well-formed name: %s" name)
+  | id :: rest -> (
+      let rest = List.rev rest in
+      match int_of_string_opt id with
+      | None -> (name, None)
+      | Some i ->
+          let rest = String.concat (spf "%c" split_char) rest in
+          (rest, Some i))
 
 let name_to_string (sname, id) =
   match id with None -> sname | Some i -> spf "%s%c%i" sname split_char i
