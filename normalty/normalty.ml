@@ -34,13 +34,13 @@ let to_smtty t =
     | Ty_constructor ("bool", _) -> Smt_Bool
     | Ty_constructor ("int", _) -> Smt_Int
     | Ty_constructor ("nat", _) -> Smt_Int
-    | Ty_constructor ("unit", _) ->
-        Smt_enum { enum_name = "unit"; enum_elems = [ "tt" ] }
+    | Ty_constructor ("unit", _) -> Smt_Unit
+    | Ty_constructor ("option", [ nt ]) -> Smt_option (aux nt)
     | Ty_constructor (name, []) -> Smt_Uninterp name
     | Ty_constructor (_, _) -> Smt_Uninterp (nt_name t)
     | Ty_tuple l -> Smt_tuple (List.map aux l)
-    | Ty_enum { enum_name; enum_elems } -> Smt_enum { enum_name; enum_elems }
     | Ty_var name -> Smt_Uninterp name
+    | Ty_record l -> Smt_record (List.map (fun x -> x#=>aux) (sort_record l))
     | _ -> _die_with [%here] (spf "%s not a basic type" (show_nt t))
   in
   aux t
@@ -49,7 +49,7 @@ open Zdatatype
 
 let wf_nt t =
   let rec aux tvars = function
-    | Ty_var _ | Ty_any | Ty_unknown | Ty_uninter _ | Ty_enum _ -> true
+    | Ty_var _ | Ty_unknown | Ty_uninter _ -> true
     | Ty_constructor (_, tps) -> List.for_all (aux tvars) tps
     | Ty_record xs -> List.for_all (fun x -> aux tvars x.ty) xs
     | Ty_arrow (nt1, nt2) -> List.for_all (aux tvars) [ nt1; nt2 ]
@@ -65,7 +65,7 @@ let wf_nt t =
 let has_poly_tp tp =
   let rec aux tp =
     match tp with
-    | Ty_any | Ty_var _ | Ty_unknown | Ty_uninter _ | Ty_enum _ -> false
+    | Ty_var _ | Ty_unknown | Ty_uninter _ -> false
     | Ty_constructor (_, tps) -> List.exists aux tps
     | Ty_record xs -> List.exists (fun x -> aux x.ty) xs
     | Ty_arrow (nt1, nt2) -> List.exists aux [ nt1; nt2 ]

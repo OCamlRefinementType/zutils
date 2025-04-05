@@ -4,7 +4,7 @@ open Ast
 let subst_nt (id, t') t =
   let rec aux t =
     match t with
-    | Ty_unknown | Ty_any | Ty_uninter _ | Ty_enum _ -> t
+    | Ty_unknown | Ty_uninter _ -> t
     | Ty_var x -> if streq x id then t' else t
     | Ty_poly (y, nt) ->
         if String.equal id y then Ty_poly (y, nt) else Ty_poly (y, aux nt)

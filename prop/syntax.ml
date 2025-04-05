@@ -3,15 +3,10 @@ open Sugar
 
 (** constant *)
 
-let rec constant_to_nt c =
+let constant_to_nt c =
   let open Nt in
-  match c with
-  | U -> unit_ty
-  | B _ -> bool_ty
-  | I _ -> int_ty
-  | Tu l -> Nt.Ty_tuple (List.map constant_to_nt l)
-  | Enum { enum_name; enum_elems; _ } -> Ty_enum { enum_name; enum_elems }
-  | Dt _ | SetLiteral _ -> failwith "Not implemented"
+  match c with U -> unit_ty | B _ -> bool_ty | I _ -> int_ty
+(* | Tu l -> Nt.Ty_tuple (List.map constant_to_nt l) *)
 
 (** op *)
 
@@ -47,6 +42,11 @@ let rec fv_lit (lit_e : 't lit) =
   | ATu _t__tlittypedlist0 ->
       [] @ List.concat (List.map typed_fv_lit _t__tlittypedlist0)
   | AProj (_t__tlittyped0, _) -> [] @ typed_fv_lit _t__tlittyped0
+  | ARecord _t__tlittypedlist0 ->
+      []
+      @ List.concat
+          (List.map (fun (_, lit) -> typed_fv_lit lit) _t__tlittypedlist0)
+  | AField (_t__tlittyped0, _) -> [] @ typed_fv_lit _t__tlittyped0
   | AAppOp (_, _t__tlittypedlist1) ->
       [] @ List.concat (List.map typed_fv_lit _t__tlittypedlist1)
 
@@ -62,6 +62,13 @@ let rec subst_lit (string_x : string) f (lit_e : 't lit) =
       ATu (List.map (typed_subst_lit string_x f) _t__tlittypedlist0)
   | AProj (_t__tlittyped0, int1) ->
       AProj (typed_subst_lit string_x f _t__tlittyped0, int1)
+  | ARecord _t__tlittypedlist0 ->
+      ARecord
+        (List.map
+           (fun (fd, lit) -> (fd, typed_subst_lit string_x f lit))
+           _t__tlittypedlist0)
+  | AField (_t__tlittyped0, int1) ->
+      AField (typed_subst_lit string_x f _t__tlittyped0, int1)
   | AAppOp (_t_stringtyped0, _t__tlittypedlist1) ->
       AAppOp
         ( _t_stringtyped0,
@@ -78,6 +85,11 @@ let rec map_lit : 't 's. ('t -> 's) -> 't lit -> 's lit =
   | ATu _t__tlittypedlist0 ->
       ATu (List.map (fun e -> typed_map_lit f e) _t__tlittypedlist0)
   | AProj (_t__tlittyped0, int1) -> AProj (typed_map_lit f _t__tlittyped0, int1)
+  | ARecord _t__tlittypedlist0 ->
+      ARecord
+        (List.map (fun (fd, e) -> (fd, typed_map_lit f e)) _t__tlittypedlist0)
+  | AField (_t__tlittyped0, int1) ->
+      AField (typed_map_lit f _t__tlittyped0, int1)
   | AAppOp (_t_stringtyped0, _t__tlittypedlist1) ->
       AAppOp (_t_stringtyped0#=>f, List.map (typed_map_lit f) _t__tlittypedlist1)
 
@@ -114,6 +126,15 @@ let lit_to_nt = function
   | ATu l -> Nt.Ty_tuple (List.map _get_ty l)
   | AProj (lit, i) -> (
       match lit.ty with Nt.Ty_tuple l -> List.nth l i | _ -> _die [%here])
+  | ARecord l -> Nt.Ty_record (List.map (fun (x, lit) -> x#:lit.ty) l)
+  | AField (lit, i) -> (
+      match lit.ty with
+      | Nt.Ty_record l ->
+          let x =
+            Zdatatype.List.find __FUNCTION__ (fun x -> String.equal x.x i) l
+          in
+          x.ty
+      | _ -> _die [%here])
   | AAppOp (f, _) -> snd @@ Nt.destruct_arr_tp f.ty
 
 let lit_to_tlit lit = lit#:(lit_to_nt lit)

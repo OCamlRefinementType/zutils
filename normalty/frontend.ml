@@ -10,21 +10,7 @@ let get_str t =
   | Ptyp_constr (name, []) -> List.nth (Longident.flatten name.txt) 0
   | _ -> _die [%here]
 
-let rec core_type_to_t ct =
-  (* enum type *)
-  match ct.ptyp_attributes with
-  | [ attr ] ->
-      let enum_name = attr.attr_name.txt in
-      let enum_elems =
-        match ct.ptyp_desc with
-        | Ptyp_tuple cts -> List.map get_str cts
-        | _ -> _die [%here]
-      in
-      let enum_elems = List.map String.capitalize_ascii enum_elems in
-      Ty_enum { enum_name; enum_elems }
-  | _ ->
-      let nt = core_type_desc_to_t ct.ptyp_desc in
-      nt
+let rec core_type_to_t ct = core_type_desc_to_t ct.ptyp_desc
 
 and object_to_labeled_type feild =
   match feild.pof_desc with
@@ -33,15 +19,10 @@ and object_to_labeled_type feild =
 
 and core_type_desc_to_t t =
   match t with
-  | Ptyp_any -> Ty_any
+  | Ptyp_any -> _die_with [%here] "new we don't suport any type"
   | Ptyp_object (l, _) ->
-      let l = List.map object_to_labeled_type l in
-      Ty_record l
-  | Ptyp_class (_, _)
-  | Ptyp_alias (_, _)
-  | Ptyp_variant (_, _, _)
-  | Ptyp_package _ | Ptyp_extension _ ->
-      _die [%here]
+      (* NOTE: In our type system, record type is anonymous type, thus use object type *)
+      Ty_record (List.map object_to_labeled_type l)
   | Ptyp_poly (lc :: ps, ct) ->
       Ty_poly (lc.txt, core_type_desc_to_t (Ptyp_poly (ps, ct)))
   | Ptyp_poly ([], ct) -> core_type_to_t ct
@@ -49,10 +30,6 @@ and core_type_desc_to_t t =
   | Ptyp_arrow (_, t1, t2) -> Ty_arrow (core_type_to_t t1, core_type_to_t t2)
   | Ptyp_tuple ts -> Ty_tuple (List.map core_type_to_t ts)
   | Ptyp_constr (lc, ts) -> (
-      (* let () = *)
-      (*   Printf.printf "%s\n" *)
-      (*     (Zzdatatype.Datatype.StrList.to_string (Longident.flatten lc.txt)) *)
-      (* in *)
       match (Longident.flatten lc.txt, ts) with
       | [ c ], args -> Ty_constructor (c, List.map core_type_to_t args)
       | cs, [] -> Ty_uninter (Zdatatype.List.split_by "." (fun x -> x) cs)
@@ -60,6 +37,11 @@ and core_type_desc_to_t t =
           failwith
           @@ Printf.sprintf "--un-imp??: %s"
                (string_of_core_type @@ desc_to_ct t))
+  | Ptyp_class (_, _)
+  | Ptyp_alias (_, _)
+  | Ptyp_variant (_, _, _)
+  | Ptyp_package _ | Ptyp_extension _ ->
+      _die [%here]
 
 let rec t_to_core_type t = Typ.mk (t_to_core_type_desc t)
 
@@ -69,7 +51,6 @@ and t_to_core_type_desc t =
   let mk0 name = Ptyp_constr (mknoloc @@ Lident name, []) in
   (* let mk1 name t = Ptyp_constr (mknoloc @@ Lident name, [ t ]) in *)
   match t with
-  | Ty_any -> Ptyp_any
   | Ty_unknown -> mk0 "unknown"
   | Ty_var name ->
       let res = Ptyp_var name in
@@ -77,7 +58,6 @@ and t_to_core_type_desc t =
       (*   Printf.printf "output res: %s\n" @@ string_of_core_type @@ desc_to_ct res *)
       (* in *)
       res
-  | Ty_enum { enum_name; _ } -> mk0 enum_name
   | Ty_poly (p, nt) -> Ptyp_poly ([ mknoloc p ], t_to_core_type nt)
   | Ty_uninter name -> mk0 name
   | Ty_tuple t -> Ptyp_tuple (List.map t_to_core_type t)

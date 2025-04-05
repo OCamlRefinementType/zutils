@@ -17,22 +17,21 @@ let builtin_primop =
 let eq_op = "=="
 let is_builtin_op str = List.exists (String.equal str) builtin_primop
 
-type constant =
-  | U
-  | B of bool
-  | I of int
-  | Tu of constant list
-  | Dt of string * constant list
-  | SetLiteral of constant list
-  | Enum of { enum_name : string; enum_elems : string list; elem : string }
-[@@deriving sexp, show, eq, ord]
+(* The constant can be direct encoded into z3 literal *)
+(* The constant is self-typed *)
+(* The constant has literal that can be passed directly *)
+(* NOTE: None and other enum literals are lit because they are not self-typed *)
+type constant = U | B of bool | I of int [@@deriving sexp, show, eq, ord]
 
 type 't lit =
   | AC of constant
   | AVar of (('t, string) typed[@free])
   | ATu of ('t, 't lit) typed list
   | AProj of ('t, 't lit) typed * int
+  | ARecord of (string * ('t, 't lit) typed) list
+  | AField of ('t, 't lit) typed * string
   | AAppOp of ('t, string) typed * ('t, 't lit) typed list
+    (* NOTE: includes None, emum, data constructor, primitive operators *)
 [@@deriving sexp, show, eq, ord]
 
 let proj_func = "_proj"
@@ -51,14 +50,30 @@ type 't prop =
   | Exists of { qv : (('t, string) typed[@bound]); body : 't prop }
 [@@deriving sexp, show, eq, ord]
 
-(* type 't sevent = *)
-(*   | GuardEvent of { vs : ('t, string) typed list; phi : 't prop } *)
-(*   | EffEvent of { op : string; vs : ('t, string) typed list; phi : 't prop } *)
-(* [@@deriving sexp, show, eq, ord] *)
-
 let eq_lit p1 p2 = equal_lit (fun _ _ -> true) p1 p2
 let eq_prop p1 p2 = equal_prop (fun _ _ -> true) p1 p2
 
 (** Ast builder *)
 
 let uAVar x = AVar (Nt.untyped x)
+
+let sort_lit_record args =
+  List.sort (fun a b -> String.compare (fst a) (fst b)) args
+
+let mk_lit_record args = ARecord (sort_lit_record args)
+
+let as_lit_record loc = function
+  | ARecord args -> sort_lit_record args
+  | _ -> _die loc
+
+let get_lit_feild loc t name =
+  let args = as_lit_record loc t in
+  match List.find_opt (fun y -> String.equal name (fst y)) args with
+  | None -> _die [%here]
+  | Some n -> snd n
+
+let get_lit_feild_idx loc t name =
+  let args = as_lit_record loc t in
+  match List.find_index (fun y -> String.equal name (fst y)) args with
+  | None -> _die [%here]
+  | Some n -> n

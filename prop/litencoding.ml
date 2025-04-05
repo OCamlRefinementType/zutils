@@ -3,25 +3,7 @@ open Z3aux
 open Syntax
 open Sugar
 open Myconfig
-
-let get_idx_in_list x l =
-  let rec aux i = function
-    | [] -> _die [%here]
-    | h :: l -> if String.equal x h then i else aux (i + 1) l
-  in
-  aux 0 l
-
-let constant_to_z3 ctx c =
-  match c with
-  | U -> Enumeration.get_const (tp_to_sort ctx Nt.unit_ty) 0
-  | Tu _ | Dt _ | SetLiteral _ ->
-      _die_with [%here] "unimp complex constant encoding"
-  | B b -> bool_to_z3 ctx b
-  | I i -> int_to_z3 ctx i
-  | Enum { elem; enum_elems; _ } ->
-      let ty = constant_to_nt c in
-      let idx = get_idx_in_list elem enum_elems in
-      Enumeration.get_const (tp_to_sort ctx ty) idx
+open Constencoding
 
 let rec typed_lit_to_z3 ctx lit =
   match lit.x with
@@ -33,6 +15,19 @@ let rec typed_lit_to_z3 ctx lit =
       Z3.FuncDecl.apply
         (List.nth (Tuple.get_field_decls (tp_to_sort ctx lit.ty)) n)
         [ typed_lit_to_z3 ctx lit ]
+  | ARecord _ ->
+      let constructor =
+        List.nth (Datatype.get_constructors (tp_to_sort ctx lit.ty)) 0
+      in
+      let args = as_lit_record [%here] lit.x in
+      Z3.FuncDecl.apply constructor
+        (List.map (fun (_, x) -> typed_lit_to_z3 ctx x) args)
+  | AField (lit, n) ->
+      let accessors =
+        List.nth (Datatype.get_accessors (tp_to_sort ctx lit.ty)) 0
+      in
+      let idx = Nt.get_feild_idx [%here] lit.ty n in
+      Z3.FuncDecl.apply (List.nth accessors idx) [ typed_lit_to_z3 ctx lit ]
   | AC c -> constant_to_z3 ctx c
   | AVar x -> tpedvar_to_z3 ctx (x.ty, x.x)
   | AAppOp (op, args) -> (
@@ -52,6 +47,16 @@ let rec typed_lit_to_z3 ctx lit =
       match (op.x, args) with
       (* NOTE: we don't encode force *)
       | "forc", [ a ] -> a
+      | "None", [] ->
+          let constructor =
+            List.nth (Datatype.get_constructors (tp_to_sort ctx lit.ty)) 0
+          in
+          Z3.FuncDecl.apply constructor []
+      | "Some", [ a ] ->
+          let constructor =
+            List.nth (Datatype.get_constructors (tp_to_sort ctx lit.ty)) 1
+          in
+          Z3.FuncDecl.apply constructor [ a ]
       | "==", [ a; b ] -> Boolean.mk_eq ctx a b
       | "!=", [ a; b ] -> Boolean.mk_not ctx @@ Boolean.mk_eq ctx a b
       | "<=", [ a; b ] -> Arithmetic.mk_le ctx a b

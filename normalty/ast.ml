@@ -21,10 +21,12 @@ let qt_pretty_layout = function Fa -> "∀ " | Ex -> "∃ "
 (** Type used for smt query. *)
 
 type smtty =
+  | Smt_Unit
   | Smt_Bool
   | Smt_Int
+  | Smt_option of smtty
   | Smt_tuple of smtty list
-  | Smt_enum of { enum_name : string; enum_elems : string list }
+  | Smt_record of (smtty, string) typed list
   | Smt_Uninterp of string
 [@@deriving sexp, show, eq, ord]
 
@@ -32,14 +34,12 @@ type smtty =
 
 type nt =
   | Ty_unknown (* parsing only, equal to none *)
-  | Ty_any
   | Ty_var of string
   | Ty_arrow of nt * nt
   | Ty_tuple of nt list
   | Ty_uninter of string
   | Ty_constructor of (string * nt list)
   | Ty_record of (nt, string) typed list
-  | Ty_enum of { enum_name : string; enum_elems : string list }
   | Ty_poly of string * nt
     (* We only allow poly type appear at 1. top level 2. return type of arrow *)
 [@@deriving sexp, eq, show, ord]
@@ -52,7 +52,7 @@ let is_uninterp = function Smt_Uninterp _ -> true | _ -> false
 
 let rec is_base_tp = function
   | Ty_poly (_, _) | Ty_arrow _ -> false
-  | Ty_uninter _ | Ty_any | Ty_constructor _ | Ty_enum _ | Ty_var _ -> true
+  | Ty_uninter _ | Ty_constructor _ | Ty_var _ -> true
   | Ty_record l -> List.for_all (fun x -> is_base_tp x.ty) l
   | Ty_tuple l -> List.for_all is_base_tp l
   | _ -> false
@@ -80,13 +80,13 @@ let get_nth_ty loc ty n =
       | Some ty -> ty)
   | _ -> _die_with loc "not a tuple type"
 
-let get_enum_name = function
-  | Ty_enum { enum_name; _ } -> enum_name
-  | _ -> _die [%here]
+(* let get_record_name = function *)
+(*   | Ty_record { record_name; _ } -> record_name *)
+(*   | _ -> _die [%here] *)
 
-let get_enum_elems = function
-  | Ty_enum { enum_elems; _ } -> enum_elems
-  | _ -> _die [%here]
+(* let get_record_feilds = function *)
+(*   | Ty_enum { enum_elems; _ } -> enum_elems *)
+(*   | _ -> _die [%here] *)
 
 let get_arr_lhs = function Ty_arrow (t1, _) -> t1 | _ -> _die [%here]
 let get_arr_rhs = function Ty_arrow (_, t2) -> t2 | _ -> _die [%here]
@@ -102,12 +102,11 @@ let _lift_poly_tp tp =
   let ps, tp = aux tp in
   (ps, tp)
 
-open Zdatatype
-
 let gather_type_vars t =
+  let open Zdatatype in
   let rec aux m = function
     | Ty_var x -> StrMap.add x () m
-    | Ty_any | Ty_unknown | Ty_uninter _ | Ty_enum _ -> m
+    | Ty_unknown | Ty_uninter _ -> m
     | Ty_constructor (_, tps) -> List.fold_left aux m tps
     | Ty_record xs -> List.fold_left (fun m x -> aux m x.ty) m xs
     | Ty_arrow (nt1, nt2) -> List.fold_left aux m [ nt1; nt2 ]
@@ -115,3 +114,26 @@ let gather_type_vars t =
     | Ty_poly (x, t) -> StrMap.remove x (aux m t)
   in
   StrMap.to_key_list @@ aux StrMap.empty t
+
+(** Record type *)
+
+(* NOTE: the Z3 encoding use list instead of map, thus we need to make sure the input list has the same order *)
+
+let sort_record args = List.sort (fun a b -> String.compare a.x b.x) args
+let mk_record args = Ty_record (sort_record args)
+
+let as_record loc = function
+  | Ty_record args -> sort_record args
+  | _ -> _die loc
+
+let get_feild loc t name =
+  let args = as_record loc t in
+  match List.find_opt (fun y -> String.equal name y.x) args with
+  | None -> _die [%here]
+  | Some n -> n.ty
+
+let get_feild_idx loc t name =
+  let args = as_record loc t in
+  match List.find_index (fun y -> String.equal name y.x) args with
+  | None -> _die [%here]
+  | Some n -> n

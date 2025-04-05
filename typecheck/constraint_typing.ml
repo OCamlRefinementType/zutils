@@ -69,6 +69,16 @@ let rec constraint_lit_type_infer (ctx : t ctx) (bc : BC.bc) (lit : t lit) =
           _die_with [%here]
           @@ spf "%s has type %s which is not a tuple type" (layout_lit y.x)
                (Nt.show_nt y.ty))
+  | ARecord args ->
+      let fds, l = List.split args in
+      let bc, l = constraint_lits_type_check ctx bc l in
+      let args = List.combine fds l in
+      ( bc,
+        (ARecord args)#:(Nt.mk_record
+                           (List.map (fun (fd, lit) -> fd#:lit.ty) args)) )
+  | AField (y, n) ->
+      let cs, y = constraint_lit_type_check ctx bc y in
+      (cs, (AField (y, n))#:(Nt.get_feild [%here] y.ty n))
   | AAppOp (mp, args) ->
       let bc, mp = constraint_id_type_check ctx bc mp in
       let bc, args = constraint_lits_type_check ctx bc args in

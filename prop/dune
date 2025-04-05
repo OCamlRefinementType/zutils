@@ -1,5 +1,4 @@
-(copy_files# prover/*.ml{,i})
-(copy_files# frontend/*.ml{,i})
+; (copy_files# frontend/*.ml{,i})
 
 (library
  (name prop)
@@ -21,7 +20,7 @@
    to_prop
    front
    ;; Prover
-   z3aux litencoding propencoding prover
+   z3aux constencoding litencoding propencoding prover
  )
  (preprocess (pps ppx_optcomp ppx_compare ppx_sexp_conv ppx_inline_test ppx_assert ppx_deriving.show ppx_deriving.eq ppx_deriving.ord ppx_here ppx_inline_test))
  (inline_tests)

@@ -51,33 +51,60 @@ let get_string_by_name m x =
 
 let int_to_z3 ctx i = mk_numeral_int ctx i (Integer.mk_sort ctx)
 let bool_to_z3 ctx b = if b then mk_true ctx else mk_false ctx
-let _z3_enum_type = Hashtbl.create 5
+(* let _z3_enum_type = Hashtbl.create 5 *)
 
-let get_z3_enum_type ctx (enum_name, enum_elems) =
-  match Hashtbl.find_opt _z3_enum_type enum_name with
-  | Some sort -> sort
-  | None ->
-      let sort = Enumeration.mk_sort_s ctx enum_name enum_elems in
-      Hashtbl.add _z3_enum_type enum_name sort;
-      sort
+(* let get_z3_enum_type ctx (enum_name, enum_elems) = *)
+(*   match Hashtbl.find_opt _z3_enum_type enum_name with *)
+(*   | Some sort -> sort *)
+(*   | None -> *)
+(*       let sort = Enumeration.mk_sort_s ctx enum_name enum_elems in *)
+(*       Hashtbl.add _z3_enum_type enum_name sort; *)
+(*       sort *)
 
-let tuple_sym ctx n = Symbol.mk_string ctx (spf "_tuple%i" n)
+let mk_tuple ctx n = Symbol.mk_string ctx (spf "_tuple%i" n)
 let tuple_field ctx n i = Symbol.mk_string ctx (spf "_tuplef%i_%i" n i)
+
+open Zdatatype
+
+let record_name fields = spf "_record%s" (List.split_by "_" _get_x fields)
+let mk_recog ctx name = Symbol.mk_string ctx (spf "_is%s" name)
 
 let rec smt_tp_to_sort ctx t =
   match t with
-  | Smt_enum { enum_name; enum_elems } ->
-      get_z3_enum_type ctx (enum_name, enum_elems)
-  (* | Smt_Uninterp name -> Sort.mk_uninterpreted_s ctx name *)
-  | Smt_Uninterp _ -> Integer.mk_sort ctx
+  (* | Smt_enum { enum_name; enum_elems } -> *)
+  (*     get_z3_enum_type ctx (enum_name, enum_elems) *)
+  | Smt_Uninterp name -> Sort.mk_uninterpreted_s ctx name
+  (* | Smt_Uninterp _ -> Integer.mk_sort ctx *)
+  | Smt_Unit -> Enumeration.mk_sort_s ctx "unit" []
   | Smt_Int -> Integer.mk_sort ctx
   | Smt_Bool -> Boolean.mk_sort ctx
+  | Smt_option smtnt ->
+      let constructor_none =
+        Datatype.mk_constructor_s ctx "None" (mk_recog ctx "is_None") [] [] []
+      in
+      let constructor_some =
+        Datatype.mk_constructor_s ctx "Some" (mk_recog ctx "is_Some")
+          [ Symbol.mk_string ctx "get_Some" ]
+          [ Some (smt_tp_to_sort ctx smtnt) ]
+          [ 0 ]
+      in
+      Datatype.mk_sort_s ctx "option" [ constructor_none; constructor_some ]
   | Smt_tuple l ->
       let n = List.length l in
-      let sym = tuple_sym ctx n in
+      let sym = mk_tuple ctx n in
       let syms = List.init n (fun i -> tuple_field ctx n i) in
       let l = List.map (smt_tp_to_sort ctx) l in
       Tuple.mk_sort ctx sym syms l
+  | Smt_record fields ->
+      let fields = sort_record fields in
+      let name = record_name fields in
+      let constructor =
+        Datatype.mk_constructor_s ctx (spf "_constr%s" name) (mk_recog ctx name)
+          (List.map (fun x -> Symbol.mk_string ctx x.x) fields)
+          (List.map (fun x -> Some (smt_tp_to_sort ctx x.ty)) fields)
+          (List.init (List.length fields) (fun i -> i))
+      in
+      Datatype.mk_sort_s ctx name [ constructor ]
 
 let tp_to_sort ctx t =
   (* let () = *)
@@ -108,18 +135,6 @@ let z3func ctx funcname inptps outtp =
 (*   array_head_ ctx (arrname, idx) *)
 
 let tpedvar_to_z3 ctx (tp, name) = Expr.mk_const_s ctx name @@ tp_to_sort ctx tp
-(* match tp with *)
-(* | Ty_enum { enum_name; enum_elems } -> *)
-(*     Expr.mk_const_s ctx name @@ get_z3_enum_type ctx (enum_name, enum_elems) *)
-(* | Ty_uninter _ -> Integer.mk_const_s ctx name *)
-(* (\* | Ty_uninter _ -> Expr.mk_const_s ctx name (tp_to_sort ctx tp) *\) *)
-(* | _ -> ( *)
-(*     match to_smtty tp with *)
-(*     (\* | Smt_Uninterp sort -> *\) *)
-(*     (\*     Expr.mk_const_s ctx name @@ Sort.mk_uninterpreted_s ctx sort *\) *)
-(*     | Smt_Uninterp _ -> Integer.mk_const_s ctx name *)
-(*     | Smt_Int -> Integer.mk_const_s ctx name *)
-(*     | Smt_Bool -> Boolean.mk_const_s ctx name) *)
 
 let make_forall ctx qv body =
   if List.length qv == 0 then body

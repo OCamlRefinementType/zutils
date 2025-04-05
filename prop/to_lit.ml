@@ -24,6 +24,11 @@ let rec lit_to_expr expr =
     | AProj (lit, 1) -> normal_apply (mkvar snd_func) [ aux lit.x ]
     | AProj (lit, n) ->
         normal_apply (mkvar proj_func) [ aux lit.x; constant_to_expr (I n) ]
+    | ARecord l ->
+        Exp.record
+          (List.map (fun (x, lit) -> (id_to_longid x, aux lit.x)) l)
+          None
+    | AField (lit, fd) -> Exp.field (aux lit.x) (id_to_longid fd)
     | AVar x ->
         if Myconfig.get_show_var_type_in_prop () then
           Exp.constraint_ (mkvar x.x) (Nt.t_to_core_type x.ty)
@@ -44,6 +49,12 @@ let rec layout_lit_to_smtlib2 expr =
         spf "(%s)" (List.split_by_comma layout_typed_lit_to_smtlib2 args)
     | AProj (lit, n) ->
         spf "(%s %s %i)" proj_func (layout_typed_lit_to_smtlib2 lit) n
+    | ARecord args ->
+        spf "{%s}"
+          (List.split_by ";"
+             (fun (x, lit) -> spf "%s = %s" x (layout_typed_lit_to_smtlib2 lit))
+             args)
+    | AField (lit, n) -> spf "%s.%s" (layout_typed_lit_to_smtlib2 lit) n
     | AVar x -> x.x
   in
   aux expr
@@ -66,6 +77,10 @@ let constructor_const_opt c =
 let rec lit_of_expr expr =
   match expr.pexp_desc with
   | Pexp_tuple es -> ATu (List.map typed_lit_of_expr es)
+  | Pexp_record (args, None) ->
+      ARecord
+        (List.map (fun (x, e) -> (longid_to_id x, typed_lit_of_expr e)) args)
+  | Pexp_field (e, fd) -> AField (typed_lit_of_expr e, longid_to_id fd)
   | Pexp_constraint _ -> _die [%here]
   | Pexp_ident id -> AVar (longid_to_id id)#:Ty_unknown
   | Pexp_construct (c, args) -> (

@@ -70,7 +70,7 @@ let type_unification m (cs : (t * t) list) =
           None
         in
         match (t1, t2) with
-        | Ty_any, _ | _, Ty_any | Ty_unknown, _ | _, Ty_unknown -> aux m cs
+        | Ty_unknown, _ | _, Ty_unknown -> aux m cs
         | Ty_var n, Ty_var k ->
             if String.compare n k == 0 then aux m cs
             else if String.compare n k > 0 then
@@ -78,7 +78,6 @@ let type_unification m (cs : (t * t) list) =
               let cs = subst_on_cs (n, t2) cs in
               aux (StrMap.add n t2 m) cs
             else aux m ((Ty_var k, Ty_var n) :: cs)
-        | Ty_enum _, Ty_enum _ -> aux m cs
         | Ty_var n, _ ->
             if List.exists (String.equal n) @@ gather_type_vars t2 then err ()
             else
