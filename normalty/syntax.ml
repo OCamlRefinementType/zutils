@@ -64,8 +64,8 @@ let rec construct_arr_tp = function
   | [], retty -> retty
   | h :: t, retty -> Ty_arrow (h, construct_arr_tp (t, retty))
 
-let core_type_to_t ct = close_poly_nt [%here] (Frontend.core_type_to_t ct)
-let of_core_type = core_type_to_t
+(* let core_type_to_t ct = close_poly_nt [%here] (Frontend.core_type_to_t ct) *)
+let of_core_type = Frontend.core_type_to_t
 let to_core_type = Frontend.t_to_core_type
 let layout_nt = Frontend.layout_nt
 

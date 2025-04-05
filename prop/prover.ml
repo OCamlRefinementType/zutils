@@ -202,12 +202,17 @@ let%test _ =
 open OcamlParser.Oparse
 
 let basic_type_ctx =
-  Typectx.ctx_from_list
-  @@ [
-       "=="#:(Nt.core_type_to_t @@ parse_core_type "'a -> 'a -> bool");
-       "None"#:(Nt.core_type_to_t @@ parse_core_type "'a option");
-       "Some"#:(Nt.core_type_to_t @@ parse_core_type "'a -> 'a option");
-     ]
+  let l =
+    [ "=="#:"'a -> 'a -> bool"; "None"#:"'a option"; "Some"#:"'a -> 'a option" ]
+  in
+  let l =
+    List.map
+      (fun x ->
+        x.x#:(Nt.close_poly_nt [%here]
+             @@ Nt.core_type_to_t @@ parse_core_type x.ty))
+      l
+  in
+  Typectx.ctx_from_list l
 
 let%test _ =
   let () =
