@@ -9,7 +9,11 @@ module Propencoding = Propencoding
 type smt_result = SmtSat of Model.model | SmtUnsat | Timeout
 
 let layout_smt_result = function
-  | SmtSat _ -> "sat"
+  | SmtSat model ->
+      ( _log "model" @@ fun _ ->
+        Printf.printf "model:\n%s\n"
+        @@ Sugar.short_str 1000 @@ Z3.Model.to_string model );
+      "sat"
   | SmtUnsat -> "unsat"
   | Timeout -> "timeout"
 
@@ -78,11 +82,15 @@ let check_sat prop =
   in
   Goal.reset goal;
   Goal.add goal [ prop ];
-  let goal = Goal.simplify goal None in
   let _ =
     _log_queries @@ fun _ ->
-    Pp.printf "@{<bold>Simplifid Goal:@}\n%s\n" (Goal.to_string goal)
+    Pp.printf "@{<bold>Goal:@}\n%s\n" (Goal.to_string goal)
   in
+  (* let goal = Goal.simplify goal None in *)
+  (* let _ = *)
+  (*   _log_queries @@ fun _ -> *)
+  (*   Pp.printf "@{<bold>Simplifid Goal:@}\n%s\n" (Goal.to_string goal) *)
+  (* in *)
   Goal.add goal axioms;
   Solver.reset solver;
   Solver.add solver (get_formulas goal);
@@ -191,6 +199,16 @@ let%test _ =
   let () = Pp.printf "@{<bold>SAT(%s): @}\n" (layout_smt_result res) in
   false
 
+open OcamlParser.Oparse
+
+let basic_type_ctx =
+  Typectx.ctx_from_list
+  @@ [
+       "=="#:(Nt.core_type_to_t @@ parse_core_type "'a -> 'a -> bool");
+       "None"#:(Nt.core_type_to_t @@ parse_core_type "'a option");
+       "Some"#:(Nt.core_type_to_t @@ parse_core_type "'a -> 'a option");
+     ]
+
 let%test _ =
   let () =
     meta_config_path := "/Users/zhezzhou/workspace/zutils/meta-config.json"
@@ -198,9 +216,11 @@ let%test _ =
   let ctx = get_ctx () in
   let prop =
     Front.of_expr
-    @@ OcamlParser.Oparse.parse_expression
-         "fun (x : int * bool) -> Some (fst x) == None && Some (snd x) == None"
+    @@ parse_expression
+         "fun ((x [@ex]) : int * bool) ((y [@ex]) : bool * int) -> Some (fst \
+          x) == Some (snd y) && Some (snd x) == None"
   in
+  let prop = Typecheck.prop_type_check basic_type_ctx [] prop in
   let () = Printf.printf "Prop: %s:\n" @@ Front.layout prop in
   let expr = Propencoding.to_z3 ctx prop in
   let () = Printf.printf "Z3: %s:\n" @@ Expr.to_string expr in

@@ -2,6 +2,7 @@ open Sugar
 open Ast
 open Zdatatype
 open Subst
+open Syntax
 
 (* let _fresh_type_var () = Ty_var (Rename.unique "__tvar") *)
 
@@ -25,7 +26,15 @@ module BoundConstraints = struct
             aux (StrMap.add p' () vars) (ps, subst_nt (p, Ty_var p') t))
           else aux (StrMap.add p () vars) (ps, t)
     in
-    aux vars (ps, t)
+    let res = aux vars (ps, t) in
+    let () =
+      Pp.printf "@{<bold>uniquelize@}: %s :: %s ====>>===== %s :: %s\n"
+        (StrList.to_string (StrMap.to_key_list vars))
+        (layout_nt t)
+        (StrList.to_string (StrMap.to_key_list (fst res)))
+        (layout_nt (snd res))
+    in
+    res
 
   let add_type { type_vars; cs } t =
     let type_vars, t = uniquelize (type_vars, t) in
@@ -54,19 +63,29 @@ module BoundConstraints = struct
     spf "type vars: %s;\n constraints: %s;\n"
       (StrList.to_string (StrMap.to_key_list bc.type_vars))
       (List.split_by ", "
-         (fun (a, b) ->
-           spf "%s = %s" (Frontend.layout_nt a) (Frontend.layout_nt b))
+         (fun (a, b) -> spf "%s = %s" (layout_nt a) (layout_nt b))
          bc.cs)
 end
 
 let type_unification m (cs : (t * t) list) =
   let rec aux m cs =
+    let () =
+      Pp.printf "@{<bold>m@}: %s\n"
+        (List.split_by_comma
+           (fun (x, ty) -> spf "%s := %s" x (layout_nt ty))
+           (StrMap.to_kv_list m))
+    in
+    let () =
+      Pp.printf "@{<bold>cs@}: %s\n"
+        (List.split_by_comma
+           (fun (x, ty) -> spf "%s = %s" (layout_nt x) (layout_nt ty))
+           cs)
+    in
     match cs with
     | [] -> Some m
     | (t1, t2) :: cs -> (
         let err () =
-          Printf.printf "cannot solve %s = %s\n" (Frontend.layout_nt t1)
-            (Frontend.layout_nt t2);
+          Printf.printf "cannot solve %s = %s\n" (layout_nt t1) (layout_nt t2);
           None
         in
         match (t1, t2) with

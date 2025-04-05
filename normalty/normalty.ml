@@ -8,6 +8,7 @@ include Subst
 (* module Frontend = Frontend *)
 (* module Connective = Connective *)
 include Frontend
+include Syntax
 include Unification
 open Sugar
 
@@ -47,20 +48,14 @@ let to_smtty t =
 
 open Zdatatype
 
-let wf_nt t =
-  let rec aux tvars = function
-    | Ty_var _ | Ty_unknown | Ty_uninter _ -> true
-    | Ty_constructor (_, tps) -> List.for_all (aux tvars) tps
-    | Ty_record xs -> List.for_all (fun x -> aux tvars x.ty) xs
-    | Ty_arrow (nt1, nt2) -> List.for_all (aux tvars) [ nt1; nt2 ]
-    | Ty_tuple nts -> List.for_all (aux tvars) nts
-    | Ty_poly _ -> false
-  in
-  let rec aux_top tvars = function
-    | Ty_poly (x, ty) -> aux_top (x :: tvars) ty
-    | _ as ty -> aux tvars ty
-  in
-  aux_top [] t
+let rec layout_smtty = function
+  | Smt_Bool -> "B"
+  | Smt_Int -> "I"
+  | Smt_Unit -> "U"
+  | Smt_Uninterp x -> x
+  | Smt_option smtty -> spf "%s_O" (layout_smtty smtty)
+  | Smt_tuple ts -> spf "T_%s_T" (List.split_by "!" layout_smtty ts)
+  | Smt_record ts -> spf "R_%s_R" (List.split_by "!" _get_x ts)
 
 let has_poly_tp tp =
   let rec aux tp =
@@ -90,27 +85,3 @@ let lift_poly_tp tp =
   _assert [%here] "same poly type var"
     (List.length ps == List.length (Zdatatype.List.slow_rm_dup String.equal ps));
   (ps, tp)
-
-let rec construct_poly_nt = function
-  | [], ty -> ty
-  | x :: xs, ty -> Ty_poly (x, construct_poly_nt (xs, ty))
-
-let close_poly_nt loc t =
-  let t = construct_poly_nt (gather_type_vars t, t) in
-  _assert loc
-    (spf "not a well-formed poly type: %s" (Frontend.layout_nt t))
-    (wf_nt t);
-  t
-
-let destruct_arr_tp tp =
-  let rec aux = function
-    | Ty_arrow (t1, t2) ->
-        let argsty, bodyty = aux t2 in
-        (t1 :: argsty, bodyty)
-    | ty -> ([], ty)
-  in
-  aux tp
-
-let rec construct_arr_tp = function
-  | [], retty -> retty
-  | h :: t, retty -> Ty_arrow (h, construct_arr_tp (t, retty))

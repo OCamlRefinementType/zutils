@@ -5,5 +5,5 @@
  (modules
    zutils
  )
- (libraries zdatatype normalty ocamlParser typectx myconfig prop dtree typecheck)
+ (libraries zdatatype normalty ocamlParser typectx myconfig prop dtree)
 )

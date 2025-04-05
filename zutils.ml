@@ -6,4 +6,4 @@ module Typectx = Typectx
 module Myconfig = Myconfig
 module Prop = Prop
 module Dtree = Dtree
-module PropTypecheck = Typecheck
+module PropTypecheck = Prop__.Typecheck
