@@ -6,6 +6,10 @@ open Myconfig
 open Constencoding
 
 let rec typed_lit_to_z3 ctx lit =
+  let () =
+    Printf.printf "lit encoding: %s : %s\n" (Front.layout_lit lit.x)
+      (Nt.layout lit.ty)
+  in
   match lit.x with
   | ATu lits ->
       Z3.FuncDecl.apply

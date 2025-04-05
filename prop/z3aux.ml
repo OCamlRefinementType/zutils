@@ -68,6 +68,8 @@ open Zdatatype
 
 let record_name fields = spf "_record%s" (List.split_by "_" _get_x fields)
 let mk_recog ctx name = Symbol.mk_string ctx (spf "_is%s" name)
+let z3_unit_name = "unit"
+let z3_tt_name = "tt"
 
 let rec smt_tp_to_sort ctx t =
   match t with
@@ -75,7 +77,7 @@ let rec smt_tp_to_sort ctx t =
   (*     get_z3_enum_type ctx (enum_name, enum_elems) *)
   | Smt_Uninterp name -> Sort.mk_uninterpreted_s ctx name
   (* | Smt_Uninterp _ -> Integer.mk_sort ctx *)
-  | Smt_Unit -> Enumeration.mk_sort_s ctx "unit" []
+  | Smt_Unit -> Enumeration.mk_sort_s ctx z3_unit_name [ z3_tt_name ]
   | Smt_Int -> Integer.mk_sort ctx
   | Smt_Bool -> Boolean.mk_sort ctx
   | Smt_option smtnt ->
@@ -106,11 +108,24 @@ let rec smt_tp_to_sort ctx t =
       in
       Datatype.mk_sort_s ctx name [ constructor ]
 
+module NTMap = Map.Make (struct
+  type t = nt
+
+  let compare = compare_nt
+end)
+
+let smt_type_cache = ref NTMap.empty
+
 let tp_to_sort ctx t =
-  (* let () = *)
-  (*   Printf.printf "z3aux t: %s\n" @@ Sexplib.Sexp.to_string @@ sexp_of_t t *)
-  (* in *)
-  smt_tp_to_sort ctx (to_smtty t)
+  match NTMap.find_opt t !smt_type_cache with
+  | Some res -> res
+  | None ->
+      (* let () = *)
+      (*   Printf.printf "z3aux t: %s\n" @@ Sexplib.Sexp.to_string @@ sexp_of_t t *)
+      (* in *)
+      let res = smt_tp_to_sort ctx (to_smtty t) in
+      smt_type_cache := NTMap.add t res !smt_type_cache;
+      res
 
 let z3func ctx funcname inptps outtp =
   (* let () = Printf.printf "[%s]funcname: %s\n" __FILE__ funcname in *)
