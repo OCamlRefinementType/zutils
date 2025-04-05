@@ -1,6 +1,7 @@
 open Common
 open Ast
 open OcamlParser
+open Oparse
 open Parsetree
 open Sugar
 open Mutils
@@ -99,7 +100,7 @@ let prop_of_expr expr =
     | Pexp_match _ -> failwith "parsing: prop does not have match"
     | Pexp_apply (func, args) -> (
         (*     let () = *)
-        (*       Printf.printf "expr: %s\n" (Pprintast.string_of_expression expr) *)
+        (*       Printf.printf "expr: %s\n" (string_of_expression expr) *)
         (*     in *)
         let f = typed_id_of_expr func in
         let args = List.map snd args in
@@ -135,7 +136,7 @@ let prop_of_expr expr =
         | _ -> _die [%here])
     | Pexp_construct _ ->
         (* let () = *)
-        (*   Printf.printf "expr: %s\n" (Pprintast.string_of_expression expr) *)
+        (*   Printf.printf "expr: %s\n" (string_of_expression expr) *)
         (* in *)
         Lit (typed_lit_of_expr expr)
     | Pexp_tuple _ | Pexp_ident _ | Pexp_constant _ ->
@@ -143,12 +144,11 @@ let prop_of_expr expr =
     | _ ->
         raise
         @@ failwith
-             (spf "not imp client parsing:%s"
-             @@ Pprintast.string_of_expression expr)
+             (spf "not imp client parsing:%s" @@ string_of_expression expr)
   in
   aux expr
 
-let layout_prop__raw x = Pprintast.string_of_expression @@ prop_to_expr x
+let layout_prop__raw x = string_of_expression @@ prop_to_expr x
 let layout_prop expr = layout_prop_ psetting expr
 let layout_propRaw expr = layout_prop_ rawsetting expr
 let layout_prop_to_coq expr = layout_prop_ coqsetting expr

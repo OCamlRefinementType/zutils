@@ -1,11 +1,10 @@
 open Ast
 open OcamlParser
+open Oparse
 open Sugar
 open Zdatatype
 open Parsetree
 open To_id
-
-(* open To_op *)
 open To_constant
 open Mutils
 open Ast_helper
@@ -61,7 +60,7 @@ let rec layout_lit_to_smtlib2 expr =
 
 and layout_typed_lit_to_smtlib2 expr = layout_lit_to_smtlib2 expr.x
 
-let layout_lit lit = Pprintast.string_of_expression @@ lit_to_expr lit
+let layout_lit lit = string_of_expression @@ lit_to_expr lit
 let layout = layout_lit
 let layout_typed_lit lit = layout lit.x
 
@@ -125,8 +124,7 @@ let rec lit_of_expr expr =
   | _ ->
       raise
       @@ failwith
-           (Sugar.spf "not imp client parsing:%s"
-           @@ Pprintast.string_of_expression expr)
+           (Sugar.spf "not imp client parsing:%s" @@ string_of_expression expr)
 
 and typed_lit_of_expr expr =
   match expr.pexp_desc with
@@ -134,4 +132,4 @@ and typed_lit_of_expr expr =
   | _ -> (lit_of_expr expr)#:Ty_unknown
 
 let of_expr = lit_of_expr
-let layout lit = Pprintast.string_of_expression @@ lit_to_expr lit
+let layout lit = string_of_expression @@ lit_to_expr lit

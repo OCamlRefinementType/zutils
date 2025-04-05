@@ -1,4 +1,5 @@
 open OcamlParser
+open Oparse
 open Parsetree
 open Sugar
 open Ast_helper
@@ -46,8 +47,8 @@ let id_of_expr expr =
   match expr.pexp_desc with
   | Pexp_ident id -> longid_to_id id
   | _ ->
-      Pprintast.expression Format.std_formatter expr;
-      failwith "die"
+      Printf.printf "%s\n" (string_of_expression expr);
+      _die [%here]
 
 let id_of_expr_opt expr =
   match expr.pexp_desc with
@@ -60,5 +61,5 @@ let rec typed_id_of_expr expr =
       (typed_id_of_expr expr).x#:(Nt.core_type_to_t ty)
   | Pexp_ident id -> Nt.untyped (longid_to_id id)
   | _ ->
-      Pprintast.expression Format.std_formatter expr;
-      failwith "die"
+      Printf.printf "%s\n" (string_of_expression expr);
+      _die [%here]

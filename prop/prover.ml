@@ -191,6 +191,23 @@ let%test _ =
   let () = Pp.printf "@{<bold>SAT(%s): @}\n" (layout_smt_result res) in
   false
 
+let%test _ =
+  let () =
+    meta_config_path := "/Users/zhezzhou/workspace/zutils/meta-config.json"
+  in
+  let ctx = get_ctx () in
+  let prop =
+    Front.of_expr
+    @@ OcamlParser.Oparse.parse_expression
+         "fun (x : int * bool) -> Some (fst x) == None && Some (snd x) == None"
+  in
+  let () = Printf.printf "Prop: %s:\n" @@ Front.layout prop in
+  let expr = Propencoding.to_z3 ctx prop in
+  let () = Printf.printf "Z3: %s:\n" @@ Expr.to_string expr in
+  let res = check_sat expr in
+  let () = Pp.printf "@{<bold>SAT(%s): @}\n" (layout_smt_result res) in
+  false
+
 (* let get_int m i = *)
 (*   match Model.eval m i true with *)
 (*   | None -> failwith "get_int" *)

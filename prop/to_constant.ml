@@ -1,5 +1,6 @@
 open Ast
 open OcamlParser
+open Oparse
 open Parsetree
 open Zdatatype
 open To_id
@@ -17,8 +18,7 @@ let string_to_constant = function
 let expr_to_constant e =
   let mk_exn () =
     failwith
-      (spf "do not support complicate literal: %s"
-         (Pprintast.string_of_expression e))
+      (spf "do not support complicate literal: %s" (string_of_expression e))
   in
   match e.pexp_desc with
   (* | Pexp_tuple es -> Tu (List.map expr_to_constant es) *)
@@ -57,5 +57,5 @@ let constant_to_expr v =
   in
   aux v
 
-let layout_constant v = Pprintast.string_of_expression @@ constant_to_expr v
+let layout_constant v = string_of_expression @@ constant_to_expr v
 let layout_constants ts = List.split_by_comma layout_constant ts
