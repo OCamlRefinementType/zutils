@@ -182,22 +182,66 @@ let _prop_under_test_2 =
         a)(Ty_constructor(bool()))))(x p2))(((ty(Ty_var a))(x(AVar((ty(Ty_var \
         a))(x v))))))))))))))))))))))"
 
-let%test _ =
-  let () =
-    meta_config_path := "/Users/zhezzhou/workspace/zutils/meta-config.json"
-  in
-  let ctx = get_ctx () in
-  let expr = Propencoding.to_z3 ctx _prop_under_test_1 in
-  let () = Printf.printf "Prop: %s:\n" @@ Front.layout _prop_under_test_1 in
-  let () = Printf.printf "Z3: %s:\n" @@ Expr.to_string expr in
-  let res = check_sat expr in
-  let () = Pp.printf "@{<bold>SAT(%s): @}\n" (layout_smt_result res) in
-  let expr = Propencoding.to_z3 ctx _prop_under_test_2 in
-  let () = Printf.printf "Prop: %s:\n" @@ Front.layout _prop_under_test_1 in
-  let () = Printf.printf "Z3: %s:\n" @@ Expr.to_string expr in
-  let res = check_sat expr in
-  let () = Pp.printf "@{<bold>SAT(%s): @}\n" (layout_smt_result res) in
-  false
+let _prop_under_test_3 =
+  prop_of_sexp Nt.nt_of_sexp
+  @@ Sexplib.Sexp.of_string
+       "(Not(Forall(qv((ty(Ty_constructor(option((Ty_var a)))))(x \
+        v)))(body(Implies(Exists(qv((ty(Ty_var a))(x \
+        y)))(body(Or((Lit((ty(Ty_constructor(bool())))(x(AAppOp((ty(Ty_arrow(Ty_constructor(option((Ty_var \
+        a_10))))(Ty_arrow(Ty_constructor(option((Ty_var \
+        a_10))))(Ty_constructor(bool())))))(x \
+        ==))(((ty(Ty_constructor(option((Ty_var \
+        a_10)))))(x(AVar((ty(Ty_constructor(option((Ty_var a_10)))))(x \
+        v)))))((ty(Ty_constructor(option((Ty_var \
+        a_10)))))(x(AAppOp((ty(Ty_constructor(option((Ty_var a_10)))))(x \
+        None))()))))))))(And((Lit((ty(Ty_constructor(bool())))(x(AAppOp((ty(Ty_arrow(Ty_constructor(option((Ty_var \
+        a_11))))(Ty_arrow(Ty_constructor(option((Ty_var \
+        a_11))))(Ty_constructor(bool())))))(x \
+        ==))(((ty(Ty_constructor(option((Ty_var \
+        a_11)))))(x(AVar((ty(Ty_constructor(option((Ty_var a_11)))))(x \
+        v)))))((ty(Ty_constructor(option((Ty_var \
+        a_11)))))(x(AAppOp((ty(Ty_arrow(Ty_var \
+        a_11)(Ty_constructor(option((Ty_var a_11))))))(x Some))(((ty(Ty_var \
+        a_11))(x(AVar((ty(Ty_var a_11))(x \
+        y))))))))))))))(Lit((ty(Ty_constructor(bool())))(x(AAppOp((ty(Ty_arrow(Ty_var \
+        a)(Ty_constructor(bool()))))(x p1))(((ty(Ty_var a))(x(AVar((ty(Ty_var \
+        a))(x y))))))))))))))))(Exists(qv((ty(Ty_constructor(int())))(x \
+        x)))(body(And((And((Lit((ty(Ty_constructor(bool())))(x(AAppOp((ty(Ty_arrow(Ty_constructor(int()))(Ty_arrow(Ty_constructor(int()))(Ty_constructor(bool())))))(x \
+        <=))(((ty(Ty_constructor(int())))(x(AC(I \
+        0))))((ty(Ty_constructor(int())))(x(AC(I \
+        10)))))))))(Lit((ty(Ty_constructor(bool())))(x(AAppOp((ty(Ty_arrow(Ty_constructor(int()))(Ty_arrow(Ty_constructor(int()))(Ty_constructor(bool())))))(x \
+        <=))(((ty(Ty_constructor(int())))(x(AC(I \
+        0))))((ty(Ty_constructor(int())))(x(AVar((ty(Ty_constructor(int())))(x \
+        x))))))))))(Lit((ty(Ty_constructor(bool())))(x(AAppOp((ty(Ty_arrow(Ty_constructor(int()))(Ty_arrow(Ty_constructor(int()))(Ty_constructor(bool())))))(x \
+        <=))(((ty(Ty_constructor(int())))(x(AVar((ty(Ty_constructor(int())))(x \
+        x)))))((ty(Ty_constructor(int())))(x(AC(I \
+        10)))))))))))(Exists(qv((ty(Ty_constructor(bool())))(x \
+        x_27)))(body(And((Iff(Lit((ty(Ty_constructor(bool())))(x(AVar((ty(Ty_constructor(bool())))(x \
+        x_27))))))(Lit((ty(Ty_constructor(bool())))(x(AAppOp((ty(Ty_arrow(Ty_constructor(int()))(Ty_arrow(Ty_constructor(int()))(Ty_constructor(bool())))))(x \
+        <))(((ty(Ty_constructor(int())))(x(AVar((ty(Ty_constructor(int())))(x \
+        x)))))((ty(Ty_constructor(int())))(x(AC(I \
+        2))))))))))(Or((And((Lit((ty(Ty_constructor(bool())))(x(AVar((ty(Ty_constructor(bool())))(x \
+        x_27))))))(Lit((ty(Ty_constructor(bool())))(x(AAppOp((ty(Ty_arrow(Ty_constructor(option((Ty_var \
+        a))))(Ty_arrow(Ty_constructor(option((Ty_var \
+        a))))(Ty_constructor(bool())))))(x \
+        ==))(((ty(Ty_constructor(option((Ty_var \
+        a)))))(x(AVar((ty(Ty_constructor(option((Ty_var a)))))(x \
+        v)))))((ty(Ty_constructor(option((Ty_var \
+        a)))))(x(AAppOp((ty(Ty_constructor(option((Ty_var a)))))(x \
+        None))()))))))))))(And((Not(Lit((ty(Ty_constructor(bool())))(x(AVar((ty(Ty_constructor(bool())))(x \
+        x_27)))))))(Exists(qv((ty(Ty_var a))(x \
+        x_28)))(body(And((Lit((ty(Ty_constructor(bool())))(x(AAppOp((ty(Ty_arrow(Ty_var \
+        a)(Ty_constructor(bool()))))(x p1))(((ty(Ty_var a))(x(AVar((ty(Ty_var \
+        a))(x \
+        x_28))))))))))(Lit((ty(Ty_constructor(bool())))(x(AAppOp((ty(Ty_arrow(Ty_constructor(option((Ty_var \
+        a))))(Ty_arrow(Ty_constructor(option((Ty_var \
+        a))))(Ty_constructor(bool())))))(x \
+        ==))(((ty(Ty_constructor(option((Ty_var \
+        a)))))(x(AVar((ty(Ty_constructor(option((Ty_var a)))))(x \
+        v)))))((ty(Ty_constructor(option((Ty_var \
+        a)))))(x(AAppOp((ty(Ty_arrow(Ty_var a)(Ty_constructor(option((Ty_var \
+        a))))))(x Some))(((ty(Ty_var a))(x(AVar((ty(Ty_var a))(x \
+        x_28))))))))))))))))))))))))))))))))))"
 
 open OcamlParser.Oparse
 
@@ -214,7 +258,7 @@ let basic_type_ctx =
   in
   Typectx.ctx_from_list l
 
-let%test _ =
+let%test "test" =
   let () =
     meta_config_path := "/Users/zhezzhou/workspace/zutils/meta-config.json"
   in
@@ -227,29 +271,21 @@ let%test _ =
   in
   let prop = Typecheck.prop_type_check basic_type_ctx [] prop in
   let () = Printf.printf "Prop: %s:\n" @@ Front.layout prop in
+  let () = Printf.printf "Prop: %s:\n" @@ show_prop prop in
   let expr = Propencoding.to_z3 ctx prop in
   let () = Printf.printf "Z3: %s:\n" @@ Expr.to_string expr in
   let res = check_sat expr in
   let () = Pp.printf "@{<bold>SAT(%s): @}\n" (layout_smt_result res) in
   false
 
-(* let get_int m i = *)
-(*   match Model.eval m i true with *)
-(*   | None -> failwith "get_int" *)
-(*   | Some v -> *)
-(*       (\* printf "get_int(%s)\n" (Expr.to_string i); *\) *)
-(*       int_of_string @@ Arithmetic.Integer.numeral_to_string v *)
-
-(* let get_bool_str m i = *)
-(*   match Model.eval m i true with None -> "none" | Some v -> Expr.to_string v *)
-
-(* let get_int_name ctx m name = *)
-(*   get_int m @@ Arithmetic.Integer.mk_const_s ctx name *)
-
-(* let get_pred m predexpr = *)
-(*   match Model.eval m predexpr true with *)
-(*   | None -> failwith "get pred" *)
-(*   | Some v -> Z3aux.z3expr_to_bool v *)
-
-(* let get_unknown_fv ctx m unknown_fv = *)
-(*   List.map (fun (_, b) -> get_pred m (Boolean.mk_const_s ctx b)) unknown_fv *)
+let%test "query" =
+  let () =
+    meta_config_path := "/Users/zhezzhou/workspace/zutils/meta-config.json"
+  in
+  let ctx = get_ctx () in
+  let expr = Propencoding.to_z3 ctx _prop_under_test_3 in
+  let () = Printf.printf "Prop: %s:\n" @@ Front.layout _prop_under_test_1 in
+  let () = Printf.printf "Z3: %s:\n" @@ Expr.to_string expr in
+  let res = check_sat expr in
+  let () = Pp.printf "@{<bold>SAT(%s): @}\n" (layout_smt_result res) in
+  false

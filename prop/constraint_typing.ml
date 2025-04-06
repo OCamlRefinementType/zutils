@@ -103,31 +103,92 @@ and constraint_lit_type_check (ctx : t ctx) (bc : BC.bc)
   mk_constraint lit.ty (constraint_lit_type_infer ctx bc lit.x)
 (* else (bc, lit) *)
 
-let lit_type_check (ctx : t ctx) (poly_vars : string list)
-    (lit : (t, t lit) typed) =
-  let bc, lit = constraint_lit_type_check ctx (BC.empty poly_vars) lit in
+let constraint_prop_type_check (ctx : t ctx) (bc : BC.bc) (prop : t prop) =
+  let rec aux ctx bc prop =
+    match prop with
+    | Lit lit ->
+        let bc, lit = constraint_lit_type_check ctx bc lit in
+        let bc, _ = BC.add bc (lit.ty, Nt.bool_ty) in
+        (bc, Lit lit.x#:Nt.bool_ty)
+    | Implies (e1, e2) ->
+        let bc, e1 = aux ctx bc e1 in
+        let bc, e2 = aux ctx bc e2 in
+        (bc, Implies (e1, e2))
+    | Ite (e1, e2, e3) ->
+        let bc, e1 = aux ctx bc e1 in
+        let bc, e2 = aux ctx bc e2 in
+        let bc, e3 = aux ctx bc e3 in
+        (bc, Ite (e1, e2, e3))
+    | Not e ->
+        let bc, e = aux ctx bc e in
+        (bc, Not e)
+    | And es ->
+        let bc, es =
+          List.fold_left
+            (fun (bc, res) e ->
+              let bc, e = aux ctx bc e in
+              (bc, res @ [ e ]))
+            (bc, []) es
+        in
+        (bc, And es)
+    | Or es ->
+        let bc, es =
+          List.fold_left
+            (fun (bc, res) e ->
+              let bc, e = aux ctx bc e in
+              (bc, res @ [ e ]))
+            (bc, []) es
+        in
+        (bc, Or es)
+    | Iff (e1, e2) ->
+        let bc, e1 = aux ctx bc e1 in
+        let bc, e2 = aux ctx bc e2 in
+        (bc, Iff (e1, e2))
+    | Forall { qv; body } ->
+        let qv = Nt.__force_typed [%here] qv in
+        let bc, body = aux (add_to_right ctx qv) bc body in
+        (bc, Forall { qv; body })
+    | Exists { qv; body } ->
+        let qv = Nt.__force_typed [%here] qv in
+        let bc, body = aux (add_to_right ctx qv) bc body in
+        (bc, Exists { qv; body })
+  in
+  aux ctx bc prop
+
+let prop_type_check (ctx : t ctx) (poly_vars : string list) (prop : t prop) =
+  let bc, prop = constraint_prop_type_check ctx (BC.empty poly_vars) prop in
   let solution = Normalty.type_unification StrMap.empty bc.cs in
   match solution with
   | None ->
-      Printf.printf "bc\n%s\nlit:%s" (BC.layout bc) (Front.layout_lit lit.x);
-      _die_with [%here] "lit normal type errpr"
-  | Some sol -> typed_map_lit (Normalty.msubst_nt sol) lit
+      Printf.printf "bc\n%s\nprop:%s" (BC.layout bc) (Front.layout_prop prop);
+      _die_with [%here] "lit normal type error"
+  | Some sol -> map_prop (Normalty.msubst_nt sol) prop
 
-let prop_type_check (ctx : t ctx) (poly_vars : string list) (prop : t prop) =
-  let rec aux ctx prop =
-    match prop with
-    | Lit lit -> Lit (lit_type_check ctx poly_vars lit.x#:Nt.bool_ty)
-    | Implies (e1, e2) -> Implies (aux ctx e1, aux ctx e2)
-    | Ite (e1, e2, e3) -> Ite (aux ctx e1, aux ctx e2, aux ctx e3)
-    | Not e -> Not (aux ctx e)
-    | And es -> And (List.map (aux ctx) es)
-    | Or es -> Or (List.map (aux ctx) es)
-    | Iff (e1, e2) -> Iff (aux ctx e1, aux ctx e2)
-    | Forall { qv; body } ->
-        let qv = Nt.__force_typed [%here] qv in
-        Forall { qv; body = aux (add_to_right ctx qv) body }
-    | Exists { qv; body } ->
-        let qv = Nt.__force_typed [%here] qv in
-        Exists { qv; body = aux (add_to_right ctx qv) body }
-  in
-  aux ctx prop
+(* let lit_type_check (ctx : t ctx) (poly_vars : string list) *)
+(*     (lit : (t, t lit) typed) = *)
+(*   let bc, lit = constraint_lit_type_check ctx (BC.empty poly_vars) lit in *)
+(*   let solution = Normalty.type_unification StrMap.empty bc.cs in *)
+(*   match solution with *)
+(*   | None -> *)
+(*       Printf.printf "bc\n%s\nlit:%s" (BC.layout bc) (Front.layout_lit lit.x); *)
+(*       _die_with [%here] "lit normal type errpr" *)
+(*   | Some sol -> typed_map_lit (Normalty.msubst_nt sol) lit *)
+
+(* let prop_type_check (ctx : t ctx) (poly_vars : string list) (prop : t prop) = *)
+(*   let rec aux ctx prop = *)
+(*     match prop with *)
+(*     | Lit lit -> Lit (lit_type_check ctx poly_vars lit.x#:Nt.bool_ty) *)
+(*     | Implies (e1, e2) -> Implies (aux ctx e1, aux ctx e2) *)
+(*     | Ite (e1, e2, e3) -> Ite (aux ctx e1, aux ctx e2, aux ctx e3) *)
+(*     | Not e -> Not (aux ctx e) *)
+(*     | And es -> And (List.map (aux ctx) es) *)
+(*     | Or es -> Or (List.map (aux ctx) es) *)
+(*     | Iff (e1, e2) -> Iff (aux ctx e1, aux ctx e2) *)
+(*     | Forall { qv; body } -> *)
+(*         let qv = Nt.__force_typed [%here] qv in *)
+(*         Forall { qv; body = aux (add_to_right ctx qv) body } *)
+(*     | Exists { qv; body } -> *)
+(*         let qv = Nt.__force_typed [%here] qv in *)
+(*         Exists { qv; body = aux (add_to_right ctx qv) body } *)
+(*   in *)
+(*   aux ctx prop *)
