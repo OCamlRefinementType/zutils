@@ -30,7 +30,25 @@ let string_of_nts = string_of_nts
 let untyped x = { x; ty = Ty_unknown }
 let nt_name nt = String.concat "_" @@ String.split_on_char ' ' @@ layout_nt nt
 
+let instantiate_poly_type_var_in_smt tp =
+  let rec aux tp =
+    match tp with
+    | Ty_var _ -> Ty_constructor ("int", [])
+    | Ty_unknown | Ty_uninter _ -> tp
+    | Ty_constructor (name, tps) -> Ty_constructor (name, List.map aux tps)
+    | Ty_record xs -> Ty_record (List.map (fun x -> x#=>aux) xs)
+    | Ty_arrow (nt1, nt2) -> Ty_arrow (aux nt1, aux nt2)
+    | Ty_tuple nts -> Ty_tuple (List.map aux nts)
+    | Ty_poly _ -> _die [%here]
+  in
+  aux tp
+
 let to_smtty t =
+  let t =
+    if Myconfig.get_instantiate_poly_type_var_in_smt () then
+      instantiate_poly_type_var_in_smt t
+    else t
+  in
   let rec aux = function
     | Ty_constructor ("bool", _) -> Smt_Bool
     | Ty_constructor ("int", _) -> Smt_Int
@@ -40,7 +58,7 @@ let to_smtty t =
     | Ty_constructor (name, []) -> Smt_Uninterp name
     | Ty_constructor (_, _) -> Smt_Uninterp (nt_name t)
     | Ty_tuple l -> Smt_tuple (List.map aux l)
-    | Ty_var name -> Smt_Uninterp name
+    | Ty_var _ -> Smt_Uninterp (layout_nt t)
     | Ty_record l -> Smt_record (List.map (fun x -> x#=>aux) (sort_record l))
     | _ -> _die_with [%here] (spf "%s not a basic type" (show_nt t))
   in

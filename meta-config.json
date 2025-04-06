@@ -3,6 +3,7 @@
         "Debug"
     ],
     "show_var_type_in_prop": true,
+    "instantiate_poly_type_var_in_smt": true,
     "max_printing_size": 300,
     "log_tags": [
         // "syn",
@@ -10,6 +11,7 @@
         // "ntypecheck",
         // "plan",
         // "parsing",
+        "axiom",
         "queries",
         "model",
         "z3encode",

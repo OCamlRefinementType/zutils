@@ -16,6 +16,7 @@ type meta_config = {
   prim_path : preload_path;
   prover_timeout_bound : int;
   show_var_type_in_prop : bool;
+  instantiate_poly_type_var_in_smt : bool;
 }
 [@@deriving yojson]
 

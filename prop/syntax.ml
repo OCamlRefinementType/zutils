@@ -593,3 +593,30 @@ let rename_pred_prop oldname newname =
     | Exists { qv; body } -> Exists { qv; body = aux body }
   in
   aux
+
+(** Z3 *)
+
+let get_fv_preds_from_lit lit =
+  let rec aux = function
+    | AC _ | AVar _ -> []
+    | ATu l -> List.concat_map (fun x -> aux x.x) l
+    | AProj (lit, _) -> aux lit.x
+    | ARecord l -> List.concat_map (fun (_, x) -> aux x.x) l
+    | AField (lit, _) -> aux lit.x
+    | AAppOp (f, args) -> f.x :: List.concat_map (fun x -> aux x.x) args
+  in
+  List.slow_rm_dup String.equal @@ aux lit.x
+
+let get_fv_preds_from_prop prop =
+  let rec aux = function
+    | Lit lit -> get_fv_preds_from_lit lit
+    | Implies (e1, e2) -> List.concat_map aux [ e1; e2 ]
+    | Ite (e1, e2, e3) -> List.concat_map aux [ e1; e2; e3 ]
+    | Not e -> aux e
+    | And es -> List.concat_map aux es
+    | Or es -> List.concat_map aux es
+    | Iff (e1, e2) -> List.concat_map aux [ e1; e2 ]
+    | Forall { body; _ } -> aux body
+    | Exists { body; _ } -> aux body
+  in
+  List.slow_rm_dup String.equal @@ aux prop

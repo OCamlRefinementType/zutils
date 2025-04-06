@@ -77,3 +77,14 @@ let get_lit_feild_idx loc t name =
   match List.find_index (fun y -> String.equal name (fst y)) args with
   | None -> _die [%here]
   | Some n -> n
+
+open Zdatatype
+
+type laxiom = {
+  tasks : StrSet.t;
+  preds : StrSet.t;
+  prop : Nt.t prop;
+  z3_prop : Z3.Expr.expr;
+}
+
+type laxiom_system = laxiom StrMap.t

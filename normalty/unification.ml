@@ -74,6 +74,8 @@ module BoundConstraints = struct
          bc.cs)
 end
 
+(* let add_cs (x, y) cs = if equal_nt x y then cs else (x, y) :: cs *)
+
 let type_unification m (cs : (t * t) list) =
   let rec aux m cs =
     let () =

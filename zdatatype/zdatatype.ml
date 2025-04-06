@@ -4,6 +4,7 @@ module List = Zlist.List
 module Tree = Ztree.Tree
 module LabeledTree = Zlabeled_tree.LabeledTree
 module IntSet = Zset.IntSet
+module StrSet = Zset.StrSet
 module IntMap = Zmap.IntMap
 module StrMap = Zmap.StrMap
 module IntListMap = Zmap.IntListMap
