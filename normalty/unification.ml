@@ -42,6 +42,11 @@ module BoundConstraints = struct
     let type_vars, t = uniquelize (type_vars, t) in
     ({ type_vars; cs }, t)
 
+  let add_type_var { type_vars; cs } pt =
+    if StrMap.mem pt type_vars then
+      _die_with [%here] (spf "same poly var: %s" pt)
+    else { type_vars = StrMap.add pt () type_vars; cs }
+
   let add bc (t1, t2) =
     let type_vars, t1 = uniquelize (bc.type_vars, t1) in
     let type_vars, t2 = uniquelize (type_vars, t2) in
