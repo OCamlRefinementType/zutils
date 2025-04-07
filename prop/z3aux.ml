@@ -49,8 +49,6 @@ let get_string_by_name m x =
           (* Printf.printf "get_int(%s)\n" (Z3.Expr.to_string v); *)
           Some str)
 
-let int_to_z3 ctx i = mk_numeral_int ctx i (Integer.mk_sort ctx)
-let bool_to_z3 ctx b = if b then mk_true ctx else mk_false ctx
 (* let _z3_enum_type = Hashtbl.create 5 *)
 
 (* let get_z3_enum_type ctx (enum_name, enum_elems) = *)
@@ -82,17 +80,9 @@ let rec smt_tp_to_sort ctx t =
   | Smt_Unit -> Enumeration.mk_sort_s ctx z3_unit_name [ z3_tt_name ]
   | Smt_Int -> Integer.mk_sort ctx
   | Smt_Bool -> Boolean.mk_sort ctx
-  (* | Smt_option smtnt -> *)
-  (*     let constructor_none = *)
-  (*       Datatype.mk_constructor_s ctx "None" (mk_recog ctx "is_None") [] [] [] *)
-  (*     in *)
-  (*     let constructor_some = *)
-  (*       Datatype.mk_constructor_s ctx "Some" (mk_recog ctx "is_Some") *)
-  (*         [ Symbol.mk_string ctx "get_Some" ] *)
-  (*         [ Some (smt_tp_to_sort ctx smtnt) ] *)
-  (*         [ 0 ] *)
-  (*     in *)
-  (*     Datatype.mk_sort_s ctx "option" [ constructor_none; constructor_some ] *)
+  | Smt_Char -> Seq.mk_char_sort ctx
+  | Smt_String -> Seq.mk_string_sort ctx
+  | Smt_Float64 -> FloatingPoint.mk_sort_64 ctx
   | Smt_option smtnt ->
       let option_name = layout_smtty t in
       let some_name = mk_some_name smtnt in
@@ -130,6 +120,15 @@ let rec smt_tp_to_sort ctx t =
           (List.init (List.length fields) (fun i -> i))
       in
       Datatype.mk_sort_s ctx record_name [ constructor ]
+
+let int_to_z3 ctx i = mk_numeral_int ctx i (Integer.mk_sort ctx)
+let bool_to_z3 ctx b = if b then mk_true ctx else mk_false ctx
+
+let float_to_z3 ctx float =
+  FloatingPoint.mk_numeral_f ctx float (smt_tp_to_sort ctx Smt_Float64)
+
+let char_to_z3 ctx char = Seq.mk_char ctx (Char.code char)
+let str_to_z3 ctx str = Seq.mk_string ctx str
 
 module NTMap = Map.Make (struct
   type t = nt

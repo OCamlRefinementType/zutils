@@ -21,7 +21,14 @@ let is_builtin_op str = List.exists (String.equal str) builtin_primop
 (* The constant is self-typed *)
 (* The constant has literal that can be passed directly *)
 (* NOTE: None and other enum literals are lit because they are not self-typed *)
-type constant = U | B of bool | I of int [@@deriving sexp, show, eq, ord]
+type constant =
+  | U
+  | B of bool
+  | I of int
+  | C of char
+  | S of string
+  | F of float
+[@@deriving sexp, show, eq, ord]
 
 type 't lit =
   | AC of constant

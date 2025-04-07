@@ -5,8 +5,13 @@ open Sugar
 
 let constant_to_nt c =
   let open Nt in
-  match c with U -> unit_ty | B _ -> bool_ty | I _ -> int_ty
-(* | Tu l -> Nt.Ty_tuple (List.map constant_to_nt l) *)
+  match c with
+  | U -> unit_ty
+  | B _ -> bool_ty
+  | I _ -> int_ty
+  | C _ -> char_ty
+  | S _ -> string_ty
+  | F _ -> float_ty
 
 (** op *)
 

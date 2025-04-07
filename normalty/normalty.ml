@@ -56,6 +56,9 @@ let to_smtty t =
     | Ty_constructor ("int", _) -> Smt_Int
     | Ty_constructor ("nat", _) -> Smt_Int
     | Ty_constructor ("unit", _) -> Smt_Unit
+    | Ty_constructor ("char", _) -> Smt_Char
+    | Ty_constructor ("string", _) -> Smt_String
+    | Ty_constructor ("float", _) -> Smt_Float64
     | Ty_constructor ("option", [ nt ]) -> Smt_option (aux nt)
     | Ty_constructor (name, []) -> Smt_Uninterp name
     | Ty_constructor (_, _) -> Smt_Uninterp (layout_nt t)
@@ -72,6 +75,9 @@ let rec layout_smtty = function
   | Smt_Bool -> "bool"
   | Smt_Int -> "int"
   | Smt_Unit -> "unit"
+  | Smt_Char -> "char"
+  | Smt_String -> "string"
+  | Smt_Float64 -> "float"
   | Smt_Uninterp x -> x
   | Smt_option smtty -> spf "%s option" (layout_smtty smtty)
   | Smt_tuple ts -> spf "(%s)" (List.split_by " * " layout_smtty ts)

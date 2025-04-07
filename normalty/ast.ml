@@ -24,6 +24,9 @@ type smtty =
   | Smt_Unit
   | Smt_Bool
   | Smt_Int
+  | Smt_Char
+  | Smt_String
+  | Smt_Float64
   | Smt_option of smtty
   | Smt_tuple of smtty list
   | Smt_record of (smtty, string) typed list
@@ -63,6 +66,9 @@ let unit_ty = _constructor_ty_0 "unit"
 let bool_ty = _constructor_ty_0 "bool"
 let int_ty = _constructor_ty_0 "int"
 let nat_ty = _constructor_ty_0 "nat"
+let char_ty = _constructor_ty_0 "char"
+let string_ty = _constructor_ty_0 "string"
+let float_ty = _constructor_ty_0 "float"
 let is_dt = function Ty_constructor _ -> true | _ -> false
 let fst_ty = function Ty_tuple [ a; _ ] -> a | _ -> _die [%here]
 let snd_ty = function Ty_tuple [ _; a ] -> a | _ -> _die [%here]

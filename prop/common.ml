@@ -32,6 +32,9 @@ let quantifier_to_pattern (q, u) =
 let smt_layout_ty = function
   | Some (Nt.Ty_constructor ("bool", [])) -> "Bool"
   | Some (Nt.Ty_constructor ("int", [])) -> "Int"
+  | Some (Nt.Ty_constructor ("char", [])) -> "Char"
+  | Some (Nt.Ty_constructor ("string", [])) -> "String"
+  | Some (Nt.Ty_constructor ("float", [])) -> "Float64"
   | Some (Nt.Ty_constructor _) -> "Int"
   | _ -> _die_with [%here] "unimp"
 
