@@ -23,7 +23,7 @@ let init_for_inline_test (nctx, axioms) =
   let axioms =
     List.map
       (fun (name, tasks, prop) ->
-        (name, tasks, Typecheck.prop_type_check ctx [ "a" ] prop))
+        (name, tasks, Typecheck.prop_type_check ctx [ Nt.unified_type_var ] prop))
       axioms
   in
   let () = update_axioms axioms in
