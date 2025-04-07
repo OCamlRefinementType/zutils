@@ -73,18 +73,19 @@ let rec prop_to_expr expr =
     match e with
     | Lit lit -> typed_lit_to_expr lit
     | Implies (e1, e2) ->
-        mk_op_apply ("implies", List.map prop_to_expr [ e1; e2 ])
+        mk_op_apply (mkvar "implies", List.map prop_to_expr [ e1; e2 ])
     | Ite (e1, e2, e3) ->
         let e1, e2, e3 = map3 prop_to_expr (e1, e2, e3) in
         mk_ite (e1, e2, e3)
-    | Not e -> mk_op_apply ("not", List.map prop_to_expr [ e ])
+    | Not e -> mk_op_apply (mkvar "not", List.map prop_to_expr [ e ])
     | And [] -> failwith "un-imp"
     | And [ x ] -> aux x
-    | And (h :: t) -> mk_op_apply ("&&", List.map prop_to_expr [ h; And t ])
+    | And (h :: t) ->
+        mk_op_apply (mkvar "&&", List.map prop_to_expr [ h; And t ])
     | Or [] -> failwith "un-imp"
     | Or [ x ] -> aux x
-    | Or (h :: t) -> mk_op_apply ("||", List.map prop_to_expr [ h; And t ])
-    | Iff (e1, e2) -> mk_op_apply ("iff", List.map prop_to_expr [ e1; e2 ])
+    | Or (h :: t) -> mk_op_apply (mkvar "||", List.map prop_to_expr [ h; And t ])
+    | Iff (e1, e2) -> mk_op_apply (mkvar "iff", List.map prop_to_expr [ e1; e2 ])
     | Forall { qv; body } ->
         mklam (quantifier_to_pattern (Nt.Fa, qv)) (prop_to_expr body)
     | Exists { qv; body } ->

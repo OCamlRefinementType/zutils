@@ -116,7 +116,7 @@ let typed_lit_force_avar_opt lit =
 
 let typed_lit_force_ac_opt lit = match lit.x with AC c -> Some c | _ -> None
 let mk_lit_true = AC (B true)
-let mk_lit_false = AC (B true)
+let mk_lit_false = AC (B false)
 
 (** For Nt.t typed *)
 
@@ -536,7 +536,7 @@ let lift_ex_quantifiers phi =
         (qvs, And ps)
     | Lit _ | Implies _ | Ite _ | Not _ | Or _ | Iff _ | Forall _ -> (qvs, prop)
   in
-  aux phi
+  aux [] phi
 
 let simpl_eq_in_prop =
   let rec aux = function
@@ -619,4 +619,54 @@ let get_fv_preds_from_prop prop =
     | Forall { body; _ } -> aux body
     | Exists { body; _ } -> aux body
   in
-  List.slow_rm_dup String.equal @@ aux prop
+  let res = List.slow_rm_dup String.equal @@ aux prop in
+  List.filter (fun p -> not (is_builtin_op p)) res
+
+let to_nnf prop =
+  let rec aux is_negate prop =
+    match prop with
+    | Lit _ -> if is_negate then Not prop else prop
+    | Implies (e1, e2) ->
+        if is_negate then smart_and [ e1; aux true e2 ]
+        else Implies (aux false e1, aux false e2)
+    | Ite _ | Iff _ -> if is_negate then smart_not prop else prop
+    | Not p -> aux (not is_negate) p
+    | And es ->
+        if is_negate then smart_or (List.map (aux true) es)
+        else smart_and (List.map (aux false) es)
+    | Or es ->
+        if is_negate then smart_and (List.map (aux true) es)
+        else smart_or (List.map (aux false) es)
+    | Forall { qv; body } ->
+        if is_negate then Exists { qv; body = aux true body }
+        else Forall { qv; body = aux false body }
+    | Exists { qv; body } ->
+        if is_negate then Forall { qv; body = aux true body }
+        else Exists { qv; body = aux false body }
+  in
+  let res = aux false prop in
+  res
+
+(* let to_snf prop = match prop with Exists { body; _ } -> body | _ -> prop *)
+(* let qvs, prop = lift_ex_quantifiers prop in *)
+(* let qvs = match qvs with [] -> [] | _ :: qvs -> qvs in *)
+(* smart_exists qvs prop *)
+
+let snf_quantified_var_by_name name =
+  let rec aux prop =
+    match prop with
+    | Exists { body; qv } ->
+        let body = aux body in
+        if String.equal qv.x name then body else Exists { body; qv }
+    | Forall { body; qv } ->
+        let body = aux body in
+        if String.equal qv.x name then body else Forall { body; qv }
+    | And l -> smart_and (List.map aux l)
+    | Or l -> smart_or (List.map aux l)
+    | Implies (e1, e2) -> Implies (aux e1, aux e2)
+    | Lit _ -> prop
+    | Iff (e1, e2) -> Iff (aux e1, aux e2)
+    | Ite (e1, e2, e3) -> Ite (aux e1, aux e2, aux e3)
+    | Not e -> Not (aux e)
+  in
+  aux

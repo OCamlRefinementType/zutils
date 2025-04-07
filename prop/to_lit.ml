@@ -17,7 +17,8 @@ let rec lit_to_expr expr =
   let rec aux expr =
     match expr with
     | AC c -> constant_to_expr c
-    | AAppOp (op, args) -> mk_op_apply (op.x, List.map typed_lit_to_expr args)
+    | AAppOp (op, args) ->
+        mk_op_apply (aux (AVar op), List.map typed_lit_to_expr args)
     | ATu l -> Exp.tuple (List.map typed_lit_to_expr l)
     | AProj (lit, 0) -> normal_apply (mkvar fst_func) [ aux lit.x ]
     | AProj (lit, 1) -> normal_apply (mkvar snd_func) [ aux lit.x ]

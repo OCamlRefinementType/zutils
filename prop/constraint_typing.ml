@@ -85,7 +85,7 @@ let rec constraint_lit_type_infer (ctx : t ctx) (bc : BC.bc) (lit : t lit) =
       let bc, retty = BC.fresh bc in
       let mp_ty = Nt.construct_arr_tp (List.map _get_ty args, retty) in
       let bc, _ = BC.add bc (mp_ty, mp.ty) in
-      (bc, (AAppOp (mp.x#:mp_ty, args))#:retty)
+      (bc, (AAppOp (mp, args))#:retty)
 
 and constraint_lits_type_check (ctx : t ctx) (bc : BC.bc)
     (lits : (t, t lit) typed list) =

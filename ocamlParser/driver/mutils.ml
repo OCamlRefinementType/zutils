@@ -177,15 +177,15 @@ let ct_eq ct ct' =
 
 let mk_op_apply (op, args) =
   desc_to_ocamlexpr
-  @@ Pexp_apply (mkvar op, List.map (fun x -> (Asttypes.Nolabel, x)) args)
+  @@ Pexp_apply (op, List.map (fun x -> (Asttypes.Nolabel, x)) args)
 
-let mk_typed_map e f = mk_op_apply ("#->", [ e; f ])
-let mk_list_map_apply f e = mk_op_apply ("List.map", [ f; e ])
-let mk_list_concat_apply l = mk_op_apply ("List.concat", [ l ])
-let mk_list_union_apply a b = mk_op_apply ("@", [ a; b ])
+let mk_typed_map e f = mk_op_apply (mkvar "#->", [ e; f ])
+let mk_list_map_apply f e = mk_op_apply (mkvar "List.map", [ f; e ])
+let mk_list_concat_apply l = mk_op_apply (mkvar "List.concat", [ l ])
+let mk_list_union_apply a b = mk_op_apply (mkvar "@", [ a; b ])
 
 let mk_list_subtract_apply eq a b =
-  mk_op_apply ("Zzdatatype.Datatype.List.substract", [ eq; a; b ])
+  mk_op_apply (mkvar "Zzdatatype.Datatype.List.substract", [ eq; a; b ])
 
 let mk_construct (name, args) =
   let arg =

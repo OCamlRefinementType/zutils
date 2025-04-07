@@ -20,7 +20,13 @@ let find_axioms_by_task asys task =
 
 let find_axioms_by_preds asys query_preds =
   let m =
-    StrMap.filter (fun _ { preds; _ } -> StrSet.subset preds query_preds) asys
+    StrMap.filter
+      (fun name { preds; _ } ->
+        ( _log @@ fun () ->
+          Pp.printf "@{<bold>in %s@}: %s\n" name
+            (StrList.to_string @@ StrSet.to_list preds) );
+        StrSet.subset preds query_preds)
+      asys
   in
   StrMap.to_key_list m
 
@@ -32,8 +38,16 @@ let find_axioms asys (task, qeury) =
   let axiom1 =
     match task with None -> [] | Some task -> find_axioms_by_task asys task
   in
+  ( _log @@ fun () ->
+    Pp.printf "@{<bold>%s@}: %s\n"
+      (layout_option (fun x -> x) task)
+      (StrList.to_string @@ StrSet.to_list query_preds) );
   let axiom2 = find_axioms_by_preds asys query_preds in
   let axioms = List.slow_rm_dup String.equal (axiom1 @ axiom2) in
+  let () =
+    _log @@ fun () ->
+    Pp.printf "@{<bold>Axioms by pred: @} %s\n" @@ StrList.to_string axiom2
+  in
   let () =
     _log @@ fun () ->
     Pp.printf "@{<bold>Axioms: @} %s\n" @@ StrList.to_string axioms

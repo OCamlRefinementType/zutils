@@ -5,8 +5,11 @@ open Sugar
 open Myconfig
 open Constencoding
 
+let _log = _log "z3encode"
+
 let rec typed_lit_to_z3 ctx lit =
   let () =
+    _log @@ fun () ->
     Printf.printf "lit encoding: %s : %s\n" (Front.layout_lit lit.x)
       (Nt.layout lit.ty)
   in
@@ -16,7 +19,10 @@ let rec typed_lit_to_z3 ctx lit =
         (Tuple.get_mk_decl (tp_to_sort ctx lit.ty))
         (List.map (typed_lit_to_z3 ctx) lits)
   | AProj (lit, n) ->
-      let () = Printf.printf "lit encoding: AProj : %s\n" (Nt.layout lit.ty) in
+      let () =
+        _log @@ fun () ->
+        Printf.printf "lit encoding: AProj : %s\n" (Nt.layout lit.ty)
+      in
       Z3.FuncDecl.apply
         (List.nth (Tuple.get_field_decls (tp_to_sort ctx lit.ty)) n)
         [ typed_lit_to_z3 ctx lit ]
@@ -37,7 +43,7 @@ let rec typed_lit_to_z3 ctx lit =
   | AVar x -> tpedvar_to_z3 ctx (x.ty, x.x)
   | AAppOp (op, args) -> (
       let () =
-        _log "z3encode" @@ fun () ->
+        _log @@ fun () ->
         Pp.printf "app (%s:%s) on %s\n" op.x (Nt.layout op.ty)
           (Zdatatype.List.split_by_comma
              (fun l -> spf "%s:%s" (Front.layout_lit l.x) (Nt.layout l.ty))
@@ -45,7 +51,7 @@ let rec typed_lit_to_z3 ctx lit =
       in
       let args = List.map (typed_lit_to_z3 ctx) args in
       let () =
-        _log "z3encode" @@ fun () ->
+        _log @@ fun () ->
         Pp.printf "app (%s:%s) on %s\n" op.x (Nt.layout op.ty)
           (Zdatatype.List.split_by_comma Expr.to_string args)
       in

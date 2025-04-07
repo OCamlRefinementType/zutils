@@ -2,7 +2,7 @@
     "mode": [
         "Debug"
     ],
-    "show_var_type_in_prop": true,
+    "show_var_type_in_prop": false,
     "instantiate_poly_type_var_in_smt": false,
     "max_printing_size": 300,
     "log_tags": [
@@ -11,10 +11,11 @@
         // "ntypecheck",
         // "plan",
         // "parsing",
+        // "unification",
         "axiom",
         "queries",
-        "model",
-        "z3encode",
+        // "model",
+        // "z3encode",
         "auxtyping",
         "preprocess",
         "typing",
@@ -23,7 +24,7 @@
         // "desymbolic",
         "never-use"
     ],
-    "prover_timeout_bound": 999,
+    "prover_timeout_bound": 2999,
     "prim_path": {
         "predefined_path": "data/predefined",
         "axioms_path": "",
