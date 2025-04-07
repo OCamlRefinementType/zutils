@@ -3,7 +3,7 @@
         "Debug"
     ],
     "show_var_type_in_prop": true,
-    "instantiate_poly_type_var_in_smt": true,
+    "instantiate_poly_type_var_in_smt": false,
     "max_printing_size": 300,
     "log_tags": [
         // "syn",

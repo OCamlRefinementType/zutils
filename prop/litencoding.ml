@@ -16,6 +16,7 @@ let rec typed_lit_to_z3 ctx lit =
         (Tuple.get_mk_decl (tp_to_sort ctx lit.ty))
         (List.map (typed_lit_to_z3 ctx) lits)
   | AProj (lit, n) ->
+      let () = Printf.printf "lit encoding: AProj : %s\n" (Nt.layout lit.ty) in
       Z3.FuncDecl.apply
         (List.nth (Tuple.get_field_decls (tp_to_sort ctx lit.ty)) n)
         [ typed_lit_to_z3 ctx lit ]

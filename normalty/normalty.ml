@@ -49,14 +49,15 @@ let to_smtty t =
       instantiate_poly_type_var_in_smt t
     else t
   in
-  let rec aux = function
+  let rec aux t =
+    match t with
     | Ty_constructor ("bool", _) -> Smt_Bool
     | Ty_constructor ("int", _) -> Smt_Int
     | Ty_constructor ("nat", _) -> Smt_Int
     | Ty_constructor ("unit", _) -> Smt_Unit
     | Ty_constructor ("option", [ nt ]) -> Smt_option (aux nt)
     | Ty_constructor (name, []) -> Smt_Uninterp name
-    | Ty_constructor (_, _) -> Smt_Uninterp (nt_name t)
+    | Ty_constructor (_, _) -> Smt_Uninterp (layout_nt t)
     | Ty_tuple l -> Smt_tuple (List.map aux l)
     | Ty_var _ -> Smt_Uninterp (layout_nt t)
     | Ty_record l -> Smt_record (List.map (fun x -> x#=>aux) (sort_record l))
@@ -67,13 +68,15 @@ let to_smtty t =
 open Zdatatype
 
 let rec layout_smtty = function
-  | Smt_Bool -> "B"
-  | Smt_Int -> "I"
-  | Smt_Unit -> "U"
+  | Smt_Bool -> "bool"
+  | Smt_Int -> "int"
+  | Smt_Unit -> "unit"
   | Smt_Uninterp x -> x
-  | Smt_option smtty -> spf "%s_O" (layout_smtty smtty)
-  | Smt_tuple ts -> spf "T_%s_T" (List.split_by "!" layout_smtty ts)
-  | Smt_record ts -> spf "R_%s_R" (List.split_by "!" _get_x ts)
+  | Smt_option smtty -> spf "%s option" (layout_smtty smtty)
+  | Smt_tuple ts -> spf "(%s)" (List.split_by " * " layout_smtty ts)
+  | Smt_record ts ->
+      spf "{%s}"
+        (List.split_by "; " (fun x -> spf "%s: %s" x.x (layout_smtty x.ty)) ts)
 
 let has_poly_tp tp =
   let rec aux tp =

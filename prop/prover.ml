@@ -333,6 +333,33 @@ let _p5 =
    a)))))((ty(Ty_constructor(int())))(x(AVar((ty(Ty_constructor(int())))(x \
    x)))))))))))))))))))))))))))))))))))"
 
+let _p6 =
+  "(Not(Forall(qv((ty(Ty_tuple((Ty_var a)(Ty_var b))))(x \
+   v)))(body(Implies(And((Lit((ty(Ty_constructor(bool())))(x(AAppOp((ty(Ty_arrow(Ty_var \
+   a)(Ty_constructor(bool()))))(x p1))(((ty(Ty_var \
+   a))(x(AProj((ty(Ty_tuple((Ty_var a)(Ty_var \
+   b))))(x(AVar((ty(Ty_tuple((Ty_var a)(Ty_var b))))(x \
+   v)))))0))))))))(Lit((ty(Ty_constructor(bool())))(x(AAppOp((ty(Ty_arrow(Ty_var \
+   b)(Ty_constructor(bool()))))(x p2))(((ty(Ty_var \
+   b))(x(AProj((ty(Ty_tuple((Ty_var a)(Ty_var \
+   b))))(x(AVar((ty(Ty_tuple((Ty_var a)(Ty_var b))))(x \
+   v)))))1))))))))))(Exists(qv((ty(Ty_var b))(x \
+   x_21)))(body(And((Lit((ty(Ty_constructor(bool())))(x(AAppOp((ty(Ty_arrow(Ty_var \
+   b)(Ty_constructor(bool()))))(x p2))(((ty(Ty_var b))(x(AVar((ty(Ty_var b))(x \
+   x_21))))))))))(Exists(qv((ty(Ty_var a))(x \
+   x_22)))(body(And((Lit((ty(Ty_constructor(bool())))(x(AAppOp((ty(Ty_arrow(Ty_var \
+   a)(Ty_constructor(bool()))))(x p1))(((ty(Ty_var a))(x(AVar((ty(Ty_var a))(x \
+   x_22))))))))))(Lit((ty(Ty_constructor(bool())))(x(AAppOp((ty(Ty_arrow(Ty_var \
+   a)(Ty_arrow(Ty_var a)(Ty_constructor(bool())))))(x ==))(((ty(Ty_var \
+   a))(x(AProj((ty(Ty_tuple((Ty_var a)(Ty_var \
+   b))))(x(AVar((ty(Ty_tuple((Ty_var a)(Ty_var b))))(x v)))))0)))((ty(Ty_var \
+   a))(x(AVar((ty(Ty_var a))(x \
+   x_22))))))))))(Lit((ty(Ty_constructor(bool())))(x(AAppOp((ty(Ty_arrow(Ty_var \
+   b)(Ty_arrow(Ty_var b)(Ty_constructor(bool())))))(x ==))(((ty(Ty_var \
+   b))(x(AProj((ty(Ty_tuple((Ty_var a)(Ty_var \
+   b))))(x(AVar((ty(Ty_tuple((Ty_var a)(Ty_var b))))(x v)))))1)))((ty(Ty_var \
+   b))(x(AVar((ty(Ty_var b))(x x_21))))))))))))))))))))))"
+
 open OcamlParser.Oparse
 
 let basic_type_ctx =
@@ -388,7 +415,7 @@ let%test "query" =
   let () =
     meta_config_path := "/Users/zhezzhou/workspace/zutils/meta-config.json"
   in
-  let prop = prop_of_sexp Nt.nt_of_sexp @@ Sexplib.Sexp.of_string _p4 in
+  let prop = prop_of_sexp Nt.nt_of_sexp @@ Sexplib.Sexp.of_string _p6 in
   let () = Printf.printf "Prop: %s:\n" @@ Front.layout prop in
   let ax = handle_prop ax_list_mem_has_nth in
   let () = Printf.printf "Ax: %s:\n" @@ Front.layout ax in
