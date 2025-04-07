@@ -12,7 +12,24 @@ type op = PrimOp of string | DtConstructor of string
 *)
 
 let builtin_primop =
-  [ "+"; "-"; "*"; "/"; ">"; ">="; "<"; "<="; "=="; "!="; "&&"; "||"; "mod" ]
+  [
+    "+";
+    "-";
+    "*";
+    "/";
+    ">";
+    ">=";
+    "<";
+    "<=";
+    "==";
+    "!=";
+    "&&";
+    "||";
+    "mod";
+    "char_is_digit";
+    "char_to_int";
+    "char_le";
+  ]
 
 let eq_op = "=="
 let is_builtin_op str = List.exists (String.equal str) builtin_primop
