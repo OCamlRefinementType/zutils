@@ -1,37 +1,47 @@
 {
-    "mode": [
-        "Debug"
+  "mode": [
+    "Debug"
+  ],
+  "max_printing_size": 300,
+  "log_tags": [
+    "axiom",
+    "queries",
+    "auxtyping",
+    "preprocess",
+    "typing",
+    "result",
+      // "syn",
+      // "eval",
+      // "ntypecheck",
+      // "plan",
+      // "parsing",
+      // "unification",
+      // "model",
+      // "z3encode",
+      // "desym_mapping",
+      // "desymbolic",
+    "never-use"
+  ],
+  "bool_options": [
+    [
+      "show_var_type_in_prop",
+      false
     ],
-    "max_printing_size": 300,
-    "log_tags": [
-        // "syn",
-        // "eval",
-        // "ntypecheck",
-        // "plan",
-        // "parsing",
-        // "unification",
-        "axiom",
-        "queries",
-        // "model",
-        // "z3encode",
-        "auxtyping",
-        "preprocess",
-        "typing",
-        "result",
-        // "desym_mapping",
-        // "desymbolic",
-        "never-use"
+    [
+      "instantiate_poly_type_var_in_smt",
+      true
     ],
-    "bool_options": [("show_var_type_in_prop", false),
-                     ("instantiate_poly_type_var_in_smt", true),
-                     ("show_record_type_feilds", true)
-                    ],
-    "prover_timeout_bound": 2999,
-    "prim_path": {
-        "predefined_path": "data/predefined",
-        "axioms_path": "",
-        "templates_path": "",
-        "p_header_template_path": "synRuntime/plang/header_template.funcp",
-        "p_client_template_path": "synRuntime/plang/client_template.funcp"
-    }
+    [
+      "show_record_type_feilds",
+      true
+    ]
+  ],
+  "prover_timeout_bound": 2999,
+  "prim_path": {
+    "predefined_path": "data/predefined",
+    "axioms_path": "",
+    "templates_path": "",
+    "p_header_template_path": "synRuntime/plang/header_template.funcp",
+    "p_client_template_path": "synRuntime/plang/client_template.funcp"
+  }
 }
