@@ -22,7 +22,8 @@ and core_type_desc_to_t t =
   | Ptyp_any -> _die_with [%here] "new we don't suport any type"
   | Ptyp_object (l, _) ->
       (* NOTE: In our type system, record type is anonymous type, thus use object type *)
-      Ty_record (List.map object_to_labeled_type l)
+      let fds = List.map object_to_labeled_type l in
+      mk_record None fds
   | Ptyp_poly (lc :: ps, ct) ->
       Ty_poly (lc.txt, core_type_desc_to_t (Ptyp_poly (ps, ct)))
   | Ptyp_poly ([], ct) -> core_type_to_t ct
@@ -71,7 +72,13 @@ and t_to_core_type_desc t =
           | None -> _die [%here]
           | Some x -> x),
           List.map t_to_core_type args )
-  | Ty_record l -> Ptyp_object (List.map labeled_t_to_feild l, Asttypes.Closed)
+  | Ty_record { fds; alias } ->
+      let alias = match alias with None -> "_record" | Some alias -> alias in
+      if Myconfig.get_show_record_type_feilds () then
+        let name_type = "record_name"#:(Ty_uninter alias) in
+        Ptyp_object
+          (List.map labeled_t_to_feild (name_type :: fds), Asttypes.Closed)
+      else mk0 alias
 
 and labeled_t_to_feild { x; ty = t } =
   Of.tag (Location.mknoloc x) (t_to_core_type t)

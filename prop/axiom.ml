@@ -30,7 +30,18 @@ let find_axioms_by_preds asys query_preds =
   in
   StrMap.to_key_list m
 
-let pred_extension (_, ps) = ps
+let rules = [ (StrSet.of_list [ "hd" ], [ "list_mem" ]) ]
+
+let pred_extension (_, ps) =
+  let ps =
+    List.fold_left
+      (fun ps (rname, new_preds) ->
+        let new_preds = if StrSet.subset rname ps then new_preds else [] in
+        let ps = StrSet.add_seq (List.to_seq new_preds) ps in
+        ps)
+      ps rules
+  in
+  ps
 
 let find_axioms asys (task, qeury) =
   let query_preds = StrSet.of_list @@ get_fv_preds_from_prop qeury in

@@ -25,6 +25,7 @@ let builtin_primop =
     "!=";
     "&&";
     "||";
+    "not";
     "mod";
     "char_is_digit";
     "char_to_int";

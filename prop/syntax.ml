@@ -131,15 +131,13 @@ let lit_to_nt = function
   | ATu l -> Nt.Ty_tuple (List.map _get_ty l)
   | AProj (lit, i) -> (
       match lit.ty with Nt.Ty_tuple l -> List.nth l i | _ -> _die [%here])
-  | ARecord l -> Nt.Ty_record (List.map (fun (x, lit) -> x#:lit.ty) l)
-  | AField (lit, i) -> (
-      match lit.ty with
-      | Nt.Ty_record l ->
-          let x =
-            Zdatatype.List.find __FUNCTION__ (fun x -> String.equal x.x i) l
-          in
-          x.ty
-      | _ -> _die [%here])
+  | ARecord l -> Nt.mk_record None (List.map (fun (x, lit) -> x#:lit.ty) l)
+  | AField (lit, i) ->
+      let l = Nt.as_record [%here] lit.ty in
+      let x =
+        Zdatatype.List.find __FUNCTION__ (fun x -> String.equal x.x i) l
+      in
+      x.ty
   | AAppOp (f, _) -> snd @@ Nt.destruct_arr_tp f.ty
 
 let lit_to_tlit lit = lit#:(lit_to_nt lit)

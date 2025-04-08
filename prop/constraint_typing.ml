@@ -74,7 +74,7 @@ let rec constraint_lit_type_infer (ctx : t ctx) (bc : BC.bc) (lit : t lit) =
       let bc, l = constraint_lits_type_check ctx bc l in
       let args = List.combine fds l in
       ( bc,
-        (ARecord args)#:(Nt.mk_record
+        (ARecord args)#:(Nt.mk_record None
                            (List.map (fun (fd, lit) -> fd#:lit.ty) args)) )
   | AField (y, n) ->
       let cs, y = constraint_lit_type_check ctx bc y in

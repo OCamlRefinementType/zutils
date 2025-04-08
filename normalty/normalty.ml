@@ -37,7 +37,8 @@ let instantiate_poly_type_var_in_smt tp =
     | Ty_var _ -> Ty_var unified_type_var
     | Ty_unknown | Ty_uninter _ -> tp
     | Ty_constructor (name, tps) -> Ty_constructor (name, List.map aux tps)
-    | Ty_record xs -> Ty_record (List.map (fun x -> x#=>aux) xs)
+    | Ty_record { alias; fds } ->
+        Ty_record { alias; fds = List.map (fun x -> x#=>aux) fds }
     | Ty_arrow (nt1, nt2) -> Ty_arrow (aux nt1, aux nt2)
     | Ty_tuple nts -> Ty_tuple (List.map aux nts)
     | Ty_poly _ -> _die [%here]
@@ -64,7 +65,8 @@ let to_smtty t =
     | Ty_constructor (_, _) -> Smt_Uninterp (layout_nt t)
     | Ty_tuple l -> Smt_tuple (List.map aux l)
     | Ty_var _ -> Smt_Uninterp (layout_nt t)
-    | Ty_record l -> Smt_record (List.map (fun x -> x#=>aux) (sort_record l))
+    | Ty_record { fds; _ } ->
+        Smt_record (List.map (fun x -> x#=>aux) (sort_record fds))
     | _ -> _die_with [%here] (spf "%s not a basic type" (show_nt t))
   in
   aux t
@@ -90,7 +92,7 @@ let has_poly_tp tp =
     match tp with
     | Ty_var _ | Ty_unknown | Ty_uninter _ -> false
     | Ty_constructor (_, tps) -> List.exists aux tps
-    | Ty_record xs -> List.exists (fun x -> aux x.ty) xs
+    | Ty_record { fds; _ } -> List.exists (fun x -> aux x.ty) fds
     | Ty_arrow (nt1, nt2) -> List.exists aux [ nt1; nt2 ]
     | Ty_tuple nts -> List.exists aux nts
     | Ty_poly _ -> true

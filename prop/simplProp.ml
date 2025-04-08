@@ -256,7 +256,9 @@ let eval_arithmetic_in_lit prop =
     | Or l -> smart_or (List.map aux l)
     | Implies (e1, e2) -> Implies (aux e1, aux e2)
     | Lit lit -> Lit (eval_arithmetic_in_lit lit)
-    | Iff (e1, e2) -> Iff (aux e1, aux e2)
+    | Iff (e1, e2) ->
+        let e1, e2 = map2 aux (e1, e2) in
+        if equal_prop (fun _ _ -> true) e1 e2 then mk_true else Iff (e1, e2)
     | Ite (e1, e2, e3) -> Ite (aux e1, aux e2, aux e3)
     | Not e -> Not (aux e)
   in
@@ -267,4 +269,5 @@ let simpl_query q =
   let q = eval_arithmetic_in_lit q in
   let q = simpl_query_by_eq q in
   let q = instantiate_quantified_bool q in
+  let q = eval_arithmetic_in_lit q in
   q

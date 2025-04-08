@@ -18,7 +18,7 @@ let gather_type_vars t =
     | Ty_var x -> StrMap.add x () m
     | Ty_unknown | Ty_uninter _ -> m
     | Ty_constructor (_, tps) -> List.fold_left aux m tps
-    | Ty_record xs -> List.fold_left (fun m x -> aux m x.ty) m xs
+    | Ty_record { fds; _ } -> List.fold_left (fun m x -> aux m x.ty) m fds
     | Ty_arrow (nt1, nt2) -> List.fold_left aux m [ nt1; nt2 ]
     | Ty_tuple nts -> List.fold_left aux m nts
     | Ty_poly (x, t) -> StrMap.remove x (aux m t)
@@ -33,7 +33,7 @@ let wf_nt t =
   let rec aux tvars = function
     | Ty_var _ | Ty_unknown | Ty_uninter _ -> true
     | Ty_constructor (_, tps) -> List.for_all (aux tvars) tps
-    | Ty_record xs -> List.for_all (fun x -> aux tvars x.ty) xs
+    | Ty_record { fds; _ } -> List.for_all (fun x -> aux tvars x.ty) fds
     | Ty_arrow (nt1, nt2) -> List.for_all (aux tvars) [ nt1; nt2 ]
     | Ty_tuple nts -> List.for_all (aux tvars) nts
     | Ty_poly _ -> false
@@ -74,10 +74,9 @@ let layout_nt = Frontend.layout_nt
 (* NOTE: the Z3 encoding use list instead of map, thus we need to make sure the input list has the same order *)
 
 let sort_record args = List.sort (fun a b -> String.compare a.x b.x) args
-let mk_record args = Ty_record (sort_record args)
 
 let as_record loc = function
-  | Ty_record args -> sort_record args
+  | Ty_record { fds; _ } -> sort_record fds
   | _ -> _die loc
 
 let get_feild loc t name =

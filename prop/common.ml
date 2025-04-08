@@ -56,8 +56,8 @@ let detailssetting =
   {
     sym_true = "⊤";
     sym_false = "⊥";
-    sym_and = " ∧ ";
-    sym_or = " ∨ ";
+    sym_and = " 𐌡 ";
+    sym_or = " ᐯ ";
     sym_not = "¬";
     sym_implies = "=>";
     sym_iff = "<=>";
@@ -71,8 +71,8 @@ let psetting =
   {
     sym_true = "⊤";
     sym_false = "⊥";
-    sym_and = " ∧ ";
-    sym_or = " ∨ ";
+    sym_and = " 𐌡 ";
+    sym_or = " ᐯ ";
     sym_not = "¬";
     sym_implies = "=>";
     sym_iff = "<=>";

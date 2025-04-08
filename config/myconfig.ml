@@ -27,11 +27,14 @@ let get_meta () =
 let get_mode () = (get_meta ()).mode
 let get_max_printing_size () = (get_meta ()).max_printing_size
 let get_log_tags () = (get_meta ()).log_tags
+let get_bool_option name = get_bool_option_by_name (get_meta ()) name
 let get_prover_timeout_bound () = (get_meta ()).prover_timeout_bound
-let get_show_var_type_in_prop () = (get_meta ()).show_var_type_in_prop
+let get_show_var_type_in_prop () = get_bool_option show_var_type_in_prop
 
 let get_instantiate_poly_type_var_in_smt () =
-  (get_meta ()).instantiate_poly_type_var_in_smt
+  get_bool_option instantiate_poly_type_var_in_smt
+
+let get_show_record_type_feilds () = get_bool_option show_record_type_feilds
 
 let _log kw (f : unit -> unit) =
   match get_log_tags () with

@@ -15,10 +15,30 @@ type meta_config = {
   max_printing_size : int;
   prim_path : preload_path;
   prover_timeout_bound : int;
-  show_var_type_in_prop : bool;
-  instantiate_poly_type_var_in_smt : bool;
+  bool_options : (string * bool) list;
 }
 [@@deriving yojson]
 
 let normalize_config c =
   match c.mode with Release -> { c with log_tags = [] } | Debug -> c
+
+let show_var_type_in_prop = "show_var_type_in_prop"
+let instantiate_poly_type_var_in_smt = "instantiate_poly_type_var_in_smt"
+let show_record_type_feilds = "show_record_type_feilds"
+
+let default_bool_options =
+  [
+    (show_var_type_in_prop, false);
+    (instantiate_poly_type_var_in_smt, false);
+    (show_record_type_feilds, false);
+  ]
+
+let get_bool_option_by_name c name =
+  match List.find_opt (fun x -> String.equal name (fst x)) c.bool_options with
+  | Some b -> snd b
+  | None -> (
+      match
+        List.find_opt (fun x -> String.equal name (fst x)) default_bool_options
+      with
+      | Some b -> snd b
+      | None -> failwith (Printf.sprintf "cannot find option %s" name))

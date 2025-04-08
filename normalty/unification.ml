@@ -128,7 +128,7 @@ let type_unification m (cs : (t * t) list) =
         | _, Ty_tuple [ t2 ] -> aux m ((t1, t2) :: cs)
         | Ty_tuple ts1, Ty_tuple ts2 when List.length ts1 == List.length ts2 ->
             aux m (List.combine ts1 ts2 @ cs)
-        | Ty_record l1, Ty_record l2 ->
+        | Ty_record { fds = l1; _ }, Ty_record { fds = l2; _ } ->
             let tab = Hashtbl.create (List.length l1) in
             let () = List.iter (fun x -> Hashtbl.add tab x.x x.ty) l1 in
             let cs =

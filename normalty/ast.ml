@@ -42,7 +42,8 @@ type nt =
   | Ty_tuple of nt list
   | Ty_uninter of string
   | Ty_constructor of (string * nt list)
-  | Ty_record of (nt, string) typed list
+  | Ty_record of { alias : string option; fds : (nt, string) typed list }
+    (* NOTE: alias for print only *)
   | Ty_poly of string * nt
     (* We only allow poly type appear at 1. top level 2. return type of arrow *)
 [@@deriving sexp, eq, show, ord]
@@ -56,7 +57,7 @@ let is_uninterp = function Smt_Uninterp _ -> true | _ -> false
 let rec is_base_tp = function
   | Ty_poly (_, _) | Ty_arrow _ -> false
   | Ty_uninter _ | Ty_constructor _ | Ty_var _ -> true
-  | Ty_record l -> List.for_all (fun x -> is_base_tp x.ty) l
+  | Ty_record { fds; _ } -> List.for_all (fun x -> is_base_tp x.ty) fds
   | Ty_tuple l -> List.for_all is_base_tp l
   | _ -> false
 
@@ -74,7 +75,11 @@ let fst_ty = function Ty_tuple [ a; _ ] -> a | _ -> _die [%here]
 let snd_ty = function Ty_tuple [ _; a ] -> a | _ -> _die [%here]
 let para_ty = function Ty_arrow (t, _) -> t | _ -> _die [%here]
 let ret_ty = function Ty_arrow (_, t) -> t | _ -> _die [%here]
-let get_record_types = function Ty_record l -> l | _ -> _die [%here]
+let mk_record alias fds = Ty_record { alias; fds }
+
+let get_record_types = function
+  | Ty_record { fds; _ } -> fds
+  | _ -> _die [%here]
 
 let get_nth_ty loc ty n =
   match ty with

@@ -125,7 +125,7 @@ let eval_ex_prim_in_prop (task_name, sprop) =
   let rec aux (evars, sprop) =
     let () = Printf.printf "Eval Prop: \n%s\n" (Front.layout sprop) in
     match evars with
-    | [] -> ()
+    | [] -> sprop
     | qv :: evars when Nt.equal_nt qv.ty Nt.int_ty -> (
         let body = snf_quantified_var_by_name qv.x sprop in
         let () = Printf.printf "Eval SNF Prop: \n%s\n" (Front.layout body) in
@@ -136,7 +136,7 @@ let eval_ex_prim_in_prop (task_name, sprop) =
             let () = Printf.printf "Sat\n" in
             let expr = Litencoding.typed_lit_to_z3 ctx (tvar_to_lit qv) in
             match Model.eval model expr false with
-            | None -> ()
+            | None -> sprop
             | Some res -> (
                 match int_of_string_opt (Expr.to_string res) with
                 | Some i ->
@@ -148,12 +148,15 @@ let eval_ex_prim_in_prop (task_name, sprop) =
                     in
                     let _ = analysize_failure model body in
                     aux (evars, body)
-                | None -> ()))
-        | _ -> ())
+                | None -> sprop))
+        | _ -> sprop)
     | _ :: evars -> aux (evars, sprop)
   in
   let qvs, _ = lift_ex_quantifiers sprop in
-  aux (qvs, sprop)
+  let sprop = aux (qvs, sprop) in
+  let ax = SimplProp.simpl_query @@ to_nnf (smart_not sprop) in
+  let () = Printf.printf "Suggested Axiom: \n%s\n" (Front.layout ax) in
+  ()
 
 (* let ax_list_mem_has_nth = *)
 (*   "fun (l : 'c list) (v : 'c) ->\n\ *)
@@ -176,9 +179,9 @@ let%test "query_from_file" =
   let () =
     meta_config_path := "/Users/zhezzhou/workspace/zutils/meta-config.json"
   in
-  let task_name = "frequencyl_aux" in
+  let task_name = "shuffle_aux" in
   let _ = get_normal_context () in
-  let prop = handle_prop_from_sexp_file (task_name, 2) in
+  let prop = handle_prop_from_sexp_file (task_name, 1) in
   let () = Printf.printf "Prop:\n%s:\n" @@ Front.layout prop in
   let sprop = SimplProp.simpl_query_by_eq prop in
   let () = Printf.printf "Simplied Prop:\n%s\n" @@ Front.layout sprop in
