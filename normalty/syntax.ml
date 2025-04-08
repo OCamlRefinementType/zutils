@@ -16,7 +16,7 @@ let gather_type_vars t =
   let open Zdatatype in
   let rec aux m = function
     | Ty_var x -> StrMap.add x () m
-    | Ty_unknown | Ty_uninter _ -> m
+    | Ty_unknown -> m
     | Ty_constructor (_, tps) -> List.fold_left aux m tps
     | Ty_record { fds; _ } -> List.fold_left (fun m x -> aux m x.ty) m fds
     | Ty_arrow (nt1, nt2) -> List.fold_left aux m [ nt1; nt2 ]
@@ -31,7 +31,7 @@ let rec construct_poly_nt = function
 
 let wf_nt t =
   let rec aux tvars = function
-    | Ty_var _ | Ty_unknown | Ty_uninter _ -> true
+    | Ty_var _ | Ty_unknown -> true
     | Ty_constructor (_, tps) -> List.for_all (aux tvars) tps
     | Ty_record { fds; _ } -> List.for_all (fun x -> aux tvars x.ty) fds
     | Ty_arrow (nt1, nt2) -> List.for_all (aux tvars) [ nt1; nt2 ]

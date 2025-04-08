@@ -35,7 +35,7 @@ let instantiate_poly_type_var_in_smt tp =
   let rec aux tp =
     match tp with
     | Ty_var _ -> Ty_var unified_type_var
-    | Ty_unknown | Ty_uninter _ -> tp
+    | Ty_unknown -> tp
     | Ty_constructor (name, tps) -> Ty_constructor (name, List.map aux tps)
     | Ty_record { alias; fds } ->
         Ty_record { alias; fds = List.map (fun x -> x#=>aux) fds }
@@ -90,7 +90,7 @@ let rec layout_smtty = function
 let has_poly_tp tp =
   let rec aux tp =
     match tp with
-    | Ty_var _ | Ty_unknown | Ty_uninter _ -> false
+    | Ty_var _ | Ty_unknown -> false
     | Ty_constructor (_, tps) -> List.exists aux tps
     | Ty_record { fds; _ } -> List.exists (fun x -> aux x.ty) fds
     | Ty_arrow (nt1, nt2) -> List.exists aux [ nt1; nt2 ]

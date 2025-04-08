@@ -40,7 +40,6 @@ type nt =
   | Ty_var of string
   | Ty_arrow of nt * nt
   | Ty_tuple of nt list
-  | Ty_uninter of string
   | Ty_constructor of (string * nt list)
   | Ty_record of { alias : string option; fds : (nt, string) typed list }
     (* NOTE: alias for print only *)
@@ -56,7 +55,7 @@ let is_uninterp = function Smt_Uninterp _ -> true | _ -> false
 
 let rec is_base_tp = function
   | Ty_poly (_, _) | Ty_arrow _ -> false
-  | Ty_uninter _ | Ty_constructor _ | Ty_var _ -> true
+  | Ty_constructor _ | Ty_var _ -> true
   | Ty_record { fds; _ } -> List.for_all (fun x -> is_base_tp x.ty) fds
   | Ty_tuple l -> List.for_all is_base_tp l
   | _ -> false

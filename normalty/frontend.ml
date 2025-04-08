@@ -30,14 +30,9 @@ and core_type_desc_to_t t =
   | Ptyp_var name -> Ty_var name
   | Ptyp_arrow (_, t1, t2) -> Ty_arrow (core_type_to_t t1, core_type_to_t t2)
   | Ptyp_tuple ts -> Ty_tuple (List.map core_type_to_t ts)
-  | Ptyp_constr (lc, ts) -> (
-      match (Longident.flatten lc.txt, ts) with
-      | [ c ], args -> Ty_constructor (c, List.map core_type_to_t args)
-      | cs, [] -> Ty_uninter (Zdatatype.List.split_by "." (fun x -> x) cs)
-      | _, _ ->
-          failwith
-          @@ Printf.sprintf "--un-imp??: %s"
-               (string_of_core_type @@ desc_to_ct t))
+  | Ptyp_constr (lc, ts) ->
+      let c = String.concat "." @@ Longident.flatten lc.txt in
+      Ty_constructor (c, List.map core_type_to_t ts)
   | Ptyp_class (_, _)
   | Ptyp_alias (_, _)
   | Ptyp_variant (_, _, _)
@@ -60,22 +55,20 @@ and t_to_core_type_desc t =
       (* in *)
       res
   | Ty_poly (p, nt) -> Ptyp_poly ([ mknoloc p ], t_to_core_type nt)
-  | Ty_uninter name -> mk0 name
   | Ty_tuple t -> Ptyp_tuple (List.map t_to_core_type t)
   | Ty_arrow (t1, t2) ->
       Ptyp_arrow (Asttypes.Nolabel, t_to_core_type t1, t_to_core_type t2)
   | Ty_constructor (id, args) ->
-      Ptyp_constr
-        ( (Location.mknoloc
-          @@
-          match Longident.unflatten [ id ] with
-          | None -> _die [%here]
-          | Some x -> x),
-          List.map t_to_core_type args )
+      let id =
+        match Longident.unflatten @@ String.split_on_char '.' id with
+        | None -> _die [%here]
+        | Some id -> id
+      in
+      Ptyp_constr (Location.mknoloc id, List.map t_to_core_type args)
   | Ty_record { fds; alias } ->
       let alias = match alias with None -> "_record" | Some alias -> alias in
       if Myconfig.get_show_record_type_feilds () then
-        let name_type = "record_name"#:(Ty_uninter alias) in
+        let name_type = "record_name"#:(Ty_constructor (alias, [])) in
         Ptyp_object
           (List.map labeled_t_to_feild (name_type :: fds), Asttypes.Closed)
       else mk0 alias
