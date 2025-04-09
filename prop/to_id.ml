@@ -15,14 +15,11 @@ let opt_typed_id_to_pattern id =
 let opt_typed_ids_to_pattern ids =
   Pat.tuple (List.map opt_typed_id_to_pattern ids)
 
-let longid_to_id c =
-  match Longident.flatten c.Location.txt with
-  | [] -> _die [%here]
-  | [ c ] -> c
-  | _ -> _die_with [%here] "un-imp"
+let longid_to_id c = String.concat "." @@ Longident.flatten c.Location.txt
 
 let id_to_longid x =
-  match Longident.unflatten [ x ] with
+  let strs = String.split_on_char '.' x in
+  match Longident.unflatten strs with
   | Some x -> Location.mknoloc x
   | None -> _die [%here]
 
