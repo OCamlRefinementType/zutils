@@ -562,6 +562,40 @@ let tv_not_mem vs qv = not (tv_mem vs qv)
 let tv_to_lit x = (AVar x)#:x.ty
 let c_to_lit c = (AC c)#:(constant_to_nt c)
 
+(* let fresh_name_lit = *)
+(*   let rec aux lit = *)
+(*     match lit with *)
+(*     | AC _ | AVar _ -> lit *)
+(*     | ATu l -> ATu (List.map typed_aux l) *)
+(*     | AProj (lit, i) -> AProj (typed_aux lit, i) *)
+(*     | ARecord l -> ARecord (List.map (fun (x, lit) -> (x, typed_aux lit)) l) *)
+(*     | AField (lit, i) -> AField (typed_aux lit, i) *)
+(*     | AAppOp (f, args) -> AAppOp (f, List.map typed_aux args) *)
+(*   and typed_aux lit = lit#->aux in *)
+(*   typed_aux *)
+
+let fresh_name_prop =
+  let rec aux = function
+    | Lit lit -> Lit lit
+    | Implies (e1, e2) -> Implies (aux e1, aux e2)
+    | Ite (e1, e2, e3) -> Ite (aux e1, aux e2, aux e3)
+    | Not p -> Not (aux p)
+    | And es -> smart_and (List.map aux es)
+    | Or es -> smart_or (List.map aux es)
+    | Iff (e1, e2) -> Iff (aux e1, aux e2)
+    | Forall { qv; body } ->
+        let qv' = qv#->Rename.unique_var in
+        let body = subst_prop_instance qv.x (AVar qv') body in
+        Forall { qv = qv'; body = aux body }
+    | Exists { qv; body } ->
+        let qv' = qv#->Rename.unique_var in
+        let body = subst_prop_instance qv.x (AVar qv') body in
+        Exists { qv = qv'; body = aux body }
+  in
+  aux
+
+(** Poly *)
+
 let gather_poly_preds_from_prop prop =
   let rec aux = function
     | Lit lit -> ( match lit.x with AAppOp (op, _) -> [ op ] | _ -> [])
@@ -576,8 +610,6 @@ let gather_poly_preds_from_prop prop =
   in
   let xs = aux prop in
   List.slow_rm_dup (fun x y -> String.equal x.x y.x) xs
-
-(** Poly *)
 
 let rename_pred_prop oldname newname =
   let rec aux = function
