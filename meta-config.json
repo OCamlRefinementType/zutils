@@ -16,7 +16,7 @@
       // "plan",
       // "parsing",
       // "unification",
-      // "model",
+      "model",
       // "z3encode",
       // "desym_mapping",
       // "desymbolic",
@@ -25,7 +25,7 @@
   "bool_options": [
     [
       "show_var_type_in_prop",
-      false
+      true
     ],
     [
       "instantiate_poly_type_var_in_smt",

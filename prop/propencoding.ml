@@ -31,6 +31,7 @@ let to_z3 ctx prop =
         make_exists ctx [ tpedvar_to_z3 ctx (qv.ty, qv.x) ] (aux body)
     | Lit lit -> Litencoding.typed_lit_to_z3 ctx lit
   in
+  let () = _assert [%here] "sanity check" (unique_quantifiers prop) in
   let p1 = to_nnf prop in
   let () =
     _log_queries @@ fun _ ->

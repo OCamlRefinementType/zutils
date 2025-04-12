@@ -23,7 +23,9 @@ let init_for_inline_test (nctx, axioms) =
   let axioms =
     List.map
       (fun (name, tasks, prop) ->
-        (name, tasks, Typecheck.prop_type_check ctx [ Nt.unified_type_var ] prop))
+        ( name,
+          tasks,
+          Typecheck.prop_type_check ctx [ unified_axiom_type_var ] prop ))
       axioms
   in
   let () = update_axioms axioms in
@@ -179,7 +181,7 @@ let%test "query_from_file" =
   let () =
     meta_config_path := "/Users/zhezzhou/workspace/zutils/meta-config.json"
   in
-  let task_name = "shuffle_aux" in
+  let task_name = "operation_proto_gen" in
   let _ = get_normal_context () in
   let prop = handle_prop_from_sexp_file (task_name, 1) in
   let () = Printf.printf "Prop:\n%s:\n" @@ Front.layout prop in

@@ -82,7 +82,9 @@ let handle_sat_result solver =
 
 let check_sat (task, prop) =
   let { goal; solver; ax_sys; ctx } = get_prover () in
-  let axioms = Axiom.find_axioms ax_sys (task, prop) in
+  let axioms =
+    List.map (Propencoding.to_z3 ctx) @@ Axiom.find_axioms ax_sys (task, prop)
+  in
   let query = Propencoding.to_z3 ctx prop in
   let _ =
     _log_queries @@ fun _ ->

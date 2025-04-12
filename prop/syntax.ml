@@ -599,20 +599,20 @@ let rename_pred_prop oldname newname =
 
 (** Z3 *)
 
-let get_fv_preds_from_lit lit =
+let get_tfv_preds_from_lit lit =
   let rec aux = function
     | AC _ | AVar _ -> []
     | ATu l -> List.concat_map (fun x -> aux x.x) l
     | AProj (lit, _) -> aux lit.x
     | ARecord l -> List.concat_map (fun (_, x) -> aux x.x) l
     | AField (lit, _) -> aux lit.x
-    | AAppOp (f, args) -> f.x :: List.concat_map (fun x -> aux x.x) args
+    | AAppOp (f, args) -> f :: List.concat_map (fun x -> aux x.x) args
   in
-  List.slow_rm_dup String.equal @@ aux lit.x
+  List.slow_rm_dup (equal_typed Nt.equal_nt String.equal) @@ aux lit.x
 
-let get_fv_preds_from_prop prop =
+let get_tfv_preds_from_prop prop =
   let rec aux = function
-    | Lit lit -> get_fv_preds_from_lit lit
+    | Lit lit -> get_tfv_preds_from_lit lit
     | Implies (e1, e2) -> List.concat_map aux [ e1; e2 ]
     | Ite (e1, e2, e3) -> List.concat_map aux [ e1; e2; e3 ]
     | Not e -> aux e
@@ -622,8 +622,15 @@ let get_fv_preds_from_prop prop =
     | Forall { body; _ } -> aux body
     | Exists { body; _ } -> aux body
   in
-  let res = List.slow_rm_dup String.equal @@ aux prop in
-  List.filter (fun p -> not (is_builtin_op p)) res
+  let res =
+    List.slow_rm_dup (equal_typed Nt.equal_nt String.equal) @@ aux prop
+  in
+  List.filter (fun p -> not (is_builtin_op p.x)) res
+
+let get_fv_preds_from_lit lit = List.map _get_x @@ get_tfv_preds_from_lit lit
+
+let get_fv_preds_from_prop prop =
+  List.map _get_x @@ get_tfv_preds_from_prop prop
 
 let to_nnf prop =
   let rec aux is_negate prop =
@@ -673,3 +680,32 @@ let snf_quantified_var_by_name name =
     | Not e -> Not (aux e)
   in
   aux
+
+let unique_quantifiers prop =
+  let rec aux prop =
+    match prop with
+    | Exists { body; qv } | Forall { body; qv } ->
+        let* m = aux body in
+        if StrSet.mem qv.x m then (
+          ( Myconfig._log_queries @@ fun () ->
+            Printf.printf "duplicate quantifier %s\n" qv.x );
+          None)
+        else Some (StrSet.add qv.x m)
+    | And l | Or l -> aux_multi l
+    | Implies (e1, e2) -> aux_multi [ e1; e2 ]
+    | Lit _ -> Some StrSet.empty
+    | Iff (e1, e2) -> aux_multi [ e1; e2 ]
+    | Ite (e1, e2, e3) -> aux_multi [ e1; e2; e3 ]
+    | Not e -> aux e
+  and aux_multi l =
+    List.fold_left
+      (fun m m' ->
+        let* m = m in
+        let* m' = m' in
+        let res = StrSet.union m m' in
+        if StrSet.cardinal res != StrSet.cardinal m + StrSet.cardinal m' then
+          None
+        else Some res)
+      (Some StrSet.empty) (List.map aux l)
+  in
+  match aux prop with None -> false | Some _ -> true

@@ -105,6 +105,8 @@ let get_lit_feild_idx loc t name =
 
 open Zdatatype
 
+let unified_axiom_type_var = "a"
+
 type laxiom = {
   tasks : StrSet.t;
   preds : StrSet.t;

@@ -29,12 +29,11 @@ let nt_of_string = nt_of_string
 let string_of_nts = string_of_nts
 let untyped x = { x; ty = Ty_unknown }
 let nt_name nt = String.concat "_" @@ String.split_on_char ' ' @@ layout_nt nt
-let unified_type_var = "a"
 
 let instantiate_poly_type_var_in_smt tp =
   let rec aux tp =
     match tp with
-    | Ty_var _ -> Ty_var unified_type_var
+    | Ty_var _ -> int_ty (* Ty_var unified_type_var *)
     | Ty_unknown -> tp
     | Ty_constructor (name, tps) -> Ty_constructor (name, List.map aux tps)
     | Ty_record { alias; fds } ->
