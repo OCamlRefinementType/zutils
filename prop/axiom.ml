@@ -46,7 +46,7 @@ let pred_extension (_, ps) =
 (** instantiate_poly_axioms *)
 
 (* The first type has poly var *)
-let find_indicator_type_from_axiom prop =
+let find_first_poly_type_from_axiom prop =
   let rec aux prop =
     match prop with
     | Exists { body; qv } | Forall { body; qv } -> (
@@ -106,32 +106,46 @@ let gather_indicator_types query axioms =
          (fun pred_name -> get_actual_types pred_name.x)
          typed_preds
   in
-  let instantiate_axiom_by_ty ax idt ty =
-    let a' = Rename.unique_type_var unified_axiom_type_var in
-    let substf = Nt.subst_nt (unified_axiom_type_var, Nt.Ty_var a') in
-    let idt = substf idt in
-    let prop = map_prop substf ax.prop in
-    let* m = Nt.type_unification StrMap.empty [ (idt, ty) ] in
+  let instantiate_axiom_by_ty ax ax_fst_ty ty =
+    let tvars = Nt.gather_type_vars ty in
+    let ty =
+      List.fold_right (fun id -> Nt.subst_nt (id, Nt.mk_uninterp id)) tvars ty
+    in
+    let () =
+      _log @@ fun () ->
+      Pp.printf "prop: %s\nunify %s and %s\n"
+        (Front.layout_prop ax.prop)
+        (Nt.layout ax_fst_ty) (Nt.layout ty)
+    in
+    let* m = Nt.type_unification StrMap.empty [ (ax_fst_ty, ty) ] in
     let solution_ty =
-      match StrMap.find_opt m a' with
+      match StrMap.find_opt m unified_axiom_type_var with
       | None ->
           let () =
-            Pp.printf "prop: %s\n%s\n" (Front.layout_prop prop)
+            Pp.printf "%s\n"
               (List.split_by ";" (fun (x, ty) ->
                    spf "%s := %s" x (Nt.layout ty))
               @@ StrMap.to_kv_list m)
           in
           _die [%here]
-      | Some ty -> ty
+      | Some ty ->
+          let ty =
+            List.fold_right
+              (fun id -> Nt.subst_uninterpreted_type (id, Nt.mk_type_var id))
+              tvars ty
+          in
+          ty
     in
-    Some (solution_ty, map_prop (Nt.subst_nt (a', solution_ty)) prop)
+    Some
+      ( solution_ty,
+        map_prop (Nt.subst_nt (unified_axiom_type_var, solution_ty)) ax.prop )
   in
   let instantiate_axiom (name, ax) =
-    match find_indicator_type_from_axiom ax.prop with
+    match find_first_poly_type_from_axiom ax.prop with
     | None -> [ ((name, None), ax.prop) ]
-    | Some idt -> (
+    | Some ax_fst_ty -> (
         let l =
-          List.filter_map (instantiate_axiom_by_ty ax idt) indicator_types
+          List.filter_map (instantiate_axiom_by_ty ax ax_fst_ty) indicator_types
         in
         match l with
         | [] ->

@@ -181,7 +181,7 @@ let%test "query_from_file" =
   let () =
     meta_config_path := "/Users/zhezzhou/workspace/zutils/meta-config.json"
   in
-  let task_name = "operation_proto_gen" in
+  let task_name = "list_repeat" in
   let _ = get_normal_context () in
   let prop = handle_prop_from_sexp_file (task_name, 1) in
   let () = Printf.printf "Prop:\n%s:\n" @@ Front.layout prop in

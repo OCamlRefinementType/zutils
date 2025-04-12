@@ -90,3 +90,6 @@ let get_feild_idx loc t name =
   match List.find_index (fun y -> String.equal name y.x) args with
   | None -> _die [%here]
   | Some n -> n
+
+let mk_uninterp name = Ty_constructor (name, [])
+let mk_type_var name = Ty_var name
