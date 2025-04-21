@@ -50,7 +50,7 @@ let find_first_poly_type_from_axiom prop =
   let rec aux prop =
     match prop with
     | Exists { body; qv } | Forall { body; qv } -> (
-        let () = Printf.printf "qv.ty : %s\n" (Nt.layout qv.ty) in
+        (* let () = Printf.printf "qv.ty : %s\n" (Nt.layout qv.ty) in *)
         match Nt.gather_type_vars qv.ty with
         | [ x ] when String.equal unified_axiom_type_var x -> Some qv
         | [] -> aux body
