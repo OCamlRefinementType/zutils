@@ -93,3 +93,6 @@ let get_feild_idx loc t name =
 
 let mk_uninterp name = Ty_constructor (name, [])
 let mk_type_var name = Ty_var name
+
+let mk_tuple loc l =
+  match l with [] -> _die loc | [ x ] -> x | xs -> Ty_tuple xs
