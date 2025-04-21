@@ -131,12 +131,23 @@ let check_sat_bool (task, prop) =
   in
   res
 
+let _tmp_path_prefix str = spf "/tmp/%s.scm" str
+
+let _store_input (task, prop) =
+  let path =
+    match task with
+    | None -> _tmp_path_prefix "tmp"
+    | Some str -> _tmp_path_prefix str
+  in
+  Sexplib.Sexp.save path (sexp_of_prop Nt.sexp_of_nt (Not prop))
+
 (** Unsat means true; otherwise means false *)
 let check_valid (task, prop) =
-  let () =
-    Printf.printf "input:\n%s\n"
-      (Sexplib.Sexp.to_string @@ sexp_of_prop Nt.sexp_of_nt (Not prop))
-  in
+  let () = _store_input (task, prop) in
+  (* let () = *)
+  (*   Printf.printf "input:\n%s\n" *)
+  (*     (Sexplib.Sexp.to_string @@ sexp_of_prop Nt.sexp_of_nt (Not prop)) *)
+  (* in *)
   match check_sat (task, Not prop) with
   | SmtUnsat -> true
   | SmtSat model ->
