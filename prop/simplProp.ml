@@ -244,7 +244,7 @@ let eval_arithmetic_in_lit =
   in
   aux
 
-let eval_arithmetic_in_lit prop =
+let eval_arithmetic prop =
   let rec aux prop =
     match prop with
     | Exists { body; qv } ->
@@ -267,8 +267,8 @@ let eval_arithmetic_in_lit prop =
   simpl_eq_in_prop res
 
 let simpl_query q =
-  let q = eval_arithmetic_in_lit q in
+  let q = eval_arithmetic q in
   let q = simpl_query_by_eq q in
   let q = instantiate_quantified_bool q in
-  let q = eval_arithmetic_in_lit q in
+  let q = eval_arithmetic q in
   q

@@ -145,7 +145,7 @@ let eval_ex_prim_in_prop (task_name, sprop) =
                     let () = Printf.printf "%s := %i\n" qv.x i in
                     let lit = AC (I i) in
                     let body =
-                      SimplProp.eval_arithmetic_in_lit
+                      SimplProp.eval_arithmetic
                       @@ subst_prop_instance qv.x lit body
                     in
                     let _ = analysize_failure model body in
