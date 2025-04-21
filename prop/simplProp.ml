@@ -224,8 +224,11 @@ let eval_arithmetic_in_lit =
         let res =
           match (f.x, List.map _get_x args) with
           | "==", [ AC a; AC b ] -> bool_to_lit (equal_constant a b)
-          | "==", [ l1; l2 ] -> bool_to_lit (equal_lit Nt.equal_nt l1 l2)
+          | "==", [ l1; l2 ] when equal_lit Nt.equal_nt l1 l2 ->
+              bool_to_lit true
           | "!=", [ AC a; AC b ] -> bool_to_lit (not (equal_constant a b))
+          | "!=", [ l1; l2 ] when equal_lit Nt.equal_nt l1 l2 ->
+              bool_to_lit false
           | "<=", [ AC (I a); AC (I b) ] -> bool_to_lit (a <= b)
           | ">=", [ AC (I a); AC (I b) ] -> bool_to_lit (a >= b)
           | "<", [ AC (I a); AC (I b) ] -> bool_to_lit (a < b)
