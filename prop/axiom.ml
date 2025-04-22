@@ -96,7 +96,11 @@ let gather_indicator_types query axioms =
       (fun p ->
         if String.equal pred_name p.x then
           let params, _ = Nt.destruct_arr_tp p.ty in
-          Some (List.hd params)
+          match params with
+          | [] ->
+              None
+              (* _die_with [%here] (spf "%s: %s" pred_name (Nt.layout p.ty)) *)
+          | x :: _ -> Some x
         else None)
       typed_preds
   in
