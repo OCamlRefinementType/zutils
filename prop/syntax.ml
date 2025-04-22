@@ -544,6 +544,7 @@ let lift_ex_quantifiers phi =
 let simpl_eq_in_prop =
   let rec aux = function
     | Lit lit -> Lit (simp_eq_lit lit.x)#:lit.ty
+    | Implies (e1, e2) when equal_prop Nt.equal_nt e1 e2 -> mk_true
     | Implies (e1, e2) -> Implies (aux e1, aux e2)
     | Ite (e1, e2, e3) -> Ite (aux e1, aux e2, aux e3)
     | Not p ->
@@ -551,6 +552,7 @@ let simpl_eq_in_prop =
         if is_true p then mk_false else if is_false p then mk_true else Not p
     | And es -> smart_and (List.map aux es)
     | Or es -> smart_or (List.map aux es)
+    | Iff (e1, e2) when equal_prop Nt.equal_nt e1 e2 -> mk_true
     | Iff (e1, e2) -> Iff (aux e1, aux e2)
     | Forall { qv; body } -> Forall { qv; body = aux body }
     | Exists { qv; body } -> Exists { qv; body = aux body }
@@ -735,8 +737,12 @@ let unique_quantifiers prop =
         let* m = m in
         let* m' = m' in
         let res = StrSet.union m m' in
-        if StrSet.cardinal res != StrSet.cardinal m + StrSet.cardinal m' then
-          None
+        if StrSet.cardinal res != StrSet.cardinal m + StrSet.cardinal m' then (
+          (let layout m = StrList.to_string @@ StrSet.to_list m in
+           Myconfig._log_queries @@ fun () ->
+           Printf.printf "[%s] ?= [%s] + [%s]\n" (layout res) (layout m)
+             (layout m'));
+          None)
         else Some res)
       (Some StrSet.empty) (List.map aux l)
   in

@@ -25,7 +25,7 @@
   "bool_options": [
     [
       "show_var_type_in_prop",
-      true
+      false
     ],
     [
       "instantiate_poly_type_var_in_smt",
@@ -33,10 +33,10 @@
     ],
     [
       "show_record_type_feilds",
-      true
+      false
     ]
   ],
-  "prover_timeout_bound": 2999,
+  "prover_timeout_bound": 1999,
   "prim_path": {
     "predefined_path": "data/predefined",
     "axioms_path": "",

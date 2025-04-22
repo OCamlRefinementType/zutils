@@ -184,7 +184,13 @@ let%test "query_from_file" =
   let task_name = "tezos_tree_gen" in
   let _ = get_normal_context () in
   let prop = handle_prop_from_sexp_file (task_name, 1) in
-  let () = Printf.printf "Prop:\n%s:\n" @@ Front.layout prop in
+  let () = Printf.printf "Prop:\n%s:\n\n" @@ Front.layout prop in
+  let sprop = SimplProp.instantiate_quantified_option prop in
+  let () = Printf.printf "Simplied Prop:\n%s\n" @@ Front.layout sprop in
+  let () =
+    Printf.printf "let[@axiom] tmp = %s\n" (Front.layout_prop__raw sprop)
+  in
+  (* let () = _die [%here] in *)
   let sprop = SimplProp.simpl_query_by_eq prop in
   let () = Printf.printf "Simplied Prop:\n%s\n" @@ Front.layout sprop in
   let sprop = to_nnf @@ SimplProp.instantiate_quantified_bool sprop in

@@ -213,13 +213,13 @@ let simpl_query_by_eq (query : Nt.t prop) =
   aux query
 
 let eval_arithmetic_in_lit =
+  let const_to_lit c = (AC c)#:(constant_to_nt c) in
+  let bool_to_lit c = const_to_lit (B c) in
+  let int_to_lit c = const_to_lit (I c) in
   let rec aux lit =
     match lit.x with
     | AC _ | AVar _ | ATu _ | AProj _ | ARecord _ | AField _ -> lit
     | AAppOp (f, args) ->
-        let const_to_lit c = (AC c)#:(constant_to_nt c) in
-        let bool_to_lit c = const_to_lit (B c) in
-        let int_to_lit c = const_to_lit (I c) in
         let args = List.map aux args in
         let res =
           match (f.x, List.map _get_x args) with
@@ -268,6 +268,87 @@ let eval_arithmetic prop =
   in
   let res = aux prop in
   simpl_eq_in_prop res
+
+let rec eval_feq_match_lits lit1 lit2 =
+  if equal_lit Nt.equal_nt lit1 lit2 then mk_true
+  else
+    match (lit1, lit2) with
+    | AAppOp (f1, args1), AAppOp (f2, args2) when String.equal f1.x f2.x ->
+        let l = _safe_combine [%here] args1 args2 in
+        smart_and (List.map (fun (x, y) -> eval_feq_match_lits x.x y.x) l)
+    | AAppOp (f1, _), AAppOp (f2, _) when not (String.equal f1.x f2.x) ->
+        mk_false
+    | _ -> Lit (lit_to_tlit @@ mk_lit_eq_lit [%here] lit1 lit2)
+
+let eval_feq_match prop =
+  let rec aux prop =
+    match prop with
+    | Exists { body; qv } ->
+        let body = aux body in
+        Exists { body; qv }
+    | Forall { body; qv } ->
+        let body = aux body in
+        Forall { body; qv }
+    | And l -> smart_and (List.map aux l)
+    | Or l -> smart_or (List.map aux l)
+    | Implies (e1, e2) -> Implies (aux e1, aux e2)
+    | Lit lit -> (
+        match lit.x with
+        | AAppOp (op, [ a; b ]) when String.equal op.x eq_op ->
+            eval_feq_match_lits a.x b.x
+        | _ -> Lit lit)
+    | Iff (e1, e2) ->
+        let e1, e2 = map2 aux (e1, e2) in
+        if equal_prop (fun _ _ -> true) e1 e2 then mk_true else Iff (e1, e2)
+    | Ite (e1, e2, e3) -> Ite (aux e1, aux e2, aux e3)
+    | Not e -> Not (aux e)
+  in
+  let res = aux prop in
+  eval_arithmetic @@ simpl_query_by_eq @@ simpl_eq_in_prop res
+
+let instantiate_quantified_option =
+  let is_option_type = function
+    | Nt.Ty_constructor (op, [ ty ]) when String.equal op "option" -> Some ty
+    | _ -> None
+  in
+  let auxaux ty qv body =
+    let none = AAppOp ("None"#:qv.ty, []) in
+    let body_none = fresh_name_prop @@ subst_prop_instance qv.x none body in
+    let sm =
+      AAppOp
+        ("Some"#:(Nt.construct_arr_tp ([ ty ], qv.ty)), [ tv_to_lit qv.x#:ty ])
+    in
+    let body_some = subst_prop_instance qv.x sm body in
+    let body_none, body_some = map2 eval_feq_match (body_none, body_some) in
+    (body_none, body_some)
+  in
+  let rec aux prop =
+    match prop with
+    | Exists { body; qv } -> (
+        let body = aux body in
+        match is_option_type qv.ty with
+        | Some ty ->
+            let body_none, body_some = auxaux ty qv body in
+            smart_or [ body_none; Exists { body = body_some; qv = qv.x#:ty } ]
+        | None -> Exists { body; qv })
+    | Forall { body; qv } -> (
+        let body = aux body in
+        let () = Printf.printf "check %s\n" qv.x in
+        match is_option_type qv.ty with
+        | Some ty ->
+            let () = Printf.printf "do %s\n" qv.x in
+            let body_none, body_some = auxaux ty qv body in
+            smart_and [ body_none; Forall { body = body_some; qv = qv.x#:ty } ]
+        | None -> Forall { body; qv })
+    | And l -> smart_and (List.map aux l)
+    | Or l -> smart_or (List.map aux l)
+    | Implies (e1, e2) -> Implies (aux e1, aux e2)
+    | Lit _ -> prop
+    | Iff (e1, e2) -> Iff (aux e1, aux e2)
+    | Ite (e1, e2, e3) -> Ite (aux e1, aux e2, aux e3)
+    | Not e -> Not (aux e)
+  in
+  aux
 
 let simpl_query q =
   let q = eval_arithmetic q in

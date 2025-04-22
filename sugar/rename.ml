@@ -22,32 +22,46 @@ let name_to_string (sname, id) =
   match id with None -> sname | Some i -> spf "%s%c%i" sname split_char i
 
 let _unique tab (sname, id) =
-  match Hashtbl.find_opt tab sname with
-  | Some n ->
-      let () =
+  let max_one =
+    match Hashtbl.find_opt tab sname with
+    | Some n -> (
         match id with
-        | None -> ()
-        | Some id ->
-            _assert [%here]
-              (spf "seen id (%i) should less than next available one (%i) in %s"
-                 id n sname)
-              (id < n)
-      in
+        | None -> Some n
+        | Some id -> if id < n then Some n else Some id)
+    | None -> id
+  in
+  match max_one with
+  | Some n ->
       Hashtbl.replace tab sname (n + 1);
       (sname, Some n)
   | None ->
-      let () =
-        match id with
-        | None -> ()
-        | Some id ->
-            _assert [%here]
-              (spf
-                 "seen id (%i) should less than next available one (None) in %s"
-                 id sname)
-              false
-      in
       Hashtbl.add tab sname 0;
       (sname, None)
+(*     let () = *)
+(*       match id with *)
+(*       | None -> () *)
+(*       | Some id -> *)
+(*         if id >= n then Hashtbl.replace tab sname (n + 1); *)
+(*           _assert [%here] *)
+(*             (spf "seen id (%i) should less than next available one (%i) in %s" *)
+(*                id n sname) *)
+(*             (id < n) *)
+(*     in *)
+(*     Hashtbl.replace tab sname (n + 1); *)
+(*     (sname, Some n) *)
+(* | None -> *)
+(*     let () = *)
+(*       match id with *)
+(*       | None -> () *)
+(*       | Some id -> *)
+(*           _assert [%here] *)
+(*             (spf *)
+(*                "seen id (%i) should less than next available one (None) in %s" *)
+(*                id sname) *)
+(*             false *)
+(*     in *)
+(*     Hashtbl.add tab sname 0; *)
+(*     (sname, None) *)
 
 let mk_unique tab name = name_to_string @@ _unique tab @@ name_of_string name
 
