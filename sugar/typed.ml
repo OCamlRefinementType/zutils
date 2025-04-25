@@ -23,20 +23,10 @@ let layout_typed f g { x; ty } = Printf.sprintf "%s: %s" (f x) (g ty)
 
 let layout_typed_var g { x; ty } = Printf.sprintf "%s: %s" x (g ty)
 
-let split_by sp f l =
-  match
-    List.fold_left
-      (fun r x ->
-        match r with
-        | None -> Some (Printf.sprintf "%s" (f x))
-        | Some r -> Some (Printf.sprintf "%s%s%s" r sp (f x)))
-      None l
-  with
-  | None -> ""
-  | Some r -> r
-
-let layout_typed_vars splitter g ctx =
-  match ctx with [] -> "∅" | l -> split_by splitter (layout_typed_var g) l
+let layout_typed_vars ?(line_length = 200) splitter g ctx =
+  match ctx with
+  | [] -> "∅"
+  | l -> SugarAux.bound_split_by line_length splitter (layout_typed_var g) l
 
 let show_typed (f : 'a -> string) (g : 'b -> string) { x; ty } =
   Printf.sprintf "(%s: %s)" (f x) (g ty)

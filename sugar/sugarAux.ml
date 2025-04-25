@@ -79,3 +79,31 @@ let rec pow a = function
       b * b * if n mod 2 = 0 then 1 else a
 
 let layout_option f = function None -> "none" | Some x -> f x
+
+let split_by sp f l =
+  match
+    List.fold_left
+      (fun r x ->
+        match r with
+        | None -> Some (spf "%s" (f x))
+        | Some r -> Some (spf "%s%s%s" r sp (f x)))
+      None l
+  with
+  | None -> ""
+  | Some r -> r
+
+let bound_split_by line_length sp f l =
+  let rec aux lines cur_line l =
+    match l with
+    | [] -> ( match cur_line with None -> lines | Some l -> lines @ [ l ])
+    | x :: xs -> (
+        match cur_line with
+        | None -> aux lines (Some (f x)) xs
+        | Some cur_line ->
+            let cur_line' = Printf.sprintf "%s%s%s" cur_line sp (f x) in
+            if String.length cur_line' > line_length then
+              aux (lines @ [ cur_line ]) None l
+            else aux lines (Some cur_line') xs)
+  in
+  let lines = aux [] None l in
+  split_by "\n" (fun s -> s) lines
