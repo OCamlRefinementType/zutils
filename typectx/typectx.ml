@@ -43,7 +43,7 @@ let map_ctx_typed (f : ('t, string) typed -> ('b, string) typed)
 let map_ctx (f : 't -> 's) (ctx_e : 't ctx) =
   match ctx_e with
   | Typectx _t_stringtypedlist0 ->
-      Typectx (List.map (fun x -> x #=> f) _t_stringtypedlist0)
+      Typectx (List.map (fun x -> x#=>f) _t_stringtypedlist0)
 
 let filter_ctx_typed (f : ('t, string) typed -> bool) (ctx_e : 't ctx) =
   match ctx_e with
@@ -59,16 +59,12 @@ let filter_ctx (f : 't -> bool) (ctx_e : 't ctx) =
   | Typectx _t_stringtypedlist0 ->
       Typectx (List.filter (fun x -> f x.ty) _t_stringtypedlist0)
 
-let layout_ctx f ctx =
-  match ctx with
-  | Typectx l -> List.split_by "" (fun x -> spf "%s: %s\n" x.x (f x.ty)) l
+let layout_ctx ?(splitter = "\n") f ctx =
+  match ctx with Typectx l -> layout_typed_vars splitter f l
 
-let pprint_ctx f ctx =
+let pprint_ctx ?(splitter = "\n") f ctx =
   match ctx with
-  | Typectx ctx ->
-      if List.length ctx == 0 then Pp.printf "@{<green>∅@}"
-      else
-        List.iter (fun { x; ty } -> Pp.printf "%s:@{<green>%s@}," x (f ty)) ctx
+  | Typectx ctx -> Pp.printf "@{<green>%s@}" (layout_typed_vars splitter f ctx)
 
 let subtract_opt eq ctx1 ctx2 =
   match (ctx1, ctx2) with

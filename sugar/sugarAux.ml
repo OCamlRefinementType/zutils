@@ -1,10 +1,9 @@
 let streq = String.equal
 let spf = Printf.sprintf
-let make_dir name = 
+
+let make_dir name =
   let full_permission = 0o777 in
-  try
-    Sys.mkdir name full_permission
-  with Sys_error _ -> ()
+  try Sys.mkdir name full_permission with Sys_error _ -> ()
 
 let rec fastexpt : int -> int -> int =
  fun b n ->

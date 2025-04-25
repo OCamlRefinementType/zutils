@@ -21,5 +21,5 @@ val map_ctx : ('a -> 'b) -> 'a ctx -> 'b ctx
 val filter_ctx : ('a -> bool) -> 'a ctx -> 'a ctx
 val filter_ctx_typed : (('a, string) Sugar.typed -> bool) -> 'a ctx -> 'a ctx
 val filter_ctx_name : (string -> bool) -> 'a ctx -> 'a ctx
-val layout_ctx : ('a -> string) -> 'a ctx -> string
-val pprint_ctx : ('a -> string) -> 'a ctx -> unit
+val layout_ctx : ?splitter:string -> ('a -> string) -> 'a ctx -> string
+val pprint_ctx : ?splitter:string -> ('a -> string) -> 'a ctx -> unit

@@ -25,11 +25,11 @@
   "bool_options": [
     [
       "show_var_type_in_prop",
-      false
+      true
     ],
     [
       "instantiate_poly_type_var_in_smt",
-      true
+      false
     ],
     [
       "show_record_type_feilds",

@@ -5,20 +5,39 @@ let _get_x x = x.x
 let ( #: ) x ty = { x; ty }
 
 let ( #-> ) : 't 'a 'b. ('t, 'a) typed -> ('a -> 'b) -> ('t, 'b) typed =
- fun { x; ty } f -> (f x) #: ty
+ fun { x; ty } f -> (f x)#:ty
 
 let ( #=> ) : 't 's 'a. ('t, 'a) typed -> ('t -> 's) -> ('s, 'a) typed =
- fun { x; ty } f -> x #: (f ty)
+ fun { x; ty } f -> x#:(f ty)
 
 let ( #: ) x ty = { x; ty }
 let ( #+ ) x ty = { x = x.x; ty }
-let typed_from_pair (x, ty) = x #: ty
+let typed_from_pair (x, ty) = x#:ty
 let typed_to_pair { x; ty } = (x, ty)
 let fv_typed_id_to_id f e = List.map (fun x -> x.x) @@ f e
 let subst_f_to_instance subst x lit e = subst x (fun _ -> lit) e
 let find_in_args name l = List.find_opt (fun x -> String.equal name x.x) l
 
 (** override show *)
+let layout_typed f g { x; ty } = Printf.sprintf "%s: %s" (f x) (g ty)
+
+let layout_typed_var g { x; ty } = Printf.sprintf "%s: %s" x (g ty)
+
+let split_by sp f l =
+  match
+    List.fold_left
+      (fun r x ->
+        match r with
+        | None -> Some (Printf.sprintf "%s" (f x))
+        | Some r -> Some (Printf.sprintf "%s%s%s" r sp (f x)))
+      None l
+  with
+  | None -> ""
+  | Some r -> r
+
+let layout_typed_vars splitter g ctx =
+  match ctx with [] -> "∅" | l -> split_by splitter (layout_typed_var g) l
+
 let show_typed (f : 'a -> string) (g : 'b -> string) { x; ty } =
   Printf.sprintf "(%s: %s)" (f x) (g ty)
 
