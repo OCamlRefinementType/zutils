@@ -362,7 +362,11 @@ let smart_implies a prop =
   match get_cbool a with
   | Some true -> prop
   | Some false -> mk_true
-  | None -> Implies (a, prop)
+  | None -> (
+      match get_cbool prop with
+      | Some true -> mk_true
+      | Some false -> smart_not a
+      | None -> Implies (a, prop))
 
 let str_in_list x l = List.exists (String.equal x) l
 
