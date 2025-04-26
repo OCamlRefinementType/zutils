@@ -81,6 +81,8 @@ let find_first_poly_type_from_axiom prop =
       in
       Some x.ty
 
+type inst_res = Mono | NoPoly | PolyAss of Nt.t
+
 let gather_indicator_types query axioms =
   let typed_preds = get_tfv_preds_from_prop query in
   let preds_in_aximos =
@@ -165,7 +167,8 @@ let gather_indicator_types query axioms =
     _log @@ fun () ->
     List.iter
       (fun ((name, ty), _) ->
-        Pp.printf "%s::@{<bold>%s@}\n" name (layout_option Nt.layout ty))
+        Pp.printf "%s::@{<bold>%s@}\n" name
+          (match ty with None -> "mono" | Some ty -> Nt.layout ty))
       props
   in
   List.map snd props
