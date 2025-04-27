@@ -36,7 +36,14 @@ let rec lit_to_expr expr =
   in
   aux expr
 
-and typed_lit_to_expr expr = lit_to_expr expr.x
+and typed_lit_to_expr expr =
+  if Myconfig.get_bool_option "show_var_type_in_lit" then
+    match expr.ty with
+    | Nt.Ty_unknown -> lit_to_expr expr.x
+    | _ ->
+        desc_to_ocamlexpr
+        @@ Pexp_constraint (lit_to_expr expr.x, Nt.t_to_core_type expr.ty)
+  else lit_to_expr expr.x
 
 let rec layout_lit_to_smtlib2 expr =
   let aux expr =

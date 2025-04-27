@@ -158,6 +158,7 @@ let eval_ex_prim_in_prop (task_name, sprop) =
   let sprop = aux (qvs, sprop) in
   let ax = SimplProp.simpl_query @@ to_nnf (smart_not sprop) in
   let () = Printf.printf "Suggested Axiom: \n%s\n" (Front.layout ax) in
+  let () = Printf.printf "let[@axiom] tmp = %s\n" (Front.layout_prop__raw ax) in
   ()
 
 (* let ax_list_mem_has_nth = *)
@@ -181,7 +182,7 @@ let%test "query_from_file" =
   let () =
     meta_config_path := "/Users/zhezzhou/workspace/zutils/meta-config.json"
   in
-  let task_name = "unbalanced_set_gen" in
+  let task_name = "leftisthp_gen" in
   let _ = get_normal_context () in
   let prop = handle_prop_from_sexp_file (task_name, 1) in
   let () = Printf.printf "Prop:\n%s:\n\n" @@ Front.layout prop in
