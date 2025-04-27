@@ -56,8 +56,6 @@ let rec typed_lit_to_z3 ctx lit =
           (Zdatatype.List.split_by_comma Expr.to_string args)
       in
       match (op.x, args) with
-      (* NOTE: we don't encode force *)
-      | "forc", [ a ] -> a
       | "None", [] ->
           let constructor =
             List.nth (Datatype.get_constructors (tp_to_sort ctx lit.ty)) 0
