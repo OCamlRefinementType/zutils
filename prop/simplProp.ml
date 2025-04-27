@@ -37,7 +37,7 @@ let find_eq_lit_in_prop (x : string) (query : Nt.t prop) =
             (*         (List.split_by_comma Front.layout_typed_lit l) *)
             (*     in *)
             (*     _die [%here] *))
-    | Exists { body; _ } -> aux body
+    | Exists _ -> None
     | Implies (_, e2) -> aux e2
     | Ite _ | Not _ | Or _ | Forall _ -> None
   in
