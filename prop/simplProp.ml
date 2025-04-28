@@ -75,7 +75,9 @@ let instantiate_quantified_bool =
         let body = aux body in
         if Nt.equal_nt qv.ty Nt.bool_ty then
           let body_true = subst_prop_instance qv.x mk_lit_true body in
-          let body_false = subst_prop_instance qv.x mk_lit_false body in
+          let body_false =
+            fresh_name_prop @@ subst_prop_instance qv.x mk_lit_false body
+          in
           (* let () = Printf.printf "body_true: %s\n" @@ Front.layout body_true in *)
           (* let () = *)
           (*   Printf.printf "body_false: %s\n" @@ Front.layout body_false *)
@@ -90,7 +92,9 @@ let instantiate_quantified_bool =
         let body = aux body in
         if Nt.equal_nt qv.ty Nt.bool_ty then
           let body_true = subst_prop_instance qv.x mk_lit_true body in
-          let body_false = subst_prop_instance qv.x mk_lit_false body in
+          let body_false =
+            fresh_name_prop @@ subst_prop_instance qv.x mk_lit_false body
+          in
           simpl_eq_in_prop (smart_and [ body_true; body_false ])
         else Forall { body; qv }
     | And l -> smart_and (List.map aux l)
