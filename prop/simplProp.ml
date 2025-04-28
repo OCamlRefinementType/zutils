@@ -4,6 +4,8 @@ open Zdatatype
 
 (** Simplify Query *)
 
+let _log = Myconfig._log "simplProp"
+
 let lit_is_var_by_name x lit =
   match lit.x with AVar a when String.equal a.x x -> true | _ -> false
 
@@ -94,6 +96,12 @@ let instantiate_quantified_bool =
           let body_true = subst_prop_instance qv.x mk_lit_true body in
           let body_false =
             fresh_name_prop @@ subst_prop_instance qv.x mk_lit_false body
+          in
+          let () =
+            _log @@ fun () ->
+            Printf.printf "body: %s\n" @@ Front.layout body;
+            Printf.printf "body_true: %s\n" @@ Front.layout body_true;
+            Printf.printf "body_false: %s\n" @@ Front.layout body_false
           in
           simpl_eq_in_prop (smart_and [ body_true; body_false ])
         else Forall { body; qv }
