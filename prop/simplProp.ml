@@ -76,7 +76,9 @@ let instantiate_quantified_bool =
     | Exists { body; qv } ->
         let body = aux body in
         if Nt.equal_nt qv.ty Nt.bool_ty then
-          let body_true = subst_prop_instance qv.x mk_lit_true body in
+          let body_true =
+            fresh_name_prop @@ subst_prop_instance qv.x mk_lit_true body
+          in
           let body_false =
             fresh_name_prop @@ subst_prop_instance qv.x mk_lit_false body
           in
@@ -93,7 +95,9 @@ let instantiate_quantified_bool =
     | Forall { body; qv } ->
         let body = aux body in
         if Nt.equal_nt qv.ty Nt.bool_ty then
-          let body_true = subst_prop_instance qv.x mk_lit_true body in
+          let body_true =
+            fresh_name_prop @@ subst_prop_instance qv.x mk_lit_true body
+          in
           let body_false =
             fresh_name_prop @@ subst_prop_instance qv.x mk_lit_false body
           in
