@@ -84,7 +84,7 @@ let rec prop_to_expr expr =
         mk_op_apply (mkvar "&&", List.map prop_to_expr [ h; And t ])
     | Or [] -> failwith "un-imp"
     | Or [ x ] -> aux x
-    | Or (h :: t) -> mk_op_apply (mkvar "||", List.map prop_to_expr [ h; And t ])
+    | Or (h :: t) -> mk_op_apply (mkvar "||", List.map prop_to_expr [ h; Or t ])
     | Iff (e1, e2) -> mk_op_apply (mkvar "iff", List.map prop_to_expr [ e1; e2 ])
     | Forall { qv; body } ->
         mklam (quantifier_to_pattern (Nt.Fa, qv)) (prop_to_expr body)

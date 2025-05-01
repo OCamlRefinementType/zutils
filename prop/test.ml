@@ -182,9 +182,9 @@ let%test "query_from_file" =
   let () =
     meta_config_path := "/Users/zhezzhou/workspace/zutils/meta-config.json"
   in
-  let task_name = "leftisthp_gen" in
+  let task_name = "gen_type_size" in
   let _ = get_normal_context () in
-  let prop = handle_prop_from_sexp_file (task_name, 1) in
+  let prop = handle_prop_from_sexp_file (task_name, 2) in
   let () = Printf.printf "Prop:\n%s:\n\n" @@ Front.layout prop in
   let sprop = SimplProp.instantiate_quantified_option prop in
   let () = Printf.printf "Simplied Prop:\n%s\n" @@ Front.layout sprop in
