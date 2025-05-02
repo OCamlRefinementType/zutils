@@ -96,3 +96,18 @@ let mk_type_var name = Ty_var name
 
 let mk_tuple loc l =
   match l with [] -> _die loc | [ x ] -> x | xs -> Ty_tuple xs
+
+(** equal type *)
+
+let rec equal_nt_omit_alias nt1 nt2 =
+  match (nt1, nt2) with
+  | Ty_record { fds = l1; _ }, Ty_record { fds = l2; _ } ->
+      let l1 = sort_record l1 in
+      let l2 = sort_record l2 in
+      List.for_all2
+        (fun x y -> String.equal x.x y.x && equal_nt_omit_alias x.ty y.ty)
+        l1 l2
+  | _ -> equal_nt nt1 nt2
+
+let raw_equal_nt = equal_nt
+let equal_nt = equal_nt_omit_alias
