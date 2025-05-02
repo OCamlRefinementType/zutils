@@ -30,6 +30,9 @@ let expr_to_constant e =
       (*   | DtConstructor op, Tu cargs -> Dt { constr = Nt.untyped op; cargs } *)
       (*   | _, _ -> mk_exn ()) *))
   | Pexp_constant (Pconst_integer (istr, None)) -> I (int_of_string istr)
+  | Pexp_constant (Pconst_float (fstr, None)) -> F (float_of_string fstr)
+  | Pexp_constant (Pconst_char c) -> C c
+  | Pexp_constant (Pconst_string (str, _, _)) -> S str
   (* | Pexp_constant (Pconst_string (constr, _, _)) -> *)
   (*     Dt { constr = Nt.untyped constr; cargs = [] } *)
   (* | Pexp_array l -> SetLiteral (List.map expr_to_constant l) *)
