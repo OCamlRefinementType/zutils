@@ -46,6 +46,28 @@ let subst_constructor_nt (name, f) t =
   in
   aux t
 
+let subst_alias_in_record_nt (fdnames, new_alias) t =
+  let rec aux t =
+    match t with
+    | Ty_unknown | Ty_var _ -> t
+    | Ty_poly (y, nt) -> Ty_poly (y, aux nt)
+    | Ty_arrow (t1, t2) -> Ty_arrow (aux t1, aux t2)
+    | Ty_tuple xs -> Ty_tuple (List.map aux xs)
+    | Ty_constructor (id, args) ->
+        let args = List.map aux args in
+        Ty_constructor (id, args)
+    | Ty_record { alias; fds } ->
+        let fds = List.map (fun x -> x#=>aux) fds in
+        let fds = Syntax.sort_record fds in
+        let alias =
+          if List.equal String.equal (List.map _get_x fds) fdnames then
+            new_alias
+          else alias
+        in
+        Ty_record { alias; fds }
+  in
+  aux t
+
 open Zdatatype
 
 let msubst_nt (m : t StrMap.t) = StrMap.fold (fun x ty -> subst_nt (x, ty)) m
