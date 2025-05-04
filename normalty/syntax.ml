@@ -99,15 +99,21 @@ let mk_tuple loc l =
 
 (** equal type *)
 
-let rec equal_nt_omit_alias nt1 nt2 =
-  match (nt1, nt2) with
-  | Ty_record { fds = l1; _ }, Ty_record { fds = l2; _ } ->
-      let l1 = sort_record l1 in
-      let l2 = sort_record l2 in
-      List.for_all2
-        (fun x y -> String.equal x.x y.x && equal_nt_omit_alias x.ty y.ty)
-        l1 l2
-  | _ -> equal_nt nt1 nt2
+let erase_record_alias =
+  let rec aux ty =
+    match ty with
+    | Ty_var _ | Ty_unknown -> ty
+    | Ty_constructor (op, tps) -> Ty_constructor (op, List.map aux tps)
+    | Ty_record { fds; _ } ->
+        let fds = List.map (fun x -> x#=>aux) fds in
+        Ty_record { fds; alias = None }
+    | Ty_arrow (nt1, nt2) -> Ty_arrow (aux nt1, aux nt2)
+    | Ty_tuple nts -> Ty_tuple (List.map aux nts)
+    | Ty_poly (x, t) -> Ty_poly (x, aux t)
+  in
+  aux
 
 let raw_equal_nt = equal_nt
-let equal_nt = equal_nt_omit_alias
+
+let equal_nt nt1 nt2 =
+  raw_equal_nt (erase_record_alias nt1) (erase_record_alias nt2)
