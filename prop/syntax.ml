@@ -368,6 +368,13 @@ let smart_implies a prop =
       | Some false -> smart_not a
       | None -> Implies (a, prop))
 
+let smart_iff p1 p2 =
+  if eq_prop p1 p2 then mk_true
+  else
+    match (get_cbool p1, get_cbool p2) with
+    | Some b1, Some b2 -> if Bool.equal b1 b2 then mk_true else mk_false
+    | _, _ -> Iff (p1, p2)
+
 let str_in_list x l = List.exists (String.equal x) l
 
 let smart_forall qvs prop =
