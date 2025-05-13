@@ -79,6 +79,8 @@ let as_record loc = function
   | Ty_record { fds; _ } -> sort_record fds
   | _ -> _die loc
 
+let as_const_ty_opt = function Ty_constructor (x, []) -> Some x | _ -> None
+
 let get_feild loc t name =
   let args = as_record loc t in
   match List.find_opt (fun y -> String.equal name y.x) args with
