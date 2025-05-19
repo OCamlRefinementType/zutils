@@ -73,7 +73,10 @@ let layout_nt = Frontend.layout_nt
 
 (* NOTE: the Z3 encoding use list instead of map, thus we need to make sure the input list has the same order *)
 
-let sort_record args = List.sort (fun a b -> String.compare a.x b.x) args
+let sort_record args =
+  if Myconfig.get_bool_option "if_sort_record" then
+    List.sort (fun a b -> String.compare a.x b.x) args
+  else args
 
 let as_record loc = function
   | Ty_record { fds; _ } -> sort_record fds

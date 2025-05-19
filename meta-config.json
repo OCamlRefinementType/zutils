@@ -23,6 +23,10 @@
     "never-use"
   ],
   "bool_options": [
+      [
+          "if_sort_record",
+          true
+      ],
     [
       "show_var_type_in_prop",
       false
