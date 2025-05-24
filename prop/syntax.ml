@@ -641,6 +641,34 @@ let count_prop_qv =
   in
   aux
 
+let count_pred_lit lit =
+  let rec aux lit =
+    match lit with
+    | AC _ | AVar _ -> []
+    | ATu l -> List.concat_map typed_aux l
+    | AProj (lit, _) -> typed_aux lit
+    | ARecord l -> List.concat_map (fun (_, lit) -> typed_aux lit) l
+    | AField (lit, _) -> typed_aux lit
+    | AAppOp (f, args) ->
+        let preds = if is_builtin_op f.x then [] else [ f ] in
+        preds @ List.concat_map typed_aux args
+  and typed_aux lit = aux lit.x in
+  List.slow_rm_dup (fun x y -> String.equal x.x y.x) @@ typed_aux lit
+
+let count_pred_prop prop =
+  let rec aux = function
+    | Lit lit -> count_pred_lit lit
+    | Implies (e1, e2) -> List.concat_map aux [ e1; e2 ]
+    | Ite (e1, e2, e3) -> List.concat_map aux [ e1; e2; e3 ]
+    | Not e1 -> aux e1
+    | And es -> List.concat_map aux es
+    | Or es -> List.concat_map aux es
+    | Iff (e1, e2) -> List.concat_map aux [ e1; e2 ]
+    | Forall { body; _ } -> aux body
+    | Exists { body; _ } -> aux body
+  in
+  List.slow_rm_dup (fun x y -> String.equal x.x y.x) @@ aux prop
+
 (** Poly *)
 
 let gather_poly_preds_from_prop prop =
