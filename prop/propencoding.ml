@@ -11,9 +11,8 @@ let unique_quantifiers prop =
     | Exists { body; qv } | Forall { body; qv } ->
         let* m = aux body in
         if StrSet.mem qv.x m then (
-          ( Myconfig._log_queries @@ fun () ->
-            Printf.printf "prop %s\n" (Front.layout_prop prop);
-            Printf.printf "duplicate quantifier %s\n" qv.x );
+          Printf.printf "prop %s\n" (Front.layout_prop prop);
+          Printf.printf "duplicate quantifier %s\n" qv.x;
           None)
         else Some (StrSet.add qv.x m)
     | And l | Or l -> aux_multi l
@@ -30,7 +29,6 @@ let unique_quantifiers prop =
         let res = StrSet.union m m' in
         if StrSet.cardinal res != StrSet.cardinal m + StrSet.cardinal m' then (
           (let layout m = StrList.to_string @@ StrSet.to_list m in
-           Myconfig._log_queries @@ fun () ->
            Printf.printf "[%s] ?= [%s] + [%s]\n" (layout res) (layout m)
              (layout m'));
           None)
