@@ -607,6 +607,40 @@ let fresh_name_prop =
   in
   aux
 
+let count_prop_qv =
+  let rec aux = function
+    | Lit _ -> (0, 0)
+    | Implies (e1, e2) ->
+        let num_ex1, num_fa1 = aux e1 in
+        let num_fa2, num_ex2 = aux e2 in
+        (num_fa1 + num_fa2, num_ex1 + num_ex2)
+    | Ite (e1, e2, e3) ->
+        let num_fa1, num_ex1 = aux e1 in
+        let num_fa2, num_ex2 = aux e2 in
+        let num_ex3, num_fa3 = aux e3 in
+        (num_fa1 + num_fa2 + num_fa3, num_ex1 + num_ex2 + num_ex3)
+    | Not e1 ->
+        let num_fa1, num_ex1 = aux e1 in
+        (num_fa1, num_ex1)
+    | And es ->
+        let num_fas, num_exs = List.split @@ List.map aux es in
+        (List.fold_left ( + ) 0 num_fas, List.fold_left ( + ) 0 num_exs)
+    | Or es ->
+        let num_fas, num_exs = List.split @@ List.map aux es in
+        (List.fold_left ( + ) 0 num_fas, List.fold_left ( + ) 0 num_exs)
+    | Iff (e1, e2) ->
+        let num_ex1, num_fa1 = aux e1 in
+        let num_fa2, num_ex2 = aux e2 in
+        (num_fa1 + num_fa2, num_ex1 + num_ex2)
+    | Forall { body; _ } ->
+        let num_fa1, num_ex1 = aux body in
+        (num_fa1 + 1, num_ex1)
+    | Exists { body; _ } ->
+        let num_fa1, num_ex1 = aux body in
+        (num_fa1, num_ex1 + 1)
+  in
+  aux
+
 (** Poly *)
 
 let gather_poly_preds_from_prop prop =
