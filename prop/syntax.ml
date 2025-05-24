@@ -795,7 +795,6 @@ let unique_quantifiers prop =
         let* m = aux body in
         if StrSet.mem qv.x m then (
           ( Myconfig._log_queries @@ fun () ->
-            Printf.printf "prop %s\n" (Front.layout_prop prop);
             Printf.printf "duplicate quantifier %s\n" qv.x );
           None)
         else Some (StrSet.add qv.x m)
