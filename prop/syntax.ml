@@ -787,36 +787,3 @@ let snf_quantified_var_by_name name =
     | Not e -> Not (aux e)
   in
   aux
-
-let unique_quantifiers prop =
-  let rec aux prop =
-    match prop with
-    | Exists { body; qv } | Forall { body; qv } ->
-        let* m = aux body in
-        if StrSet.mem qv.x m then (
-          ( Myconfig._log_queries @@ fun () ->
-            Printf.printf "duplicate quantifier %s\n" qv.x );
-          None)
-        else Some (StrSet.add qv.x m)
-    | And l | Or l -> aux_multi l
-    | Implies (e1, e2) -> aux_multi [ e1; e2 ]
-    | Lit _ -> Some StrSet.empty
-    | Iff (e1, e2) -> aux_multi [ e1; e2 ]
-    | Ite (e1, e2, e3) -> aux_multi [ e1; e2; e3 ]
-    | Not e -> aux e
-  and aux_multi l =
-    List.fold_left
-      (fun m m' ->
-        let* m = m in
-        let* m' = m' in
-        let res = StrSet.union m m' in
-        if StrSet.cardinal res != StrSet.cardinal m + StrSet.cardinal m' then (
-          (let layout m = StrList.to_string @@ StrSet.to_list m in
-           Myconfig._log_queries @@ fun () ->
-           Printf.printf "[%s] ?= [%s] + [%s]\n" (layout res) (layout m)
-             (layout m'));
-          None)
-        else Some res)
-      (Some StrSet.empty) (List.map aux l)
-  in
-  match aux prop with None -> false | Some _ -> true
