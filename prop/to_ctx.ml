@@ -5,10 +5,44 @@ open Zdatatype
 open Sugar
 open Common
 
+let of_ocamltypedec { ptype_name; ptype_params; ptype_kind; ptype_manifest; _ }
+    =
+  let type_params =
+    List.map
+      (fun (ct, (_, _)) ->
+        match Nt.core_type_to_t ct with
+        | Nt.Ty_var name -> name
+        | _ -> _die [%here])
+      ptype_params
+  in
+  let mk_decl type_decl =
+    let ty = Nt.Ty_record { alias = Some ptype_name.txt; fds = type_decl } in
+    (ptype_name.txt, type_params, ty)
+  in
+  match (ptype_kind, ptype_manifest) with
+  | Ptype_record lds, None ->
+      let lds =
+        List.map
+          (fun ld -> ld.pld_name.txt#:(Nt.core_type_to_t ld.pld_type))
+          lds
+      in
+      Some (mk_decl lds)
+  | Ptype_variant _, _ -> None
+  | _ -> failwith "unimp complex type decl"
+
 (* NOTE: The top level normal type need to be closed by Nt.close_poly_nt *)
 let get_normal_ctx filename =
   let parse_nt pval_type =
     Nt.close_poly_nt [%here] (Nt.core_type_to_t pval_type)
+  in
+  let code = parse_imp_from_file ~sourcefile:filename in
+  let alias =
+    List.filter_map
+      (fun s ->
+        match s.pstr_desc with
+        | Pstr_type (_, [ type_dec ]) -> of_ocamltypedec type_dec
+        | _ -> None)
+      code
   in
   let f structure =
     match structure.pstr_desc with
@@ -20,7 +54,7 @@ let get_normal_ctx filename =
         let () = Printf.printf "%s\n" (string_of_structure [ structure ]) in
         _failatwith [%here] "not a normal type definition"
   in
-  let l = List.filter_map f (parse_imp_from_file ~sourcefile:filename) in
+  let l = List.filter_map f code in
   let l =
     [
       "None"#:(parse_nt @@ parse_core_type "'a option");
@@ -28,7 +62,7 @@ let get_normal_ctx filename =
     ]
     @ l
   in
-  Typectx.(add_to_rights emp l)
+  Typectx.(alias, add_to_rights emp l)
 
 let get_axiom_ctx filename =
   let f structure =

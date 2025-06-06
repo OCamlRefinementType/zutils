@@ -8,6 +8,7 @@ open Sugar
 
 open OcamlParser.Oparse
 open To_ctx
+open Zdatatype
 
 let _builtin_normal_context = ref None
 
@@ -18,11 +19,39 @@ let _builtin_axioms_file =
   "/Users/zhezzhou/workspace/CoverageType/data/predefined/axioms.ml"
 
 let init_for_inline_test (nctx, axioms) =
-  let ctx = get_normal_ctx nctx in
+  let alias, ctx = get_normal_ctx nctx in
+  let inline_record (x, args, record_ty) ty =
+    let f ts =
+      let m = StrMap.of_list @@ _safe_combine [%here] args ts in
+      let record_ty = Nt.msubst_nt m record_ty in
+      record_ty
+    in
+    let ty = Nt.subst_constructor_nt (x, f) ty in
+    let core =
+      match record_ty with
+      | Nt.Ty_record { alias; fds } -> (List.map _get_x fds, alias)
+      | _ -> _die [%here]
+    in
+    Nt.subst_alias_in_record_nt core ty
+  in
+  let inline nt =
+    let res = List.fold_right inline_record alias nt in
+    (* let () = *)
+    (*   _log @@ fun () -> *)
+    (*   Printf.printf "decls %s \n" (List.split_by_comma _get_x decls); *)
+    (*   Printf.printf "inline %s ==> %s\n" (Nt.layout nt) (Nt.layout res) *)
+    (* in *)
+    res
+  in
+  let ctx = Typectx.map_ctx inline ctx in
   let axioms = get_axiom_ctx axioms in
+  let axioms =
+    List.map (fun (a, b, prop) -> (a, b, map_prop inline prop)) axioms
+  in
   let axioms =
     List.map
       (fun (name, tasks, prop) ->
+        let () = Printf.printf "%s\n" (Front.layout_prop prop) in
         ( name,
           tasks,
           Typecheck.prop_type_check ctx [ unified_axiom_type_var ] prop ))
@@ -182,9 +211,9 @@ let%test "query_from_file" =
   let () =
     meta_config_path := "/Users/zhezzhou/workspace/zutils/meta-config.json"
   in
-  let task_name = "tezos_tree_gen" in
+  let task_name = "list_repeat" in
   let _ = get_normal_context () in
-  let prop = handle_prop_from_sexp_file (task_name, 2) in
+  let prop = handle_prop_from_sexp_file (task_name, 1) in
   let () = Printf.printf "Prop:\n%s:\n\n" @@ Front.layout prop in
   let sprop = SimplProp.instantiate_quantified_option prop in
   let () = Printf.printf "Simplied Prop:\n%s\n" @@ Front.layout sprop in

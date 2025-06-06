@@ -87,7 +87,9 @@ let as_const_ty_opt = function Ty_constructor (x, []) -> Some x | _ -> None
 let get_feild loc t name =
   let args = as_record loc t in
   match List.find_opt (fun y -> String.equal name y.x) args with
-  | None -> _die [%here]
+  | None ->
+      Printf.printf "Cannot find feild: %s\n" name;
+      _die [%here]
   | Some n -> n.ty
 
 let get_feild_idx loc t name =
