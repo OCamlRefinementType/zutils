@@ -28,7 +28,7 @@ let op_name_for_typectx = function
 
 let is_dt_op str =
   let fst_char = String.get str 0 in
-  Char.uppercase_ascii fst_char == fst_char
+  Char.equal (Char.uppercase_ascii fst_char) fst_char
 
 let id_eq_op = function PrimOp "==" -> true | _ -> false
 let id_is_dt name = String.(equal name @@ capitalize_ascii name)
@@ -496,7 +496,7 @@ let get_consts prop =
 
 let lit_to_prop lit = Lit lit#:(lit_to_nt lit)
 let msubst f = List.fold_right (fun (x, lit) -> f x lit)
-let subst_name_qv x z y = if y.x == x then z else y
+let subst_name_qv x z y = if String.equal y.x x then z else y
 
 let to_conjs prop =
   let rec aux = function And l -> List.concat_map aux l | _ as r -> [ r ] in
