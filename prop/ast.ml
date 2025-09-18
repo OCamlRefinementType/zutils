@@ -3,7 +3,7 @@ open Sugar
 module Nt = Normalty
 
 type op = PrimOp of string | DtConstructor of string
-[@@deriving sexp, show, eq, ord]
+[@@deriving sexp, show, eq, ord, yojson]
 
 (* a string:
    1. is in builtin_primop, then is a builtin operator.
@@ -47,7 +47,7 @@ type constant =
   | C of char
   | S of string
   | F of float
-[@@deriving sexp, show, eq, ord]
+[@@deriving sexp, show, eq, ord, yojson]
 
 type 't lit =
   | AC of constant
@@ -58,7 +58,7 @@ type 't lit =
   | AField of ('t, 't lit) typed * string
   | AAppOp of ('t, string) typed * ('t, 't lit) typed list
     (* NOTE: includes None, emum, data constructor, primitive operators *)
-[@@deriving sexp, show, eq, ord]
+[@@deriving sexp, show, eq, ord, yojson]
 
 let proj_func = "_proj"
 let fst_func = "fst"

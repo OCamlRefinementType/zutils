@@ -31,7 +31,7 @@ type smtty =
   | Smt_tuple of smtty list
   | Smt_record of (smtty, string) typed list
   | Smt_Uninterp of string
-[@@deriving sexp, show, eq, ord]
+[@@deriving sexp, show, eq, ord, yojson]
 
 (** Normal Type. *)
 
@@ -45,7 +45,7 @@ type nt =
     (* NOTE: alias for print only *)
   | Ty_poly of string * nt
     (* We only allow poly type appear at 1. top level 2. return type of arrow *)
-[@@deriving sexp, eq, show, ord]
+[@@deriving sexp, eq, show, ord, yojson]
 
 type t = nt
 

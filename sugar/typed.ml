@@ -1,4 +1,5 @@
-type ('a, 'b) typed = { ty : 'a; x : 'b } [@@deriving sexp, show, eq, ord]
+type ('a, 'b) typed = { ty : 'a; x : 'b }
+[@@deriving sexp, show, eq, ord, yojson]
 
 let _get_ty x = x.ty
 let _get_x x = x.x
