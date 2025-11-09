@@ -41,6 +41,18 @@ let _mk_prover timeout_bound =
 let mk_prover () = _mk_prover (get_prover_timeout_bound ())
 let _prover : prover option ref = ref None
 
+let reset_solver_in_prover () =
+  match !_prover with
+  | Some p -> 
+    let solver = mk_solver p.ctx None in
+    let p = {p with solver} in
+    let () = _prover := Some p in
+    p
+  | None ->
+      let p = mk_prover () in
+      let () = _prover := Some p in
+      p
+
 let get_prover () =
   match !_prover with
   | Some p -> p
