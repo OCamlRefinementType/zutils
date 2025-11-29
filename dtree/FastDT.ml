@@ -320,7 +320,7 @@ let ex_F = transpose_data ex_X
             match split_white l with
             | y :: x ->
                 let x = of_list (map_filter (H.find dict) x) in
-                fast_sort compare x;
+               fast_sort Int.compare x;
                 let p = predict (snd dts.(i - 1)) x in
                 pred.(n) <- p;
                 read (n + 1)
@@ -442,7 +442,7 @@ let ex_F = transpose_data ex_X
           | y :: x ->
               let y = float_of_string y > 0.5 in
               let x = of_list (map_filter (H.find dict) x) in
-              fast_sort compare x;
+              fast_sort Int.compare x;
               let v = predict_committee model x in
               let p = v > 0.5 in
               if y != p then error := !error +. 1.;
