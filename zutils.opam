@@ -12,6 +12,7 @@ bug-reports: "https://github.com/username/reponame/issues"
 depends: [
   "ocaml"
   "dune" {>= "3.11"}
+  "spectrum" {>= "0.6.0"}
   "odoc" {with-doc}
 ]
 build: [
