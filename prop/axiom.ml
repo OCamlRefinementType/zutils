@@ -77,20 +77,14 @@ let find_first_poly_type_from_axiom prop =
       (fun res x -> match res with None -> aux x | Some qv -> Some qv)
       None l
   in
-  match aux prop with
-  | None ->
-      let () =
-        ZUtilsLog.axiom @@ fun () ->
-        Printf.printf "normal type %s\n" (Front.layout_prop prop)
-      in
-      None
-  | Some x ->
-      let () =
-        ZUtilsLog.axiom @@ fun () ->
+  let res = aux prop in
+  ( ZUtilsLog.axiom @@ fun () ->
+    match res with
+    | None -> Printf.printf "normal type %s\n" (Front.layout_prop prop)
+    | Some x ->
         Pp.printf "@{<bold>Axiom Indicator Type %s@} in %s\n" (Nt.layout x.ty)
-          (Front.layout_prop prop)
-      in
-      Some x.ty
+          (Front.layout_prop prop) );
+  Option.map (fun x -> x.ty) res
 
 type inst_res = Mono | NoPoly | PolyAss of Nt.t
 
