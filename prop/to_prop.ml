@@ -29,7 +29,7 @@ let rec layout_to_smtlib2 = function
       spf "(exists ((%s %s)) %s)" qv.x (smt_layout_ty qv.ty)
         (layout_to_smtlib2 body)
 
-let layout_prop_
+let layout_prop_with
     {
       sym_and;
       sym_or;
@@ -39,10 +39,11 @@ let layout_prop_
       sym_forall;
       sym_exists;
       layout_typedid;
+      layout_mp;
       _;
     } =
   let rec layout = function
-    | Lit lit -> (layout_typed_lit lit, true)
+    | Lit lit -> (layout_typed_lit_mp layout_mp lit, true)
     | Implies (p1, p2) ->
         (spf "%s %s %s" (p_layout p1) sym_implies (p_layout p2), false)
     | And [ p ] -> layout p
@@ -149,9 +150,10 @@ let prop_of_expr expr =
   in
   aux expr
 
-let layout_prop__raw x = string_of_expression @@ prop_to_expr x
-let layout_prop expr = layout_prop_ psetting expr
-let layout_propRaw expr = layout_prop_ rawsetting expr
-let layout_prop_to_rocq expr = layout_prop_ rocqsetting expr
+(* The prop as OCaml source, printed through the parsetree: the one layout that
+   re-parses, so a consumer can write it out and read it back. *)
+let layout_prop_source x = string_of_expression @@ prop_to_expr x
+let layout_prop expr = layout_prop_with psetting expr
+let layout_prop_to_rocq expr = layout_prop_with rocqsetting expr
 let layout = layout_prop
 let of_expr = prop_of_expr
