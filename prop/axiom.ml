@@ -13,16 +13,13 @@ let add_laxiom asys (name, prop) =
 let add_laxioms asys l = List.fold_left add_laxiom asys l
 
 let find_axioms_by_preds asys query_preds =
-  let m =
-    StrMap.filter
-      (fun name { preds; _ } ->
-        ( ZUtilsLog.axiom @@ fun () ->
-          Pp.printf "@{<bold>in %s@}: %s\n" name
-            (StrList.to_string @@ StrSet.to_list preds) );
-        StrSet.subset preds query_preds)
-      asys
-  in
-  StrMap.to_key_list m
+  StrMap.filter
+    (fun name { preds; _ } ->
+      ( ZUtilsLog.axiom @@ fun () ->
+        Pp.printf "@{<bold>in %s@}: %s\n" name
+          (StrList.to_string @@ StrSet.to_list preds) );
+      StrSet.subset preds query_preds)
+    asys
 
 (* A rule fires on the query's own predicates, never on what another rule added,
    so a rule must also list whatever the predicates it adds would imply. *)
@@ -192,10 +189,8 @@ let find_axioms asys query =
   ( ZUtilsLog.axiom @@ fun () ->
     Pp.printf "@{<bold>query preds@}: %s\n"
       (StrList.to_string @@ StrSet.to_list query_preds) );
-  let axioms = find_axioms_by_preds asys query_preds in
+  let props = find_axioms_by_preds asys query_preds in
   ( ZUtilsLog.axiom @@ fun () ->
-    Pp.printf "@{<bold>Axioms: @} %s\n" @@ StrList.to_string axioms );
-  let props =
-    StrMap.filter (fun name _ -> List.exists (String.equal name) axioms) asys
-  in
+    Pp.printf "@{<bold>Axioms: @} %s\n"
+      (StrList.to_string @@ StrMap.to_key_list props) );
   gather_indicator_types query (StrMap.to_kv_list props)
