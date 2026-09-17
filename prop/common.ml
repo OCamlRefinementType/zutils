@@ -99,7 +99,7 @@ let rawsetting =
     layout_mp = (fun x -> x);
   }
 
-let coqsetting =
+let rocqsetting =
   {
     sym_true = "True";
     sym_false = "False";
