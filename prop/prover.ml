@@ -7,9 +7,13 @@ open ZUtilsConfig
 (* Constructors stay in [Portfolio]; a match on a [check_sat] result resolves
    them from the scrutinee's type. *)
 type smt_result = Portfolio.smt_result
-type prover = { ax_sys : laxiom_system; ctx : context }
+type prover = { ax_sys : laxiom_system; env : Z3decls.z3_env }
 
-let mk_prover () = { ctx = mk_context []; ax_sys = Axiom.emp }
+let mk_prover () =
+  let ctx = mk_context [] in
+  let env = Z3aux.mk_env ctx in
+  { env; ax_sys = Axiom.emp }
+
 let _prover : prover option ref = ref None
 
 let get_prover () =
@@ -47,8 +51,8 @@ let update_axioms axioms =
   let p = get_prover () in
   _prover := Some { p with ax_sys = Axiom.add_laxioms p.ax_sys axioms }
 
-let serialize (ctx : context) (exprs : Expr.expr list) : string =
-  let solver = mk_solver ctx None in
+let serialize (env : Z3decls.z3_env) (exprs : Expr.expr list) : string =
+  let solver = mk_solver env.ctx None in
   Solver.add solver exprs;
   Solver.to_string solver
 
@@ -67,7 +71,7 @@ let dump_queries entries =
     entries
 
 (* The queries raced for one [check_sat] *)
-let portfolio_entries axiom_body : Portfolio.entry list =
+let portfolio_entries ~functional_bodies axiom_body : Portfolio.entry list =
   let timeout =
     match !_timeout with Some t -> t | None -> get_prover_timeout_bound ()
   in
@@ -78,40 +82,48 @@ let portfolio_entries axiom_body : Portfolio.entry list =
     | Some r -> Printf.sprintf "(set-option :rlimit %d)\n" r
     | None -> ""
   in
-  let wrap ?(mbqi_only = false) body =
+  let wrap ?(dt_eager = false) ?(mbqi_only = false) body =
+    let dt = if dt_eager then "(set-option :smt.dt_lazy_splits 0)\n" else "" in
     let mq =
       if mbqi_only then
         "(set-option :smt.ematching false)\n(set-option :smt.mbqi true)\n"
       else ""
     in
     Printf.sprintf
-      "%s(set-option :timeout %d)\n\
+      "%s%s(set-option :timeout %d)\n\
        %s%s\n\
        (check-sat)\n\
        (get-info :reason-unknown)\n"
-      mq timeout rlimit_opt body
+      dt mq timeout rlimit_opt body
   in
   [
     { Portfolio.label = "axiom"; query = wrap axiom_body };
+    {
+      Portfolio.label = "axiom_dt-eager";
+      query = wrap ~dt_eager:true axiom_body;
+    };
     {
       Portfolio.label = "axiom_mbqi-only";
       query = wrap ~mbqi_only:true axiom_body;
     };
   ]
+  @ List.map
+      (fun body -> { Portfolio.label = "functional"; query = wrap body })
+      functional_bodies
 
-let check_sat prop =
+let check_sat ?(functional_bodies = []) prop =
   incr query_counter;
-  let { ctx; ax_sys } = get_prover () in
+  let { env; ax_sys } = get_prover () in
   let z3_axioms =
-    List.map (Propencoding.to_z3 ctx) @@ Axiom.find_axioms ax_sys prop
+    List.map (Propencoding.to_z3 env) @@ Axiom.find_axioms ax_sys prop
   in
-  let query = Propencoding.to_z3 ctx prop in
+  let query = Propencoding.to_z3 env prop in
   let _ =
     ZUtilsLog.queries @@ fun _ ->
     Pp.printf "@{<bold>QUERY:@}\n%s\n" (Expr.to_string query)
   in
-  let body = serialize ctx (z3_axioms @ [ query ]) in
-  let entries = portfolio_entries body in
+  let body = serialize env (z3_axioms @ [ query ]) in
+  let entries = portfolio_entries ~functional_bodies body in
   dump_queries entries;
   let time_t, (res, winner) = Sugar.clock (fun () -> Portfolio.solve entries) in
   let () =
