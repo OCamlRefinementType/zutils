@@ -99,11 +99,20 @@ let portfolio_entries axiom_body : Portfolio.entry list =
     };
   ]
 
+let select_axioms prop =
+  let { ax_sys; _ } = get_prover () in
+  Axiom.find_axioms ax_sys prop
+
+let all_axioms () =
+  let { ax_sys; _ } = get_prover () in
+  Axiom.all_axioms ax_sys
+
 let check_sat prop =
   incr query_counter;
   let { ctx; ax_sys } = get_prover () in
   let z3_axioms =
-    List.map (Propencoding.to_z3 ctx) @@ Axiom.find_axioms ax_sys prop
+    List.map (fun (_, p) -> Propencoding.to_z3 ctx p)
+    @@ Axiom.find_axioms ax_sys prop
   in
   let query = Propencoding.to_z3 ctx prop in
   let _ =
