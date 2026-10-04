@@ -83,32 +83,22 @@ type inst_res = Mono | NoPoly | PolyAss of Nt.t
 
 let gather_indicator_types query axioms =
   let typed_preds = get_tfv_preds_from_prop query in
-  let preds_in_aximos =
+  let preds_in_axioms =
     List.fold_left
       (fun s (_, { preds; _ }) -> StrSet.union preds s)
       StrSet.empty axioms
   in
-  let typed_preds =
-    List.filter (fun x -> StrSet.mem x.x preds_in_aximos) typed_preds
-  in
-  let get_actual_types pred_name =
-    List.filter_map
-      (fun p ->
-        if String.equal pred_name p.x then
-          let params, _ = Nt.destruct_arr_tp p.ty in
-          match params with
-          | [] ->
-              None
-              (* _die_with [%here] (spf "%s: %s" pred_name (Nt.layout p.ty)) *)
-          | x :: _ -> Some x
-        else None)
-      typed_preds
+  let relevant_preds =
+    List.filter (fun x -> StrSet.mem x.x preds_in_axioms) typed_preds
   in
   let indicator_types =
     List.slow_rm_dup Nt.equal_nt
-    @@ List.concat_map
-         (fun pred_name -> get_actual_types pred_name.x)
-         typed_preds
+    @@ List.filter_map
+         (fun p ->
+           match Nt.destruct_arr_tp p.ty with
+           | x :: _, _ -> Some x
+           | [], _ -> None)
+         relevant_preds
   in
   let instantiate_axiom_by_ty ax ax_fst_ty ty =
     let tvars = Nt.gather_type_vars ty in
