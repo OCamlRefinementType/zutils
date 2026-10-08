@@ -46,9 +46,29 @@ let z3_tt_name = "tt"
 let mk_some_name ty = spf "Some_%s" (layout_smtty ty)
 let mk_none_name ty = spf "None_%s" (layout_smtty ty)
 
+type env = {
+  sorts : (nt, Sort.sort) Hashtbl.t;
+  datatypes : (string, Sort.sort) Hashtbl.t;
+  (* The datatypes' decls, by name. *)
+  funcs : (string, FuncDecl.func_decl) Hashtbl.t;
+}
+
+(* Z3 sorts and declarations are bound to the context that built them. *)
+let envs : (context * env) list ref = ref []
+
 let rec smt_tp_to_sort ctx t =
   match t with
-  | Smt_Uninterp name -> Sort.mk_uninterpreted_s ctx name
+  | Smt_Uninterp name -> (
+      let built =
+        Option.bind (List.assq_opt ctx !envs) (fun env ->
+            Hashtbl.find_opt env.datatypes name)
+      in
+      match built with
+      | Some sort -> sort
+      | None when Z3decls.is_registered name ->
+          _die_with [%here]
+            (spf "registered datatype %s has no sort built in this context" name)
+      | None -> Sort.mk_uninterpreted_s ctx name)
   | Smt_Unit -> Enumeration.mk_sort_s ctx z3_unit_name [ z3_tt_name ]
   | Smt_Int -> Integer.mk_sort ctx
   | Smt_Bool -> Boolean.mk_sort ctx
@@ -99,21 +119,72 @@ let float_to_z3 ctx float =
 let char_to_z3 ctx char = Seq.mk_char ctx (Char.code char)
 let str_to_z3 ctx str = Seq.mk_string ctx str
 
-module NTMap = Map.Make (struct
-  type t = nt
+open Z3decls
 
-  let compare = compare_nt
-end)
+let add_func env name fd =
+  if Hashtbl.mem env.funcs name then
+    _die_with [%here] (spf "duplicate function symbol %s" name);
+  Hashtbl.add env.funcs name fd
 
-let smt_type_cache = ref NTMap.empty
+(* A self-referencing field gets [None]: sort 0 of the declaration being built. *)
+let build_constructor ctx decl ctor =
+  let field_sort f =
+    match f.ftype with
+    | Ty_constructor (name, []) when name = decl.dt_name -> None
+    | ty -> Some (smt_tp_to_sort ctx (to_smtty ty))
+  in
+  Datatype.mk_constructor_s ctx ctor.cname
+    (Symbol.mk_string ctx (recognizer_name ctor.cname))
+    (List.map (fun f -> Symbol.mk_string ctx f.fname) ctor.fields)
+    (List.map field_sort ctor.fields)
+    (List.map (fun _ -> 0) ctor.fields)
 
-let tp_to_sort ctx t =
-  match NTMap.find_opt t !smt_type_cache with
-  | Some res -> res
+let build_datatype ctx env decl =
+  let sort =
+    Datatype.mk_sort_s ctx decl.dt_name
+      (List.map (build_constructor ctx decl) decl.ctors)
+  in
+  Hashtbl.add env.datatypes decl.dt_name sort;
+  List.iter2
+    (fun c fd -> add_func env c.cname fd)
+    decl.ctors
+    (Datatype.get_constructors sort);
+  List.iter2
+    (fun c fd -> add_func env (recognizer_name c.cname) fd)
+    decl.ctors
+    (Datatype.get_recognizers sort);
+  List.iter2
+    (fun c fds -> List.iter2 (fun f fd -> add_func env f.fname fd) c.fields fds)
+    decl.ctors
+    (Datatype.get_accessors sort)
+
+(* Builds every datatype registered so far, joining [envs] first so a field
+   can name an earlier one. *)
+let env_of ctx =
+  match List.assq_opt ctx !envs with
+  | Some env -> env
   | None ->
-      let res = smt_tp_to_sort ctx (to_smtty t) in
-      smt_type_cache := NTMap.add t res !smt_type_cache;
-      res
+      let env =
+        {
+          sorts = Hashtbl.create 16;
+          datatypes = Hashtbl.create 16;
+          funcs = Hashtbl.create 16;
+        }
+      in
+      envs := (ctx, env) :: !envs;
+      List.iter (build_datatype ctx env) (registered_decls ());
+      env
+
+let func_lookup ctx name = Hashtbl.find_opt (env_of ctx).funcs name
+
+let tp_to_sort ctx ty =
+  let env = env_of ctx in
+  match Hashtbl.find_opt env.sorts ty with
+  | Some sort -> sort
+  | None ->
+      let sort = smt_tp_to_sort ctx (to_smtty ty) in
+      Hashtbl.add env.sorts ty sort;
+      sort
 
 let z3func ctx funcname inptps outtp =
   FuncDecl.mk_func_decl ctx
@@ -140,3 +211,46 @@ let z3expr_to_bool v =
   | Z3enums.L_TRUE -> true
   | Z3enums.L_FALSE -> false
   | Z3enums.L_UNDEF -> failwith "z3expr_to_bool"
+
+let%test_module "datatype encoding" =
+  (module struct
+    let ilist = Ty_constructor ("ilist", [])
+    let ctx = Z3.mk_context []
+
+    let () =
+      ZUtilsConfig.(set (Result.get_ok (of_yojson (`Assoc []))));
+      register_decl
+        {
+          dt_name = "ilist";
+          ctors =
+            [
+              { cname = "nil"; fields = [] };
+              {
+                cname = "cons";
+                fields =
+                  [
+                    { fname = "head"; ftype = int_ty };
+                    { fname = "tail"; ftype = ilist };
+                  ];
+              };
+            ];
+        }
+
+    let%test "a list datatype encodes as a recursive sort" =
+      let apply name args =
+        match func_lookup ctx name with
+        | Some fd -> FuncDecl.apply fd args
+        | None -> _die_with [%here] (spf "%s is not registered" name)
+      in
+      let l = Expr.mk_const_s ctx "l" (tp_to_sort ctx ilist) in
+      let cell = apply "cons" [ int_to_z3 ctx 1; l ] in
+      let entails e =
+        let solver = Z3.Solver.mk_solver ctx None in
+        Z3.Solver.add solver [ mk_not ctx e ];
+        Z3.Solver.check solver [] = Z3.Solver.UNSATISFIABLE
+      in
+      entails (apply "is_cons" [ cell ])
+      && entails (mk_eq ctx (apply "head" [ cell ]) (int_to_z3 ctx 1))
+      && entails (mk_eq ctx (apply "tail" [ cell ]) l)
+      && entails (mk_not ctx (mk_eq ctx cell l))
+  end)
