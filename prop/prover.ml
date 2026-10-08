@@ -52,6 +52,10 @@ let serialize (ctx : context) (exprs : Expr.expr list) : string =
   Solver.add solver exprs;
   Solver.to_string solver
 
+let declares_datatype body =
+  String.split_on_char '\n' body
+  |> List.exists (String.starts_with ~prefix:"(declare-datatype")
+
 let dump_queries entries =
   ZUtilsLog.dump_smt @@ fun _ ->
   List.iter
@@ -78,26 +82,39 @@ let portfolio_entries axiom_body : Portfolio.entry list =
     | Some r -> Printf.sprintf "(set-option :rlimit %d)\n" r
     | None -> ""
   in
-  let wrap ?(mbqi_only = false) body =
+  let wrap ?(dt_eager = false) ?(mbqi_only = false) body =
+    let dt = if dt_eager then "(set-option :smt.dt_lazy_splits 0)\n" else "" in
     let mq =
       if mbqi_only then
         "(set-option :smt.ematching false)\n(set-option :smt.mbqi true)\n"
       else ""
     in
     Printf.sprintf
-      "%s(set-option :timeout %d)\n\
+      "%s%s(set-option :timeout %d)\n\
        %s%s\n\
        (check-sat)\n\
        (get-info :reason-unknown)\n"
-      mq timeout rlimit_opt body
+      dt mq timeout rlimit_opt body
   in
-  [
-    { Portfolio.label = "axiom"; query = wrap axiom_body };
-    {
-      Portfolio.label = "axiom_mbqi-only";
-      query = wrap ~mbqi_only:true axiom_body;
-    };
-  ]
+  (* [dt_lazy_splits] only steers datatype case splits, so a body without a
+     datatype would race a copy of [axiom]. *)
+  let dt_eager =
+    if declares_datatype axiom_body then
+      [
+        {
+          Portfolio.label = "axiom_dt-eager";
+          query = wrap ~dt_eager:true axiom_body;
+        };
+      ]
+    else []
+  in
+  ({ Portfolio.label = "axiom"; query = wrap axiom_body } :: dt_eager)
+  @ [
+      {
+        Portfolio.label = "axiom_mbqi-only";
+        query = wrap ~mbqi_only:true axiom_body;
+      };
+    ]
 
 let select_axioms prop =
   let { ax_sys; _ } = get_prover () in

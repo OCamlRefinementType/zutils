@@ -79,7 +79,12 @@ let rec typed_lit_to_z3 ctx lit =
       | "char_to_int", [ a ] -> Seq.mk_char_to_int ctx a
       | "char_le", [ a; b ] -> Seq.mk_char_le ctx a b
       | opname, args ->
-          let opname = spf "%s!%s" opname (Nt.layout op.ty) in
-          let argsty, retty = Nt.destruct_arr_tp op.ty in
-          let func = z3func ctx opname argsty retty in
+          let func =
+            match func_lookup ctx opname with
+            | Some fd -> fd
+            | None ->
+                (* A method predicate this context holds no definition for. *)
+                let arg_tys, ret_ty = Nt.destruct_arr_tp op.ty in
+                z3func ctx (spf "%s!%s" opname (Nt.layout op.ty)) arg_tys ret_ty
+          in
           Z3.FuncDecl.apply func args)
