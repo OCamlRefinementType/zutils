@@ -7,7 +7,11 @@ open Zdatatype
 
 (* Constructors stay in [Portfolio]; a match on a [check_sat] result resolves
    them from the scrutinee's type. *)
-type smt_result = Portfolio.smt_result
+type smt_result = Portfolio.smt_result =
+  | SmtSat
+  | SmtUnsat
+  | Unknown of string option
+
 type valid_result = SmtValid | SmtInvalid | Unknown of string option
 type prover = { ax_sys : laxiom_system; ctx : context }
 
