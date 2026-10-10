@@ -37,31 +37,6 @@ let _unique tab (sname, id) =
   | None ->
       Hashtbl.add tab sname 0;
       (sname, None)
-(*     let () = *)
-(*       match id with *)
-(*       | None -> () *)
-(*       | Some id -> *)
-(*         if id >= n then Hashtbl.replace tab sname (n + 1); *)
-(*           _assert [%here] *)
-(*             (spf "seen id (%i) should less than next available one (%i) in %s" *)
-(*                id n sname) *)
-(*             (id < n) *)
-(*     in *)
-(*     Hashtbl.replace tab sname (n + 1); *)
-(*     (sname, Some n) *)
-(* | None -> *)
-(*     let () = *)
-(*       match id with *)
-(*       | None -> () *)
-(*       | Some id -> *)
-(*           _assert [%here] *)
-(*             (spf *)
-(*                "seen id (%i) should less than next available one (None) in %s" *)
-(*                id sname) *)
-(*             false *)
-(*     in *)
-(*     Hashtbl.add tab sname 0; *)
-(*     (sname, None) *)
 
 let mk_unique tab name = name_to_string @@ _unique tab @@ name_of_string name
 
