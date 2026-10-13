@@ -5,8 +5,6 @@ open Syntax
 open ZUtilsConfig
 open Zdatatype
 
-(* Constructors stay in [Portfolio]; a match on a [check_sat] result resolves
-   them from the scrutinee's type. *)
 type smt_result = Portfolio.smt_result =
   | SmtSat
   | SmtUnsat
