@@ -17,7 +17,7 @@ module MyMap (Ord : Map.OrderedType) = struct
   let from_kv_list l = List.fold_left (fun m (k, v) -> add k v m) empty l
 
   let from_klist_vlist_consistent_exn kl vl =
-    if List.length kl != List.length vl then
+    if List.length kl <> List.length vl then
       raise
       @@ failwith
            (spf "[%s]; then number keys and values has different" __MODULE__)
@@ -26,7 +26,7 @@ module MyMap (Ord : Map.OrderedType) = struct
         (fun m (k, v) ->
           match find_opt m k with
           | Some v' ->
-              if Ord.compare v v' == 0 then m
+              if Ord.compare v v' = 0 then m
               else
                 raise
                 @@ failwith

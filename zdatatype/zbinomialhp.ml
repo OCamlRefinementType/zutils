@@ -10,7 +10,7 @@ let empty = []
 open Zlist
 
 let deep = List.length
-let is_single_tree = function Node (_, _, l) -> List.length l == 0
+let is_single_tree = function Node (_, _, l) -> List.length l = 0
 let deep_tree = function Node (_, _, l) -> 1 + deep l
 
 let rec mem x = function
@@ -35,7 +35,7 @@ let of_list l =
     | [] -> raise @@ failwith "cannot make empty tree in binomail"
     | (r, x) :: t -> Node (r, x, make [] 1 t)
   and make tmp num l =
-    if List.length l == 0 then tmp
+    if List.length l = 0 then tmp
     else if List.length l < num then raise @@ failwith "wrong binomial farmat"
     else
       let a = List.sublist l ~start_included:0 ~end_excluded:num in
@@ -121,17 +121,17 @@ let compare t1 t2 =
     | _, [] -> 1
     | Node (r1, x1, y1) :: t1, Node (r2, x2, y2) :: t2 ->
         let tmp = compare r1 r2 in
-        if tmp != 0 then tmp
+        if tmp <> 0 then tmp
         else
           let tmp = compare x1 x2 in
-          if tmp != 0 then tmp
+          if tmp <> 0 then tmp
           else
             let tmp = aux y1 y2 in
-            if tmp != 0 then tmp else aux t1 t2
+            if tmp <> 0 then tmp else aux t1 t2
   in
   aux t1 t2
 
-let eq t1 t2 = compare t1 t2 == 0
+let eq t1 t2 = compare t1 t2 = 0
 let is_empty ts = ts = []
 let rank (Node (r, _, _)) = r
 let root (Node (_, x, _)) = x
@@ -193,7 +193,7 @@ let if_complete_list l =
 let rec binomial_complete_tree = function
   | Node (0, _, []) -> true
   | Node (num_nodes, _, ts) ->
-      if List.length ts != num_nodes then false
+      if List.length ts <> num_nodes then false
       else if
         let if_comp = if_complete_list @@ List.map rank ts in
         (* let () = Printf.printf "_complete_list? %b\n" if_comp in *)
@@ -218,7 +218,7 @@ let fold_left f default input =
   in
   aux default input
 
-(* let mem t x = fold_left (fun b (_, x') -> b || x == x') false t *)
+(* let mem t x = fold_left (fun b (_, x') -> b || x = x') false t *)
 
 let max_opt t =
   fold_left
@@ -259,8 +259,8 @@ let binomialhp ts =
         let n' = n / 2 in
         let r = n - (n' * 2) in
         let b =
-          if r == 1 then true
-          else if r == 0 then false
+          if r = 1 then true
+          else if r = 0 then false
           else raise @@ failwith "bad divide"
         in
         to_binary (b :: res) n'
@@ -269,8 +269,8 @@ let binomialhp ts =
   (* let () = Printf.printf "bl: %s\n" @@ List.split_by_comma string_of_bool bl in *)
   let bl = List.filter_mapi (fun idx b -> if b then Some idx else None) bl in
   (* let () = Printf.printf "bl: %s\n" @@ IntList.to_string bl in *)
-  if List.length ts != List.length bl then false
+  if List.length ts <> List.length bl then false
   else
     let rs = List.map rank ts in
-    if List.eq ( == ) bl rs then List.for_all binomial_complete_tree ts
+    if List.eq ( = ) bl rs then List.for_all binomial_complete_tree ts
     else false

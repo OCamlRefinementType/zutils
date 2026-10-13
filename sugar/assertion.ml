@@ -1,7 +1,7 @@
 open Lexing
 
 let _check_arity loc a b =
-  if List.length a != List.length b then
+  if List.length a <> List.length b then
     failwith
       (Printf.sprintf "Arity check error on %s line %i" loc.pos_fname
          loc.pos_lnum)

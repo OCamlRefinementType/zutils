@@ -49,7 +49,7 @@ module BoundConstraints = struct
     let type_vars, t1 = uniquelize (bc.type_vars, t1) in
     let type_vars, t2 = uniquelize (type_vars, t2) in
     _assert [%here] "new poly type var"
-      (StrMap.cardinal bc.type_vars == StrMap.cardinal type_vars);
+      (StrMap.cardinal bc.type_vars = StrMap.cardinal type_vars);
     ({ bc with cs = (t1, t2) :: bc.cs }, (t1, t2))
 
   let fresh { type_vars; cs } =
@@ -100,7 +100,7 @@ let type_unification m (cs : (t * t) list) =
         match (t1, t2) with
         | Ty_unknown, _ | _, Ty_unknown -> aux m cs
         | Ty_var n, Ty_var k ->
-            if String.compare n k == 0 then aux m cs
+            if String.compare n k = 0 then aux m cs
             else if String.compare n k > 0 then
               let m = subst_on_sol (n, t2) m in
               let cs = subst_on_cs (n, t2) cs in
@@ -119,7 +119,7 @@ let type_unification m (cs : (t * t) list) =
               let cs = subst_on_cs (n, t1) cs in
               aux (StrMap.add n t1 m) cs
         | Ty_constructor (id1, ts1), Ty_constructor (id2, ts2) ->
-            if String.equal id1 id2 && List.length ts1 == List.length ts2 then
+            if String.equal id1 id2 && List.length ts1 = List.length ts2 then
               aux m (List.combine ts1 ts2 @ cs)
             else err ()
         | Ty_arrow (t11, t12), Ty_arrow (t21, t22) ->
@@ -127,7 +127,7 @@ let type_unification m (cs : (t * t) list) =
         (* unfold singleton tuple *)
         | Ty_tuple [ t1 ], _ -> aux m ((t1, t2) :: cs)
         | _, Ty_tuple [ t2 ] -> aux m ((t1, t2) :: cs)
-        | Ty_tuple ts1, Ty_tuple ts2 when List.length ts1 == List.length ts2 ->
+        | Ty_tuple ts1, Ty_tuple ts2 when List.length ts1 = List.length ts2 ->
             aux m (List.combine ts1 ts2 @ cs)
         | Ty_record { fds = l1; _ }, Ty_record { fds = l2; _ } ->
             let tab = Hashtbl.create (List.length l1) in

@@ -27,7 +27,7 @@ let unique_quantifiers prop =
         let* m = m in
         let* m' = m' in
         let res = StrSet.union m m' in
-        if StrSet.cardinal res != StrSet.cardinal m + StrSet.cardinal m' then (
+        if StrSet.cardinal res <> StrSet.cardinal m + StrSet.cardinal m' then (
           (let layout m = StrList.to_string @@ StrSet.to_list m in
            ZUtilsLog.queries @@ fun () ->
            Printf.printf "[%s] ?= [%s] + [%s]\n" (layout res) (layout m)

@@ -51,7 +51,7 @@ let ( let* ) x f = opt_bind x f
 let ( let+ ) x f = opt_fmap x f
 let ( >>= ) x f = opt_bind x f
 let ( >|= ) x f = opt_fmap x f
-let compare_bind a b = if a != 0 then a else b
+let compare_bind a b = if a <> 0 then a else b
 
 (** Better compostion operations *)
 let ( &&& ) a b x = a x && b x

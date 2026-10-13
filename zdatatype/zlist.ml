@@ -49,7 +49,7 @@ module List = struct
       | _ :: _, [] -> 1
       | h1 :: t1, h2 :: t2 ->
           let c = e_compare h1 h2 in
-          if c != 0 then c else aux t1 t2
+          if c <> 0 then c else aux t1 t2
     in
     aux l1 l2
 
@@ -164,19 +164,19 @@ module List = struct
     aux default 0 l
 
   let mean_exn (f : 'a -> float) (l : 'a list) =
-    if length l == 0 then raise @@ failwith @@ spf "[%s]:never happen" __FILE__
+    if length l = 0 then raise @@ failwith @@ spf "[%s]:never happen" __FILE__
     else
       let r = fold_left (fun sum x -> sum +. f x) 0.0 l in
       r /. (float_of_int @@ length l)
 
   let mean_opt (f : 'a -> float) (l : 'a list) =
-    if length l == 0 then None
+    if length l = 0 then None
     else
       let r = fold_left (fun sum x -> sum +. f x) 0.0 l in
       Some (r /. (float_of_int @@ length l))
 
   let meani_opt (f : int -> 'a -> float) (l : 'a list) =
-    if length l == 0 then None
+    if length l = 0 then None
     else
       let r = fold_lefti (fun sum i x -> sum +. f i x) 0.0 l in
       Some (r /. (float_of_int @@ length l))
@@ -205,11 +205,11 @@ module List = struct
 
   let lastb l e =
     let l = List.rev l in
-    match l with [] -> false | h :: _ -> h == e
+    match l with [] -> false | h :: _ -> h = e
 
   let to_string f l =
     fold_lefti
-      (fun res i a -> if i == 0 then res ^ f a else res ^ "," ^ f a)
+      (fun res i a -> if i = 0 then res ^ f a else res ^ "," ^ f a)
       "" l
 
   let rec element_unique f l e =
@@ -269,7 +269,7 @@ module List = struct
   (*   in *)
   (*   aux [] (l1 @ l2) *)
 
-  (* let remove_duplicates_eq l = remove_duplicates (fun x y -> x == y) l *)
+  (* let remove_duplicates_eq l = remove_duplicates (fun x y -> x = y) l *)
 
   let inner_layout l split default =
     match l with
@@ -281,8 +281,8 @@ module List = struct
   let combination num_all num_choose =
     let rec aux prefix rest_num rest_elems =
       if rest_num > List.length rest_elems then []
-      else if rest_num == 0 then [ prefix ]
-      else if rest_num == 1 then
+      else if rest_num = 0 then [ prefix ]
+      else if rest_num = 1 then
         List.fold_left (fun r x -> (x :: prefix) :: r) [] rest_elems
       else
         match rest_elems with
@@ -330,7 +330,7 @@ module List = struct
     aux l
 
   let cross l0 l1 =
-    if List.length l0 == 0 || List.length l1 == 0 then []
+    if List.length l0 = 0 || List.length l1 = 0 then []
     else
       let rec aux i j res =
         if j >= List.length l1 then aux (i + 1) 0 res
@@ -357,9 +357,9 @@ module List = struct
     List.init (List.length ll) (fun i -> List.map (fun l -> nth l i) ll)
 
   let choose_list_list ll =
-    if List.exists (fun l -> List.length l == 0) ll then []
+    if List.exists (fun l -> List.length l = 0) ll then []
     else
-      let one_lists, others = List.partition (fun l -> List.length l == 1) ll in
+      let one_lists, others = List.partition (fun l -> List.length l = 1) ll in
       let others = Array.of_list (List.map Array.of_list others) in
       let one_list = List.flatten one_lists in
       let n = Array.length others in
@@ -381,7 +381,7 @@ module List = struct
       List.map (fun l -> one_list @ l) (aux [])
 
   let choose_list_list_order ll =
-    if List.exists (fun l -> List.length l == 0) ll then []
+    if List.exists (fun l -> List.length l = 0) ll then []
     else
       let others = Array.of_list (List.map Array.of_list ll) in
       let n = Array.length others in
@@ -403,7 +403,7 @@ module List = struct
       aux []
 
   let choose_list_list_order_fold f default ll =
-    if List.exists (fun l -> List.length l == 0) ll then default
+    if List.exists (fun l -> List.length l = 0) ll then default
     else
       let others = Array.of_list (List.map Array.of_list ll) in
       let n = Array.length others in
@@ -427,7 +427,7 @@ module List = struct
   (* duplicate *)
   let choose_n l n =
     let rec aux r n =
-      if n == 0 then r
+      if n = 0 then r
       else
         aux
           (List.flatten @@ List.map (fun e -> List.map (fun r -> e :: r) r) l)
@@ -435,7 +435,7 @@ module List = struct
     in
     if n < 0 then
       raise @@ failwith @@ spf "[%s]:%s" __FILE__ "choose_n_eq: bad n"
-    else if n == 0 then [ [] ]
+    else if n = 0 then [ [] ]
     else aux (List.map (fun x -> [ x ]) l) (n - 1)
 
   let choose_n_neq l n =
@@ -444,7 +444,7 @@ module List = struct
     let used = Array.make len false in
     let res = ref [] in
     let rec aux curidx rest_len prefix =
-      if rest_len == 0 then res := prefix :: !res
+      if rest_len = 0 then res := prefix :: !res
       else if curidx >= len then ()
       else
         match used.(curidx) with
@@ -550,27 +550,27 @@ end
 
 module IntList = struct
   let spf = Printf.sprintf
-  let exists x l = List.exists (fun a -> a == x) l
+  let exists x l = List.exists (fun a -> a = x) l
   let contain l0 l1 = List.for_all (fun x -> exists x l1) l0
 
   let rec keep_ord l0 l1 =
     let rec aux a b = function
       | [] -> false
-      | h :: t -> if h == a then exists b t else aux a b t
+      | h :: t -> if h = a then exists b t else aux a b t
     in
     let rec aux2 a = function [] -> true | h :: t -> aux a h l1 && aux2 a t in
     match l0 with [] -> true | h :: t -> aux2 h t && keep_ord t l1
 
   let forall_ge l = List.for_alli (fun h i -> h >= i) l
   let forall_gt l = List.for_alli (fun h i -> h > i) l
-  let forall_eq l = List.for_alli (fun h i -> h == i) l
-  let eq l0 l1 = List.eq (fun x y -> x == y) l0 l1
+  let forall_eq l = List.for_alli (fun h i -> h = i) l
+  let eq l0 l1 = List.eq (fun x y -> x = y) l0 l1
   let sum = List.fold_left (fun sum x -> sum + x) 0
 
   let to_string l =
     List.fold_lefti
       (fun res i a ->
-        if i == 0 then res ^ string_of_int a else res ^ ";" ^ string_of_int a)
+        if i = 0 then res ^ string_of_int a else res ^ ";" ^ string_of_int a)
       "" l
 
   let max_opt l =
@@ -599,9 +599,9 @@ module IntList = struct
 
   let is_strict_sort (l : int list) =
     let l' = List.sort_uniq compare l in
-    List.eq ( == ) l l'
+    List.eq ( = ) l l'
 
   let is_unique (l : int list) =
     let l' = List.sort_uniq compare l in
-    List.length l == List.length l'
+    List.length l = List.length l'
 end

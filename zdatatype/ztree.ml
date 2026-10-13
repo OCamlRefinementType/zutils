@@ -46,7 +46,7 @@ module Tree = struct
     let rec aux d = function
       | Leaf -> Leaf
       | Node (x, l, r) ->
-          if depth == d + 1 then Leaf else Node (x, aux (d + 1) l, aux (d + 1) r)
+          if depth = d + 1 then Leaf else Node (x, aux (d + 1) l, aux (d + 1) r)
     in
     aux 0 tr
 
@@ -208,7 +208,7 @@ module Tree = struct
       | n, Node (x, l, Leaf) -> aux (x :: incompeletes) (n - 1, l)
       | n, Node (_, l, r) -> aux (aux incompeletes (n - 1, l)) (n - 1, r)
     in
-    List.exists (fun x -> x == u) @@ aux [] (deep t, t)
+    List.exists (fun x -> x = u) @@ aux [] (deep t, t)
 
   let eq compare t1 t2 =
     let rec aux = function
@@ -238,18 +238,18 @@ module Tree = struct
       | Node _, Leaf -> 1
       | Node (a1, l1, r1), Node (a2, l2, r2) ->
           let c = e_compare a1 a2 in
-          if c != 0 then c
+          if c <> 0 then c
           else
             let c = aux l1 l2 in
-            if c != 0 then c else aux r1 r2
+            if c <> 0 then c else aux r1 r2
     in
     aux t1 t2
 
   let last t i =
     let rec aux = function
       | Leaf -> false
-      | Node (x, Leaf, Leaf) -> x == i
-      | Node (x, l, r) -> x == i || aux l || aux r
+      | Node (x, Leaf, Leaf) -> x = i
+      | Node (x, l, r) -> x = i || aux l || aux r
     in
     aux t
 
@@ -273,7 +273,7 @@ module Tree = struct
       | Leaf, _ -> true
       | Node (_, _, _), Leaf -> false
       | Node (x1, l1, r1), Node (x2, l2, r2) ->
-          x1 == x2 && aux (l1, l2) && aux (r1, r2)
+          x1 = x2 && aux (l1, l2) && aux (r1, r2)
     in
     aux (t1, t2)
 
@@ -281,7 +281,7 @@ module Tree = struct
     let rec aux = function
       | Leaf | Node (_, Leaf, _) | Node (_, _, Leaf) -> true
       | Node (_, Node (x1, l1, r1), Node (x2, l2, r2)) ->
-          x1 != x2 && aux l1 && aux r1 && aux l2 && aux r2
+          x1 <> x2 && aux l1 && aux r1 && aux l2 && aux r2
     in
     aux t
 end
