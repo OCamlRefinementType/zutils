@@ -94,7 +94,7 @@ module F (P : Predictable) = struct
   (** Remove unreachable paths by given paths *)
   let refine_dt_from_tab features (paths : ('a, bool) Hashtbl.t list) dt =
     let rec aux paths dt =
-      if 0 == List.length paths then F
+      if 0 = List.length paths then F
       else
         match dt with
         | T -> T

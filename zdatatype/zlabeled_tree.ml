@@ -101,7 +101,7 @@ module LabeledTree = struct
       | None ->
           nfalse := Some i;
           true
-      | Some i' -> if i == i' then true else false
+      | Some i' -> if i = i' then true else false
     in
     let rec aux idx = function
       | Leaf -> update idx
@@ -116,7 +116,7 @@ module LabeledTree = struct
   let rb_balance2 t1 t2 =
     let a1, b1 = rb_balance_ t1 in
     let a2, b2 = rb_balance_ t2 in
-    a1 && a2 && b1 == b2
+    a1 && a2 && b1 = b2
 
   let leftists t =
     let rec aux = function
@@ -125,7 +125,7 @@ module LabeledTree = struct
           match aux l with
           | None -> None
           | Some ll -> (
-              if label != ll + 1 then None
+              if label <> ll + 1 then None
               else match aux r with None -> None | Some _ -> Some label))
     in
     match aux t with None -> false | Some _ -> true
@@ -263,7 +263,7 @@ module LabeledTree = struct
 
   let flatten_forall t = List.remove_duplicates (flatten t)
 
-  (* let union l0 l1 = List.union (fun x y -> x == y) l0 l1 *)
+  (* let union l0 l1 = List.union (fun x y -> x = y) l0 l1 *)
 
   let once f tr e =
     let l = flatten tr in
@@ -277,18 +277,18 @@ module LabeledTree = struct
       | Node _, Leaf -> 1
       | Node (_, a1, l1, r1), Node (_, a2, l2, r2) ->
           let c = e_compare a1 a2 in
-          if c != 0 then c
+          if c <> 0 then c
           else
             let c = aux l1 l2 in
-            if c != 0 then c else aux r1 r2
+            if c <> 0 then c else aux r1 r2
     in
     aux t1 t2
 
   let last t i =
     let rec aux = function
       | Leaf -> false
-      | Node (_, x, Leaf, Leaf) -> x == i
-      | Node (_, x, l, r) -> x == i || aux l || aux r
+      | Node (_, x, Leaf, Leaf) -> x = i
+      | Node (_, x, l, r) -> x = i || aux l || aux r
     in
     aux t
 
@@ -297,7 +297,7 @@ module LabeledTree = struct
     let rec aux d = function
       | Leaf -> Leaf
       | Node (label, x, l, r) ->
-          if depth == d + 1 then Leaf
+          if depth = d + 1 then Leaf
           else Node (label, x, aux (d + 1) l, aux (d + 1) r)
     in
     aux 0 tr

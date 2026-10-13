@@ -135,7 +135,7 @@ let report_unclosed loc query =
        (List.split_by_comma
           (function { x; ty } -> spf "%s:%s" x (Nt.layout ty))
           fvs))
-    (0 == List.length fvs)
+    (0 = List.length fvs)
 
 let check_sat loc prop =
   incr query_counter;

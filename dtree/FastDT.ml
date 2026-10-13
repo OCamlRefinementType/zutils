@@ -31,7 +31,7 @@ module FastDT : FastDT = struct
     let _N = length a in
     let rec lin_search lo hi =
       (* search *includes* both lo and hi *)
-      if a.(lo) == i then true
+      if a.(lo) = i then true
       else if lo >= hi then false
       else if a.(lo) < i then lin_search (lo + 1) hi
       else false
@@ -43,11 +43,11 @@ module FastDT : FastDT = struct
         if mi >= _N then lin_search lo hi
         else
           let v = a.(mi) in
-          if v == i then true
+          if v = i then true
           else if v < i then bin_search mi hi
           else bin_search lo mi
     in
-    if _N == 0 then false else bin_search 0 (_N - 1)
+    if _N = 0 then false else bin_search 0 (_N - 1)
 
   let split_white_re = Str.regexp "[ \t]+"
   let split_white = Str.split split_white_re
@@ -82,7 +82,7 @@ module FastDT : FastDT = struct
         let r = map_filter f xs in
         try f x :: r with _ -> r)
 
-  let ( /.. ) a b = if b == 0 then 0.5 else float_of_int a /. float_of_int b
+  let ( /.. ) a b = if b = 0 then 0.5 else float_of_int a /. float_of_int b
 
   let predict dt x =
     let rec predict' = function
@@ -330,7 +330,7 @@ let ex_F = transpose_data ex_X
       let error = ref 0. in
       for n = 0 to _N - 1 do
         let p = pred.(n) >= 0.5 in
-        if p != _Y.(n) then error := !error +. _W.(n)
+        if p <> _Y.(n) then error := !error +. _W.(n)
       done;
       if !error > 0. then (
         let epsilon = !error /. sum_W in
@@ -339,7 +339,7 @@ let ex_F = transpose_data ex_X
         let sum = ref 0. in
         for n = 0 to _N - 1 do
           let p = pred.(n) >= 0.5 in
-          let v = if p == _Y.(n) then exp (0. -. alpha) else exp alpha in
+          let v = if p = _Y.(n) then exp (0. -. alpha) else exp alpha in
           pred.(n) <- v;
           sum := !sum +. v
         done;
@@ -360,7 +360,7 @@ let ex_F = transpose_data ex_X
     let rec uniq' = function
       | [] -> []
       | [ x ] -> [ x ]
-      | x :: y :: xs -> if x == y then uniq' (y :: xs) else x :: uniq' (y :: xs)
+      | x :: y :: xs -> if x = y then uniq' (y :: xs) else x :: uniq' (y :: xs)
     in
     uniq' l
 
@@ -445,7 +445,7 @@ let ex_F = transpose_data ex_X
               fast_sort Int.compare x;
               let v = predict_committee model x in
               let p = v > 0.5 in
-              if y != p then error := !error +. 1.;
+              if y <> p then error := !error +. 1.;
               sumW := !sumW +. 1.;
               printf "%g\n" v;
               read ()

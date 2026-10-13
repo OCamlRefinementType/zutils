@@ -58,12 +58,12 @@ let to_string (a, b, c) =
 
 let compare (a1, b1, c1) (a2, b2, c2) =
   let tmp = List.compare compare (to_list a1) (to_list a2) in
-  if tmp != 0 then tmp
+  if tmp <> 0 then tmp
   else
     let tmp = List.compare compare b1 b2 in
-    if tmp != 0 then tmp else List.compare compare (to_list c1) (to_list c2)
+    if tmp <> 0 then tmp else List.compare compare (to_list c1) (to_list c2)
 
-let eq t1 t2 = compare t1 t2 == 0
+let eq t1 t2 = compare t1 t2 = 0
 let empty = (lazy Nil, [], lazy Nil)
 let is_empty = function (lazy Nil), _, _ -> true | _ -> false
 

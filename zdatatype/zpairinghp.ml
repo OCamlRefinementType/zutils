@@ -70,11 +70,11 @@ let compare t1 t2 =
     | _, E -> 1
     | T (x1, l1), T (x2, l2) ->
         let tmp = compare x1 x2 in
-        if tmp != 0 then tmp else List.compare aux l1 l2
+        if tmp <> 0 then tmp else List.compare aux l1 l2
   in
   aux t1 t2
 
-let eq t1 t2 = compare t1 t2 == 0
+let eq t1 t2 = compare t1 t2 = 0
 let is_empty = function E -> true | _ -> false
 
 let merge h1 h2 =
@@ -129,7 +129,7 @@ let min_opt t =
     (fun opt x' -> match opt with None -> Some x' | Some x -> Some (min x x'))
     None t
 
-(* let mem t x = fold_left (fun opt x' -> opt || x == x') false t *)
+(* let mem t x = fold_left (fun opt x' -> opt || x = x') false t *)
 
 let single x = T (x, [])
 

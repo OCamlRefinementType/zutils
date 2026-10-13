@@ -91,5 +91,5 @@ let lift_poly_tp tp =
   let ps, tp = aux tp in
   _assert [%here] "not a well-formed poly type" (not (has_poly_tp tp));
   _assert [%here] "same poly type var"
-    (List.length ps == List.length (Zdatatype.List.slow_rm_dup String.equal ps));
+    (List.length ps = List.length (Zdatatype.List.slow_rm_dup String.equal ps));
   (ps, tp)

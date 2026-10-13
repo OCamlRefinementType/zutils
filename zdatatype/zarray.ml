@@ -8,13 +8,13 @@ module Array = struct
     r
 
   let mean_opt (f : 'a -> float) (l : 'a array) =
-    if length l == 0 then None
+    if length l = 0 then None
     else
       let r = fold_left (fun sum x -> sum +. f x) 0.0 l in
       Some (r /. (float_of_int @@ length l))
 
   let meani_opt (f : int -> 'a -> float) (l : 'a array) =
-    if length l == 0 then None
+    if length l = 0 then None
     else
       let r = fold_lefti (fun sum i x -> sum +. f i x) 0.0 l in
       Some (r /. (float_of_int @@ length l))
@@ -57,7 +57,7 @@ module BoolList = struct
     | 1, 1 -> [ true ]
     | _, _ ->
         let res = of_int (len - 1) (n / 2) in
-        if n mod 2 == 0 then false :: res else true :: res
+        if n mod 2 = 0 then false :: res else true :: res
 
   (** l = binary(to_int (reverse l)) *)
   let rec to_int (l : t) =
@@ -91,7 +91,7 @@ module Bitarray = struct
     Bytes.set t.buf index @@ char_of_int new_ch
 
   let equal ba1 ba2 =
-    if ba1.len != ba2.len then false else Bytes.equal ba1.buf ba2.buf
+    if ba1.len <> ba2.len then false else Bytes.equal ba1.buf ba2.buf
 
   (* HACK: hash will fial when bitarray with different length mixed up *)
   let hash { buf; _ } = Hashtbl.hash (Bytes.to_string buf)

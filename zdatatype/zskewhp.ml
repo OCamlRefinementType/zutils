@@ -8,7 +8,7 @@ exception Empty
 
 open Zlist
 
-let is_single_tree = function Node (_, _, _, t) -> List.length t == 0
+let is_single_tree = function Node (_, _, _, t) -> List.length t = 0
 let deep = List.length
 let deep_tree = function Node (_, _, _, l) -> 1 + deep l
 
@@ -111,20 +111,20 @@ let compare t1 t2 =
     | _, [] -> 1
     | Node (r1, x1, l1, y1) :: t1, Node (r2, x2, l2, y2) :: t2 ->
         let tmp = compare r1 r2 in
-        if tmp != 0 then tmp
+        if tmp <> 0 then tmp
         else
           let tmp = compare x1 x2 in
-          if tmp != 0 then tmp
+          if tmp <> 0 then tmp
           else
             let tmp = List.compare compare l1 l2 in
-            if tmp != 0 then tmp
+            if tmp <> 0 then tmp
             else
               let tmp = aux y1 y2 in
-              if tmp != 0 then tmp else aux t1 t2
+              if tmp <> 0 then tmp else aux t1 t2
   in
   aux t1 t2
 
-let eq t1 t2 = compare t1 t2 == 0
+let eq t1 t2 = compare t1 t2 = 0
 let empty = []
 let is_empty ts = ts = []
 let rank (Node (r, _, _, _)) = r
@@ -206,7 +206,7 @@ let rec binomial_complete_tree = function
   | Node (0, _, _, _) -> false
   | Node (num_nodes, _, xs, ts) ->
       (* let _ = Printf.printf "num_nodes = %i\n" num_nodes in *)
-      if List.length ts != num_nodes || List.length xs > num_nodes then false
+      if List.length ts <> num_nodes || List.length xs > num_nodes then false
       else if
         let if_comp = if_complete_list @@ List.map rank ts in
         (* let () = Printf.printf "_complete_list? %b\n" if_comp in *)
@@ -232,7 +232,7 @@ let fold_left f default input =
   in
   aux default input
 
-(* let mem t x = fold_left (fun b x' -> b || x == x') false t *)
+(* let mem t x = fold_left (fun b x' -> b || x = x') false t *)
 
 let max_opt t =
   fold_left
@@ -261,8 +261,8 @@ let skewhp ts =
         let n' = n / 2 in
         let r = n - (n' * 2) in
         let b =
-          if r == 1 then true
-          else if r == 0 then false
+          if r = 1 then true
+          else if r = 0 then false
           else raise @@ failwith "bad divide"
         in
         to_binary (b :: res) n'
@@ -272,8 +272,8 @@ let skewhp ts =
   (* let _ = raise @@ failwith "skewhp" in *)
   let bl = List.filter_mapi (fun idx b -> if b then Some idx else None) bl in
   (* let () = Printf.printf "bl: %s\n" @@ IntList.to_string bl in *)
-  if List.length ts != List.length bl then false
+  if List.length ts <> List.length bl then false
   else
     let rs = List.map rank ts in
-    if List.eq ( == ) bl rs then List.for_all binomial_complete_tree ts
+    if List.eq ( = ) bl rs then List.for_all binomial_complete_tree ts
     else false
