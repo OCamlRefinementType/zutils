@@ -306,6 +306,11 @@ let subst_prop_instance x instance e =
 let typed_subst_prop_instance x instance e =
   subst_f_to_instance typed_subst_prop x instance e
 
+let has_quantifiers (prop_e : 't prop) =
+  fold_prop
+    (fun acc -> function Forall _ | Exists _ -> true | _ -> acc)
+    false prop_e
+
 (* force *)
 let prop_force_typed_lit_opt prop =
   match prop with Lit lit -> Some lit | _ -> None
