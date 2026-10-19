@@ -643,39 +643,13 @@ let fresh_name_prop =
   in
   aux
 
-let count_prop_qv =
-  let rec aux = function
-    | Lit _ -> (0, 0)
-    | Implies (e1, e2) ->
-        let num_ex1, num_fa1 = aux e1 in
-        let num_fa2, num_ex2 = aux e2 in
-        (num_fa1 + num_fa2, num_ex1 + num_ex2)
-    | Ite (e1, e2, e3) ->
-        let num_fa1, num_ex1 = aux e1 in
-        let num_fa2, num_ex2 = aux e2 in
-        let num_ex3, num_fa3 = aux e3 in
-        (num_fa1 + num_fa2 + num_fa3, num_ex1 + num_ex2 + num_ex3)
-    | Not e1 ->
-        let num_fa1, num_ex1 = aux e1 in
-        (num_fa1, num_ex1)
-    | And es ->
-        let num_fas, num_exs = List.split @@ List.map aux es in
-        (List.fold_left ( + ) 0 num_fas, List.fold_left ( + ) 0 num_exs)
-    | Or es ->
-        let num_fas, num_exs = List.split @@ List.map aux es in
-        (List.fold_left ( + ) 0 num_fas, List.fold_left ( + ) 0 num_exs)
-    | Iff (e1, e2) ->
-        let num_ex1, num_fa1 = aux e1 in
-        let num_fa2, num_ex2 = aux e2 in
-        (num_fa1 + num_fa2, num_ex1 + num_ex2)
-    | Forall { body; _ } ->
-        let num_fa1, num_ex1 = aux body in
-        (num_fa1 + 1, num_ex1)
-    | Exists { body; _ } ->
-        let num_fa1, num_ex1 = aux body in
-        (num_fa1, num_ex1 + 1)
-  in
-  aux
+let count_prop_qv prop =
+  fold_prop
+    (fun (num_fa, num_ex) -> function
+      | Forall _ -> (num_fa + 1, num_ex)
+      | Exists _ -> (num_fa, num_ex + 1)
+      | _ -> (num_fa, num_ex))
+    (0, 0) prop
 
 let count_pred_lit lit =
   let rec aux lit =
@@ -692,34 +666,22 @@ let count_pred_lit lit =
   List.slow_rm_dup (fun x y -> String.equal x.x y.x) @@ typed_aux lit
 
 let count_pred_prop prop =
-  let rec aux = function
-    | Lit lit -> count_pred_lit lit
-    | Implies (e1, e2) -> List.concat_map aux [ e1; e2 ]
-    | Ite (e1, e2, e3) -> List.concat_map aux [ e1; e2; e3 ]
-    | Not e1 -> aux e1
-    | And es -> List.concat_map aux es
-    | Or es -> List.concat_map aux es
-    | Iff (e1, e2) -> List.concat_map aux [ e1; e2 ]
-    | Forall { body; _ } -> aux body
-    | Exists { body; _ } -> aux body
+  let aux =
+    fold_prop
+      (fun acc -> function Lit lit -> acc @ count_pred_lit lit | _ -> acc)
+      []
   in
   List.slow_rm_dup (fun x y -> String.equal x.x y.x) @@ aux prop
 
 (** Poly *)
 
 let gather_poly_preds_from_prop prop =
-  let rec aux = function
-    | Lit lit -> ( match lit.x with AAppOp (op, _) -> [ op ] | _ -> [])
-    | Implies (e1, e2) -> aux e1 @ aux e2
-    | Ite (e1, e2, e3) -> aux e1 @ aux e2 @ aux e3
-    | Not e -> aux e
-    | And es -> List.concat @@ List.map aux es
-    | Or es -> List.concat @@ List.map aux es
-    | Iff (e1, e2) -> aux e1 @ aux e2
-    | Forall { body; _ } -> aux body
-    | Exists { body; _ } -> aux body
+  let xs =
+    fold_prop
+      (fun acc -> function
+        | Lit { x = AAppOp (op, _); _ } -> acc @ [ op ] | _ -> acc)
+      [] prop
   in
-  let xs = aux prop in
   List.slow_rm_dup (fun x y -> String.equal x.x y.x) xs
 
 let rename_pred_prop oldname newname =
@@ -754,16 +716,11 @@ let get_tfv_preds_from_lit lit =
   List.slow_rm_dup (equal_typed Nt.equal_nt String.equal) @@ aux lit.x
 
 let get_tfv_preds_from_prop prop =
-  let rec aux = function
-    | Lit lit -> get_tfv_preds_from_lit lit
-    | Implies (e1, e2) -> List.concat_map aux [ e1; e2 ]
-    | Ite (e1, e2, e3) -> List.concat_map aux [ e1; e2; e3 ]
-    | Not e -> aux e
-    | And es -> List.concat_map aux es
-    | Or es -> List.concat_map aux es
-    | Iff (e1, e2) -> List.concat_map aux [ e1; e2 ]
-    | Forall { body; _ } -> aux body
-    | Exists { body; _ } -> aux body
+  let aux =
+    fold_prop
+      (fun acc -> function
+        | Lit lit -> acc @ get_tfv_preds_from_lit lit | _ -> acc)
+      []
   in
   let res =
     List.slow_rm_dup (equal_typed Nt.equal_nt String.equal) @@ aux prop
