@@ -275,6 +275,28 @@ let rec map_prop (f : 't -> 's) (prop_e : 't prop) =
 and typed_map_prop (f : 't -> 's) (prop_e : ('t, 't prop) typed) =
   prop_e#=>f#->(map_prop f)
 
+let rec fold_prop f acc (prop_e : 't prop) =
+  let acc = f acc prop_e in
+  match prop_e with
+  | Lit _ -> acc
+  | Implies (e1, e2) ->
+      let acc = fold_prop f acc e1 in
+      fold_prop f acc e2
+  | Ite (e1, e2, e3) ->
+      let acc = fold_prop f acc e1 in
+      let acc = fold_prop f acc e2 in
+      fold_prop f acc e3
+  | Not e -> fold_prop f acc e
+  | And es -> List.fold_left (fold_prop f) acc es
+  | Or es -> List.fold_left (fold_prop f) acc es
+  | Iff (e1, e2) ->
+      let acc = fold_prop f acc e1 in
+      fold_prop f acc e2
+  | Forall { body; _ } -> fold_prop f acc body
+  | Exists { body; _ } -> fold_prop f acc body
+
+and typed_fold_prop f acc prop_e = fold_prop f acc prop_e.x
+
 let fv_prop_id e = fv_typed_id_to_id fv_prop e
 let typed_fv_prop_id e = fv_typed_id_to_id typed_fv_prop e
 
