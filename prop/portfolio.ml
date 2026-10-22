@@ -1,10 +1,16 @@
+open Sugar
+
 (* Race N z3 subprocesses per query and take the first definite verdict. z3 emits
    its few bytes of output just before exiting, so we wait for each to exit and
    read the temp files rather than streaming. *)
 
 (* [Unknown] carries z3's `:reason-unknown`, present only when the query appended
    [(get-info :reason-unknown)]; [None] when no reason line was emitted. *)
-type smt_result = SmtSat | SmtUnsat | Unknown of string option
+type smt_result =
+  | SmtSat of string option
+  | SmtUnsat
+  | Unknown of string option
+
 type entry = { label : string; query : string }
 
 (* z3 prints the reason as `(:reason-unknown "<text>")`; "" after sat/unsat. *)
@@ -20,8 +26,29 @@ let parse_reason_unknown (lines : string list) : string option =
         | _ -> None)
     lines
 
+(* assumes the model appears directly after the reason-unknown line *)
+let parse_model (lines : string list) : string option =
+  (* if user did not ask for a model, this may be some later output *)
+  let* _ = if ZUtilsConfig.should_retrieve_model () then Some () else None in
+  let* reason_index =
+    List.find_index (String.starts_with ~prefix:"(:reason-unknown") lines
+  in
+  let remaining_lines = Zdatatype.List.drop (reason_index + 1) lines in
+  let get_count c =
+    String.fold_left (fun acc c' -> acc + if c == c' then 1 else 0) 0
+  in
+  let get_balance line = get_count '(' line - get_count ')' line in
+  let rec aux lines balance =
+    match lines with
+    | [] -> []
+    | line :: rest ->
+        let balance = balance + get_balance line in
+        if balance <= 0 then [ line ] else line :: aux rest balance
+  in
+  Some (aux remaining_lines 0 |> String.concat "\n")
+
 let layout_smt_result = function
-  | SmtSat -> "sat"
+  | SmtSat _ -> "sat"
   | SmtUnsat -> "unsat"
   | Unknown None -> "unknown"
   | Unknown (Some r) -> Printf.sprintf "unknown(%s)" r
@@ -51,7 +78,7 @@ let classify ~(status : Unix.process_status) ~(stdout : string)
             match lines with
             | [] -> fail "produced no output"
             | "unsat" :: _ -> Ok SmtUnsat
-            | "sat" :: _ -> Ok SmtSat
+            | "sat" :: _ -> Ok (SmtSat (parse_model lines))
             | "unknown" :: rest -> Ok (Unknown (parse_reason_unknown rest))
             | other :: _ ->
                 fail (Printf.sprintf "unrecognized first line %S" other)))
@@ -157,7 +184,7 @@ let solve (entries : entry list) : smt_result * string option =
                         failwith
                           (Printf.sprintf "Portfolio: z3 error (%s): %s" c.label
                              m)
-                    | Ok ((SmtSat | SmtUnsat) as r) ->
+                    | Ok ((SmtSat _ | SmtUnsat) as r) ->
                         remove_tmp c.query_tmp;
                         (r, Some c.label)
                     | Ok (Unknown r) ->

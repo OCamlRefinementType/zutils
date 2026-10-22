@@ -8,6 +8,7 @@ type options = {
   show_type_infer_pre_judgement : bool; [@default false]
   show_type_infer_constant_judgement : bool; [@default false]
   show_type_infer_variable_judgement : bool; [@default false]
+  retrieve_model : bool; [@default false]
 }
 [@@deriving of_yojson { strict = true }]
 
@@ -53,3 +54,5 @@ let get_show_type_infer_constant_judgement () =
 
 let get_show_type_infer_variable_judgement () =
   (get ()).options.show_type_infer_variable_judgement
+
+let should_retrieve_model () = (get ()).options.retrieve_model

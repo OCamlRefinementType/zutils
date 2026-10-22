@@ -6,11 +6,15 @@ open ZUtilsConfig
 open Zdatatype
 
 type smt_result = Portfolio.smt_result =
-  | SmtSat
+  | SmtSat of string option
   | SmtUnsat
   | Unknown of string option
 
-type valid_result = SmtValid | SmtInvalid | Unknown of string option
+type valid_result =
+  | SmtValid
+  | SmtInvalid of string option
+  | Unknown of string option
+
 type prover = { ax_sys : laxiom_system; ctx : context }
 
 let mk_prover () = { ctx = mk_context []; ax_sys = Axiom.emp }
@@ -93,12 +97,16 @@ let portfolio_entries axiom_body : Portfolio.entry list =
         "(set-option :smt.ematching false)\n(set-option :smt.mbqi true)\n"
       else ""
     in
+    let get_model =
+      if ZUtilsConfig.should_retrieve_model () then "(get-model)\n" else ""
+    in
     Printf.sprintf
       "%s%s(set-option :timeout %d)\n\
        %s%s\n\
        (check-sat)\n\
-       (get-info :reason-unknown)\n"
-      dt mq timeout rlimit_opt body
+       (get-info :reason-unknown)\n\n\
+      \       %s"
+      dt mq timeout rlimit_opt body get_model
   in
   (* [dt_lazy_splits] only steers datatype case splits, so a body without a
      datatype would race a copy of [axiom]. *)
@@ -180,16 +188,23 @@ let record_nondecisive ~reason ~coerced_to =
     "[non-decisive Z3 verdict] q%i: timeout/unknown coerced to %s; %s.\n"
     !query_counter coerced_to (coercion_hint reason)
 
+let record_model ~model =
+  ZUtilsLog.model @@ fun () ->
+  Printf.printf "[Z3 model] q%i:\n%s\n" !query_counter
+    (Option.value ~default:"<none>" model)
+
 let check_valid loc query =
   match check_sat loc (smart_not query) with
   | SmtUnsat -> SmtValid
-  | SmtSat -> SmtInvalid
+  | SmtSat model -> SmtInvalid model
   | Unknown reason -> Unknown reason
 
 let check_sat_bool loc query ~coerce_to =
   let coerce_desc = if coerce_to then "inhabited" else "uninhabited" in
   match check_sat loc query with
-  | SmtSat -> true
+  | SmtSat model ->
+      record_model ~model;
+      true
   | SmtUnsat -> false
   | Unknown reason ->
       record_nondecisive ~reason ~coerced_to:coerce_desc;
@@ -199,7 +214,9 @@ let check_valid_bool loc query ~coerce_to =
   let coerce_desc = if coerce_to then "valid" else "invalid" in
   match check_valid loc query with
   | SmtValid -> true
-  | SmtInvalid -> false
+  | SmtInvalid model ->
+      record_model ~model;
+      false
   | Unknown reason ->
       record_nondecisive ~reason ~coerced_to:coerce_desc;
       coerce_to
