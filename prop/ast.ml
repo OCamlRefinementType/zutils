@@ -33,7 +33,6 @@ let builtin_primop =
     "char_le";
   ]
 
-let eq_op = "=="
 let is_builtin_op str = List.exists (String.equal str) builtin_primop
 
 (* The constant can be direct encoded into z3 literal *)
@@ -64,14 +63,39 @@ let proj_func = "_proj"
 let fst_func = "fst"
 let snd_func = "snd"
 
+type cmp_op = Eq | Neq | Lt | Le | Gt | Ge [@@deriving sexp, show, eq, ord]
+
+let cmp_op_of_string = function
+  | "==" -> Some Eq
+  | "!=" -> Some Neq
+  | "<" -> Some Lt
+  | "<=" -> Some Le
+  | ">" -> Some Gt
+  | ">=" -> Some Ge
+  | _ -> None
+
+let cmp_op_to_string = function
+  | Eq -> "=="
+  | Neq -> "!="
+  | Lt -> "<"
+  | Le -> "<="
+  | Gt -> ">"
+  | Ge -> ">="
+
+(* Comparisons and the connectives are props, so a lit is a term: parsing or
+   encoding one inside a lit is rejected. A [Lit] of any sort can be a [Cmp]
+   operand; everywhere else a prop is a formula. *)
+let is_prop_op name =
+  Option.is_some (cmp_op_of_string name) || List.mem name [ "&&"; "||"; "not" ]
+
 type 't prop =
   | Lit of ('t, 't lit) typed
+  | Cmp of cmp_op * 't prop * 't prop
   | Implies of 't prop * 't prop
   | Ite of 't prop * 't prop * 't prop
   | Not of 't prop
   | And of 't prop list
   | Or of 't prop list
-  | Iff of 't prop * 't prop
   | Forall of { qv : (('t, string) typed[@bound]); body : 't prop }
   | Exists of { qv : (('t, string) typed[@bound]); body : 't prop }
 [@@deriving sexp, show, eq, ord]

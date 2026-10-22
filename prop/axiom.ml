@@ -62,7 +62,7 @@ let find_first_poly_type_from_axiom prop =
     | And l | Or l -> aux_multi l
     | Implies (e1, e2) -> aux_multi [ e1; e2 ]
     | Lit _ -> None
-    | Iff (e1, e2) -> aux_multi [ e1; e2 ]
+    | Cmp (_, e1, e2) -> aux_multi [ e1; e2 ]
     | Ite (e1, e2, e3) -> aux_multi [ e1; e2; e3 ]
     | Not e -> aux e
   and aux_multi l =

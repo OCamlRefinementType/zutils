@@ -18,7 +18,7 @@ let unique_quantifiers prop =
     | And l | Or l -> aux_multi l
     | Implies (e1, e2) -> aux_multi [ e1; e2 ]
     | Lit _ -> Some StrSet.empty
-    | Iff (e1, e2) -> aux_multi [ e1; e2 ]
+    | Cmp (_, e1, e2) -> aux_multi [ e1; e2 ]
     | Ite (e1, e2, e3) -> aux_multi [ e1; e2; e3 ]
     | Not e -> aux e
   and aux_multi l =
@@ -57,12 +57,20 @@ let to_z3 ctx prop =
     | Not p -> Boolean.mk_not ctx (aux p)
     | And ps -> Boolean.mk_and ctx (List.map aux ps)
     | Or ps -> Boolean.mk_or ctx (List.map aux ps)
-    | Iff (p1, p2) -> Boolean.mk_iff ctx (aux p1) (aux p2)
     | Forall { qv; body } ->
         make_forall ctx [ tpedvar_to_z3 ctx (qv.ty, qv.x) ] (aux body)
     | Exists { qv; body } ->
         make_exists ctx [ tpedvar_to_z3 ctx (qv.ty, qv.x) ] (aux body)
     | Lit lit -> Litencoding.typed_lit_to_z3 ctx lit
+    | Cmp (op, a, b) -> (
+        let a, b = map2 aux (a, b) in
+        match op with
+        | Eq -> Boolean.mk_eq ctx a b
+        | Neq -> Boolean.mk_not ctx @@ Boolean.mk_eq ctx a b
+        | Lt -> Arithmetic.mk_lt ctx a b
+        | Le -> Arithmetic.mk_le ctx a b
+        | Gt -> Arithmetic.mk_gt ctx a b
+        | Ge -> Arithmetic.mk_ge ctx a b)
   in
   let () = _assert [%here] "sanity check" (unique_quantifiers prop) in
   let p1 = to_nnf prop in
