@@ -207,6 +207,14 @@ module List = struct
     let l = List.rev l in
     match l with [] -> false | h :: _ -> h = e
 
+  let rec take n l =
+    if n <= 0 then []
+    else match l with [] -> [] | h :: rest -> h :: take (n - 1) rest
+
+  let rec drop n l =
+    if n <= 0 then l
+    else match l with [] -> [] | _ :: rest -> drop (n - 1) rest
+
   let to_string f l =
     fold_lefti
       (fun res i a -> if i = 0 then res ^ f a else res ^ "," ^ f a)
