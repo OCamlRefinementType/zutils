@@ -110,6 +110,16 @@ let constraint_prop_type_check (ctx : t ctx) (bc : BC.bc) (prop : t prop) =
         let bc, lit = constraint_lit_type_check ctx bc lit in
         let bc, _ = BC.add bc (lit.ty, Nt.bool_ty) in
         (bc, Lit lit.x#:Nt.bool_ty)
+    | Cmp (op, a, b) ->
+        let bc, a, a_ty = operand ctx bc a in
+        let bc, b, b_ty = operand ctx bc b in
+        let bc, _ = BC.add bc (a_ty, b_ty) in
+        let bc =
+          match op with
+          | Eq | Neq -> bc
+          | Lt | Le | Gt | Ge -> fst @@ BC.add bc (a_ty, Nt.int_ty)
+        in
+        (bc, Cmp (op, a, b))
     | Implies (e1, e2) ->
         let bc, e1 = aux ctx bc e1 in
         let bc, e2 = aux ctx bc e2 in
@@ -140,10 +150,6 @@ let constraint_prop_type_check (ctx : t ctx) (bc : BC.bc) (prop : t prop) =
             (bc, []) es
         in
         (bc, Or es)
-    | Iff (e1, e2) ->
-        let bc, e1 = aux ctx bc e1 in
-        let bc, e2 = aux ctx bc e2 in
-        (bc, Iff (e1, e2))
     | Forall { qv; body } ->
         let qv = Nt.__force_typed [%here] qv in
         let bc, body = aux (add_to_right ctx qv) bc body in
@@ -152,6 +158,14 @@ let constraint_prop_type_check (ctx : t ctx) (bc : BC.bc) (prop : t prop) =
         let qv = Nt.__force_typed [%here] qv in
         let bc, body = aux (add_to_right ctx qv) bc body in
         (bc, Exists { qv; body })
+  (* A [Lit] operand is a term of any sort; any other operand is a formula. *)
+  and operand ctx bc = function
+    | Lit lit ->
+        let bc, lit = constraint_lit_type_check ctx bc lit in
+        (bc, Lit lit, lit.ty)
+    | p ->
+        let bc, p = aux ctx bc p in
+        (bc, p, Nt.bool_ty)
   in
   aux ctx bc prop
 
