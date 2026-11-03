@@ -97,6 +97,9 @@ let para_ty = function Ty_arrow (t, _) -> t | _ -> _die [%here]
 let ret_ty = function Ty_arrow (_, t) -> t | _ -> _die [%here]
 let mk_record alias fds = Ty_record { alias; fds }
 
+let builtin_base_nts =
+  [ unit_ty; bool_ty; int_ty; nat_ty; char_ty; string_ty; float_ty ]
+
 let get_record_types = function
   | Ty_record { fds; _ } -> fds
   | _ -> _die [%here]
